@@ -1,0 +1,53 @@
+S37 evidence: Publish on GitHub (no ROM) (2026-10-15)
+
+What was built
+  README.md (front page), BUILDING.md, MODDING.md, ARCHITECTURE.md, CONTRIBUTING.md, CHANGELOG.md, LICENSE (MIT for our own code; "the Maze Chase contributors" as holder, the user can put a name there), THIRD-PARTY-LICENSES.txt (the z80 core was missing from it: added; SDL2, miniz, compiler runtime already there), .gitignore, .clang-format, docs/GITHUB_UPLOAD_GUIDE.md (click by click for a first-time user: account, GitHub Desktop upload, web-page alternative, About text, release, check in a private window, undo).
+  tools/export_github.sh: makes the clean copy and refuses to finish if it finds ROM bytes. tests/run_rom_free.sh: the tests that need no ROM. docs/images/: four screenshots of our own menus.
+  Small changes outside the list in S37.md (needed so the copy works without the ROM, no change to the game): tools/check_docs.py (cited paths that the export leaves out are accepted only when the marker file .github_export is present), tests/run_all.sh (skips tests/test_rom_tables.py when it is not there), tests/run_rom_free.sh (new), docs/evidence/S25_audio.txt and src/logic/mode_timers.h (see "ROM-derived material found" below).
+
+1. Audit: what is left out of the export and why
+  roms/, build/, dist/MazeChase/, dist/PacmanPortTest/, every *.zip, *.exe, *.o, *.bin   the player's ROM, build output, release files (the exe and zip go on the GitHub Releases page; dist/res, dist/README-PACKAGE.txt and dist/REPORT-A-PROBLEM.bat stay because tools/package.sh needs them: icon and text of our own)
+  docs/disasm/pacman.asm, pacman_raw.asm (and build/rom/prog_raw.asm)   the disassembly contains the original program's instructions (made from the ROM). docs/disasm/labels.txt and blocks.txt (our names and address ranges, no bytes) stay.
+  tests/data/rom_tables.json and tests/test_rom_tables.py   tables decoded from the ROM and the test that compares them (the test stays in the project, not in the export)
+  docs/evidence/*.png and docs/evidence/prototype/   screenshots of the running game: they show the game's graphics (made from the ROM). Only docs/images/ is published; its four pictures were cropped to our own menu panels (the first versions had game graphics faintly visible behind the menus: removed).
+  docs/evidence/*user*   the user's own test reports and screenshots (private)
+  PROJECT_STATUS.md   exported without the "## User" section
+  The text evidence notes in docs/evidence/ stay; where they name a screenshot, the picture is not in the GitHub copy.
+  ROM-derived material found by the scan and fixed (each one was a real hit, not a false alarm):
+    tests/data/rom_tables.json (excluded as above); docs/evidence/S25_audio.txt had the 16 values of a ROM note table (replaced by a sentence); src/logic/mode_timers.h had speed-pattern rows, level rows and Cruise Elroy pairs in the ROM's order (the tables were re-arranged by kind: same values, no 16-value run of the ROM left; test_logic_timers re-run at full size afterwards: 0 differences, see T01f_mode_timers.txt).
+
+2. The ROM-byte scan (tools/export_github.sh runs it on every export)
+  Input: all 10 ROM files of the Midway set (4 program, 2 graphics, 4 PROMs), 15,784 distinct 16-byte windows after dropping windows with fewer than 8 different values or fewer than 4 different steps between neighbouring bytes (zero padding, 00 01 02... counting runs).
+  It searches every exported file as raw bytes; as hexadecimal text; and as number tables in text files (8, 16 and 32 bit values written in decimal or 0x notation, big endian, little endian and word swapped, separated only by commas, spaces or braces).
+  Result on the final export: 0 hits. The first runs of the scan reported hits in tests/data/rom_tables.json, docs/evidence/S25_audio.txt, src/logic/mode_timers.h and the disassembly; those were fixed or excluded as listed above. (Some earlier false alarms, such as counting runs and numbers spread over several lines, led to the filters described.)
+  Canary: 32 bytes of ROM program code written as a C array into src/zz_canary.h (temporary file) -> "ROM BYTES FOUND in src/zz_canary.h (matches pacman.6f at offset 512)", export deleted, exit code 1. The file was removed afterwards.
+  Independent second check (separate script, no filter at all: all 21,795 distinct 16-byte windows of the ROM files, raw bytes only, every file of the export): 0 hits in the 458 files of the export.
+  The release zip (MazeChase-1.0.1-win64.zip, 4 files) is scanned the same way after unzipping. With the strict filter: clean. The unfiltered second check finds 22,736 matches in MazeChase.exe: 21,290 are 16 zero bytes, 1,424 are zero runs with one other byte, 2 have 3 different values, 20 are 15 or 16 different values and these are the counting run 00 01 02 .. 0F (18 times) or 00 00 01 .. 0E (2 times), as found in the C library part of any program. None is ROM data. The exe contains no ROM: it reads the ROM from the player's file at run time (src/board/romset.cpp).
+  The release zip content: MazeChase.exe, README.txt, REPORT-A-PROBLEM.bat, THIRD-PARTY-LICENSES.txt (now with the z80 licence). tools/package.sh was run again for that. MazeChase.exe differs from the exe the user tested (S36) in 5 bytes of the file header (build time stamp); everything else is byte for byte identical (cmp -l).
+
+3. Formatting (layout only)
+  .clang-format (LLVM based, 4 spaces, 170 columns, no include sorting, comments not reflowed) applied with clang-format -i to 101 files in src/ and tests/ (not src/core/z80.h and src/third_party/, which are not ours).
+  Proof that it is layout only: every translation unit of the program compiled to an object file before and after formatting and compared with cmp: 66 of 66 identical (src/app/menu.cpp is part of main.cpp and is covered by it; tests/test_level256.cpp was compared separately with the miniz include path: identical).
+  A one-line header comment was added to the files that lacked one: src/app/display.cpp, firstrun.cpp, menu.cpp, overlay.cpp, replay.cpp, src/audio/audio_out.cpp, wsg.cpp, src/board/bus.cpp, inputs.cpp, machine.cpp, romset.cpp, src/video/gfx.cpp, tools/analysis/dis.py.
+
+4. Fresh copy of the export, no ROM, following BUILDING.md part A
+  cp -r of the export to an empty folder (no roms/, no build/); step 3 sh tools/build_app.sh -> "built build/app/pacman-port"; step 6 sh tests/run_rom_free.sh -> ROM-FREE TESTS PASSED: Z80 core test PASS, app builds, test_audio_stall 15 checks, test_bindings 167, test_haptics 54, test_fruit_ach 120 (first part), test_records 48 (first part), check_hardware_facts PASS, check_notes_cited PASS, check_docs OK. The tests with a second part that plays the game print "needs build/rom/prog.bin" and skip that part, as documented in BUILDING.md.
+  Which tests need no ROM was found by running every test script on the fresh copy: 62 of 69 did not finish or failed without the ROM (they play the game, or their window part needs it), 7 passed; of those that print PASS for their first part but fail in the window part (test_crt, test_crt_look, test_curve, test_glow, test_assist, test_lastdevice, test_lightbar, test_mouse, test_stats, test_progress_ach, test_ultrawide) the full versions are part of the ROM suite only.
+  Not tested: building on Windows itself (WSL and MSYS2 are described in BUILDING.md and labelled untested; there is no Windows machine in the workspace). The Linux build and the Linux to Windows cross build are tested.
+
+5. Regression after formatting (on the project folder, with the ROM)
+  sh tests/run_all.sh: ALL TESTS PASSED (python checks, the six logic proofs in their short versions, check_docs).
+  sh tests/test_purist.sh: PASS (7273 frame hashes identical to the Python prototype). sh tests/test_replay.sh: PASS (7273 frame hashes identical, run 1 = run 2 = prototype).
+  tests/test_logic_timers.sh 3000000 1000000 (full size, after the table re-arrangement): PASS, 0 differences.
+  Note: run_all.sh in its present form took about 10 minutes here (the status file's older figure of about 85 minutes is not what it took this time).
+
+6. README links and screenshots
+  50 relative links in README.md, BUILDING.md, MODDING.md, ARCHITECTURE.md, CONTRIBUTING.md, CHANGELOG.md and docs/GITHUB_UPLOAD_GUIDE.md checked by script against the export: 0 missing (the links "../../releases" and "../../issues" work only on github.com). Paths in backticks checked too. The four pictures in README exist in docs/images/ (viewed: only our own menus and button pictures).
+
+7. Honest limits
+  1. I cannot upload: this workspace has no GitHub login. The guide is for you to follow (docs/GITHUB_UPLOAD_GUIDE.md); the file names and screens of GitHub may differ slightly.
+  2. The documentation says plainly that the readable game rules (src/logic) are proved but not used by the game yet, so editing them does not change play; what can be changed today is the front end and the arcade options (MODDING.md section 2).
+  3. The screenshot choice (own menus only) means the README has no picture of the game itself: any picture of the maze or the characters is made from the ROM graphics.
+  4. The scan can only find copies that keep 16 values in a row in one of the forms above. It cannot find a ROM table that was typed in a different order, with gaps, or in words (the T01f case shows that tables in ROM order are caught, and that is why they were re-arranged).
+  5. Licence: MIT is used as recommended in the step file; the user may change it before uploading (LICENSE and README "Legal"). THIRD-PARTY-LICENSES.txt lists SDL2 (zlib), miniz (MIT), z80 (MIT) and the compiler runtime.
+  6. The disassembly docs are not published, so a few links in notes to docs/disasm/pacman.asm do not work in the GitHub copy (tools/check_docs.py knows the omitted paths).

@@ -1,0 +1,66 @@
+S23 evidence: input ports and DIP switches (src/board/inputs.{h,cpp}, tests/test_inputs.cpp)
+Date: 2026-10-09
+
+Build: g++ -std=c++17 -O2 -Wall -Wextra -DMINIZ_NO_STDIO -DMINIZ_NO_TIME tests/test_inputs.cpp src/board/inputs.cpp src/board/romset.cpp src/board/machine.cpp src/board/bus.cpp miniz*.o -o build/s23/test_inputs
+Run:   build/s23/test_inputs roms/pacman.zip build/s23/
+
+== Test output ==
+  READY tile after Y: code 0x5B (row 20, col 11)
+  attract before coin: CREDIT word yes, digit 0; after coin: digit 1, 4E6E=1; READY at frame 424, 4E00=2
+  DIP C9 default             ROM: coins/credit 1, credits/coin 1, lives 3, bonus 0x10, diff ptr 0x68, alt names 0, cocktail 0
+  DIP CB 2 coins 1 credit    ROM: coins/credit 2, credits/coin 1, lives 3, bonus 0x10, diff ptr 0x68, alt names 0, cocktail 0
+  DIP CA 1 coin 2 credits    ROM: coins/credit 1, credits/coin 2, lives 3, bonus 0x10, diff ptr 0x68, alt names 0, cocktail 0
+  DIP C8 free play           ROM: coins/credit 0, credits/coin 0, lives 3, bonus 0x10, diff ptr 0x68, alt names 0, cocktail 0
+  DIP C1 one life            ROM: coins/credit 1, credits/coin 1, lives 1, bonus 0x10, diff ptr 0x68, alt names 0, cocktail 0
+  DIP C5 two lives           ROM: coins/credit 1, credits/coin 1, lives 2, bonus 0x10, diff ptr 0x68, alt names 0, cocktail 0
+  DIP CD five lives          ROM: coins/credit 1, credits/coin 1, lives 5, bonus 0x10, diff ptr 0x68, alt names 0, cocktail 0
+  DIP D9 bonus 15000         ROM: coins/credit 1, credits/coin 1, lives 3, bonus 0x15, diff ptr 0x68, alt names 0, cocktail 0
+  DIP E9 bonus 20000         ROM: coins/credit 1, credits/coin 1, lives 3, bonus 0x20, diff ptr 0x68, alt names 0, cocktail 0
+  DIP F9 no bonus            ROM: coins/credit 1, credits/coin 1, lives 3, bonus 0xFF, diff ptr 0x68, alt names 0, cocktail 0
+  DIP 89 hard                ROM: coins/credit 1, credits/coin 1, lives 3, bonus 0x10, diff ptr 0x7D, alt names 0, cocktail 0
+  DIP 49 alternate names     ROM: coins/credit 1, credits/coin 1, lives 3, bonus 0x10, diff ptr 0x68, alt names 1, cocktail 0
+  2 coins per credit: after coin 1 CREDIT 0, after coin 2 CREDIT 1
+89 checks, 0 failures
+PASS test_inputs
+
+== Tile text dump of the screen at the first frame with READY (frame 424 of the script: coin frames 400-404, start 420-423) ==
+ 0 |@@@1UP@@@HIGH@SCORE@@@@@@@@@|
+ 1 |@@@@@  @@@@@@@@@@@@@@@@@@@@@|
+ 2 |............................|
+ 3 |............................|
+ 4 |............................|
+ 5 |............................|
+ 6 |............................|
+ 7 |............................|
+ 8 |............................|
+ 9 |............................|
+10 |............................|
+11 |............................|
+12 |............@..@............|
+13 |............@..@............|
+14 |.........PLAYER@ONE.........|
+15 |.........@........@.........|
+16 |.........@........@.........|
+17 |@@@@@@.@@@........@@@.@@@@@@|
+18 |.........@........@.........|
+19 |.........@........@.........|
+20 |.........@@READY.@@.........|
+21 |.........@........@.........|
+22 |.........@........@.........|
+23 |............................|
+24 |............................|
+25 |............................|
+26 |.............@@.............|
+27 |............................|
+28 |............................|
+29 |............................|
+30 |............................|
+31 |............................|
+32 |............................|
+33 |............................|
+34 |@@......@@@@@@@@@@@@@@@@..@@|
+35 |@@......@@@@@@@@@@@@@@@@..@@|
+
+Tile code after READY is 0x5B: the '!' (confirmed by eye in docs/evidence/S23_coin_ready.png, left = frame 410 after the coin: CREDIT 1; right = frame 430 after start: PLAYER ONE, READY!).
+Note: the text dump shows letters and digits only; punctuation and graphics tiles appear as '.'.
+Hardware_facts.md section 6 DIP tables (coinage, lives, bonus, difficulty, names, cocktail) are confirmed by the ROM's own derived values 4E6B-4E75 (Part E).

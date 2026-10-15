@@ -1,0 +1,21 @@
+Settings: no settings file yet (build/s34b/t/p/settings.cfg), using the standard settings
+Purist mode: ON (no overlay, filters, one-button start, save states, rewind or saved high score)
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: loaded build/s34b/t/p/controls.cfg
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+State: rewind is switched off in Purist mode
+Menu: opened (the game is paused)
+State: that is switched off in Purist mode
+Menu: resumed
+State: that is switched off in Purist mode
+Menu: opened (the game is paused)
+State: that is switched off in Purist mode
+Menu: resumed
+Machine at exit: main state 1, lives 1, dots eaten 1, score 0, credits 0.
+Ran 29.68 s: 1500 machine ticks, 1808 pictures drawn
+Measured tick rate: 50.545 per second (arcade: 60.606)
+Pacing: 1878 presents, 1500 machine ticks, 1496 pictures finished. Refreshes each picture stayed on screen: 1 x 1425 2 x 69 9 x 2
+Pacing: time between presents average 15.802 ms, longest 45.885 ms
+Machine hash after 1500 ticks: cbbe4b7d7ed751ba

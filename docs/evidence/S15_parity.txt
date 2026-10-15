@@ -1,0 +1,15 @@
+S15 CPU parity evidence, 2026-10-08
+Test: sh tests/test_cpu_parity.sh   (C++ src/board/boot_test.cpp on src/core/z80.h versus tools/analysis/oracle_trace.py on the Python prototype core)
+Each line of both logs = PC AF BC DE HL IX IY SP I R IFF1 IFF2 AF' BC' DE' HL' before one instruction; byte-for-byte comparison with cmp.
+
+== 20,000 instructions, native:
+PASS: 20000 instructions identical (C++ core vs Python prototype), 52 distinct PCs, interrupt path exercised
+== 20,000 instructions, native + mingw build under wine 9.0:
+PASS: 20000 instructions identical (C++ core vs Python prototype and mingw build under wine), 52 distinct PCs, interrupt path exercised
+== 300,000 instructions, native (extra):
+PASS: 300000 instructions identical (C++ core vs Python prototype), 133 distinct PCs, interrupt path exercised
+
+What the trace covers: reset, boot_init fill loops, EI and HALT at 2349/234A (instruction ~6230), the interrupt delivered by the board rule (halted + enable + IFF1) through the I=3F table to 3000, then the self-test ROM checksum loop. 300,000 instructions reach 133 distinct PCs.
+Negative control: changing one character of a log line at line 5000 makes cmp report 'line 5001', so a difference would be shown with its instruction number.
+Setup differences recorded: both sides start with AF=SP=FFFF (real Z80 reset; the Python wrapper alone starts at AF=0002, SP=0, which the oracle overrides). The interrupt is delivered as soon as the CPU is halted rather than after 50,688 cycles (neither side counts cycles here).
+Not covered: cycle counts, I/O reads of inputs other than the stub values, frame-timed interrupts (S17/S18).

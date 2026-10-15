@@ -1,0 +1,16 @@
+S34V: pad vibration for Xbox, DualShock 4 and DualSense (script part; the user's test with real pads is still to come)
+
+What was built: src/app/haptics.h (engine, header only), a Vibration item (Off / Light / Full) on Esc > Controls, settings.cfg line "vibration", wiring in src/app/main.cpp.
+Test aids added: --virtual-type xbox360|xboxone|ps4|ps5 (the pretend pad gets that maker/product id and records every motor command it receives), --vibration off|light|full.
+
+Effects: coin tick; dot purr (Full); energizer thump; ghost thump growing along the chain 200/400/800/1600; fruit double tap; extra-life triple tap; death rumble fading over 110 frames (the death animation); level-done double pulse; fright-end tick; heartbeat when a ghost that can hurt you is within 28 picture pixels (Full).
+Triggers by pad type (starting values): Xbox big 100% small 100% trigger motors 85%; DualShock 4 big 90% small 120% (its small motor is weak) no trigger motors; DualSense big 80% small 90%, no trigger motors; other 100/100.
+
+Evidence:
+- docs/evidence/S34V_engine_unit_test.txt: 54 checks on made-up frames.
+- docs/evidence/S34V_driven_runs.txt: the 7,273-frame real replay on pretend pads of 4 types. Events seen (same for all): coin 3, dot 119, energizer 2, death 5, fright end 2, ghost near 32. Check: the game's own dot counter (RAM 4E0E) counted 121 = 119 dots + 2 energizers.
+  Xbox pad received 1,243 motor commands (strongest big 65535, small 39321) and 601 trigger-motor commands; DualShock 4 1,243 (big 58982, small 47185), no trigger commands; DualSense 1,243 (big 52428, small 35389), no trigger commands.
+  Light: no dots, no heartbeat, energizers still felt. Off and Purist: the pad received nothing. No pad: no change, no crash.
+  7,273 frame hashes are identical with and without a shaking pad. Scripted hashes unchanged: 2400 ticks (at 180 Hz) 60c4b12eb084ed7e, 3000 ticks d7d39438e9e8d70c. test_purist, test_replay, test_state, test_audio_stall, test_controls, test_bindings (167), test_menu (134), test_padbuttons, run_all pass.
+- Not yet seen in a real game (the replay has no ghost eaten, fruit, extra life or level done): those four effects are covered only by the unit test on made-up frames; the score values they key on (200-1600, 100-5000) are the Dossier's. Not tested with a physical pad: feel and strength of the motors.
+- A bug found and fixed on the way: the board's power-on self-test (first ~300 frames) fills memory with test patterns that looked like 20 coins; nothing is judged before frame 320 now.

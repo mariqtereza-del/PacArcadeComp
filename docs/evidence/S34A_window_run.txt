@@ -1,0 +1,25 @@
+Settings: no settings file yet (build/s34a/cfg/settings.cfg), using the standard settings
+Purist mode: off
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: no settings file yet (build/s34a/cfg/controls.cfg), using the standard controls
+High score: no saved score yet (build/s34a/cfg/highscore.txt)
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+Menu: opened (the game is paused)
+Controls: bindings screen opened
+Controls: saved to build/s34a/cfg/controls.cfg
+Controls: COIN = C
+Controls: saved to build/s34a/cfg/controls.cfg
+Controls: C WAS ON COIN - SWAPPED
+Controls: saved to build/s34a/cfg/controls.cfg
+Controls: START 1 KEY 1 CLEARED
+Controls: START 1 KEY 1 CLEARED
+Menu: resumed
+Note: the program was frozen for 68 ms before machine tick 530 (the sound queue is re-set after a freeze)
+Machine at exit: main state 1, lives 1, dots eaten 21, score 0, credits 0.
+Ran 36.24 s: 1819 machine ticks, 2202 pictures drawn
+Measured tick rate: 50.196 per second (arcade: 60.606)
+Pacing: 2285 presents, 1819 machine ticks, 1810 pictures finished. Refreshes each picture stayed on screen: 1 x 1728 2 x 81 9 x 1
+Pacing: time between presents average 15.859 ms, longest 68.119 ms
+Machine hash after 1819 ticks: b4c80ec84e3952e5

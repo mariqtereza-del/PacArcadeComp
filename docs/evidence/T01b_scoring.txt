@@ -1,0 +1,28 @@
+T01b evidence: scoring, extra life and high score as readable code (src/logic/scoring.h, work_ram.h) versus ROM add_score 2A5A / 2B33 (2026-10-15)
+
+== What was written ==
+src/logic/scoring.h: BCD score addition, the 14 point values (written as ordinary numbers 10, 50, 200 ... 5000, NOT copied ROM bytes), the extra life rule (once per game and player, flag bit 0 in the byte after the score, sound request 4E9C bit 0, lives 4E14/4E15) and the high score update. src/logic/work_ram.h: the RAM view. Not copied (left to the ROM): redrawing the score, the high score and the lives pictures in video RAM.
+
+== How it was proved ==
+What is compared: ALL work RAM 4C00-4FEF after the routine (not only the score bytes), except the few bytes under the stack pointer used by the routine's own calls. The video RAM is not compared.
+Part A (live): the real machine plays (scripted player, one and two player games, normal and five-life DIP); at every entry of 2A5A the readable version gets a copy of the work RAM and the same points number; at the return both must be identical.
+Part B1: the ROM routine alone for EVERY score 000000-999999 x EVERY one of the 14 points kinds (14,000,000 calls), player 1, limit 10, flag clear.
+Part B2: 4,000,000 random situations: all work RAM random first (garbage must not matter), either player, demo or game, DIP limits 10/15/20/FF and others, extra-life flags, lives, high score equal to, next to or unrelated to the score; the other player's score must stay untouched.
+
+== Result (full run: 3,000,000 frames, 4,000,000 random cases, all 1,000,000 scores) ==
+part A: 3000000 frames (13.8 hours of game time), 98374 calls of 2A5A compared: dots 92713, energizers 2129, ghosts 1441/1020/534/534, fruit and bonus 3; player 1 93791, player 2 4583, in the demo 79822; extra lives given 0; high scores raised 155; differences 0
+part B1: every score 000000-999999 with each of the 14 points kinds, run through the ROM routine alone: 14000000 calls, differences so far 0
+part B2: 4000000 random situations (both players, demo and game, all limits, flags, lives, high scores equal or next to the score): differences 0
+PASS test_logic_scoring: 98374 live calls and 18000000 isolated calls compared, 0 differences
+
+== The test can fail (five deliberately broken versions, each caught) ==
+1600 changed to 1500: 2,305 differences. Extra life limit compared without the minus 1: 213. High score copied on equal (>= instead of >): 51. Lives shown not raised: 1,323. BCD carry wrong: 923. Original restored (cmp clean).
+
+== Other checks ==
+tests/run_all.sh (with the 100,000-frame versions of both logic tests) ALL TESTS PASSED; tests/test_purist.sh PASS; tests/test_replay.sh PASS; tests/test_logic_random.sh PASS (T01a still equal). The game code was not changed (only src/logic/, new tests, tests/run_all.sh).
+
+== Honest limits ==
+1. In the live play (Part A) the scripted player never reached the extra life score (0 extra lives given in 3,000,000 frames; only 3 fruit scores), so the extra life and the big fruit values are proved by Parts B1 and B2 (the ROM routine run alone on hundreds of thousands of such situations), not by live play.
+2. The BCD addition is exact for valid BCD scores (every score the game can reach); a score byte holding a non-BCD nibble was not tested, the ROM's DAA would treat it differently.
+3. A carry out of the third score byte (1,000,000 points) is lost in both; it was run in B2 (random scores up to 999,999 plus points).
+4. The readable code is not used by the game yet; the game still runs the ROM. The full 85-minute regression was not rerun (no game code changed).

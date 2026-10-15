@@ -1,0 +1,36 @@
+X41 glow fix evidence (2026-10-14/15)
+User report: with the curve on, the glow 'reflections' of moving elements were too spaced apart and too visible (screenshot).
+Cause: curved-mesh drawing used the picture textures' texture coordinates (0 to 0.64) for the picture-sized glow texture (0 to 1): glow stretched about 1.57x. Flat glow was correct.
+Fix: draw_mesh(texture, own_size) in src/app/main.cpp; glow gain 0.3 Light / 0.6 Strong (was 0.5 / 1.0).
+
+== tests/test_glow.sh (includes the new alignment check) ==
+RESULT: PASS
+  RESULT: PASS
+  RESULT: PASS
+  RESULT: PASS
+glow with curve light:
+  correlation of the curved glow with the flat glow bent by the formula: 0.871
+glow with curve strong:
+  correlation of the curved glow with the flat glow bent by the formula: 0.890
+  ok: self test: a glow stretched by 1.57 (the old bug) is detected
+  ok: self test: a glow shifted by 45 pixels is detected
+  ok: replay hash log identical with the strong glow on (same)
+  1920x1080 glow off: Pacing: time between presents average 15.873 ms, longest 108.095 ms
+  1920x1080 glow light: Pacing: time between presents average 16.045 ms, longest 116.272 ms
+  1920x1080 glow strong: Pacing: time between presents average 16.001 ms, longest 112.764 ms
+  2560x1440 glow off: Pacing: time between presents average 15.895 ms, longest 108.293 ms
+  2560x1440 glow light: Pacing: time between presents average 16.001 ms, longest 112.389 ms
+  2560x1440 glow strong: Pacing: time between presents average 16.106 ms, longest 119.910 ms
+RESULT: PASS
+
+== tests run after the fix ==
+tests/test_menu.sh: ok: PASS: 934 checks, 0 failures 
+tests/test_crt_look.sh: ok:   ok: hash log lines (7273)   ok: replay hash log identical with the Old TV look on (same) RESULT: PASS 
+tests/test_curve.sh: ok:   ok: game: with the curve strong the wall bows (spread >= 8) RESULT: PASS RESULT: PASS 
+tests/test_surround.sh: ok:   ok: hash log lines (7273)   ok: replay hash log identical with the cabinet surround on (same) RESULT: PASS 
+tests/test_purist.sh: ok: PASS: Purist run: 7273 frame hashes identical to the Python prototype and the high score file untouched; normal run without a saved score identical; normal run with a saved s
+tests/test_replay.sh: ok: PASS: 7273 frame hashes identical (C++ run 1 = run 2 = Python prototype); recorder round trip identical   replay played: 7273 frames, 7172 distinct frame states, main state c
+DONE
+
+Picture with the fix (curve + glow + mask, Strong left, Light right): docs/evidence/X41_glow_fix.png
+Not rerun: the other ~45 test groups (nothing outside the glow/curve drawing and crt.h gains changed; the full regression is rerun at the next step's checkpoint).

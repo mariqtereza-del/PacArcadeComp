@@ -1,0 +1,32 @@
+S36 bug 2: sound goes wrong after a window resize (user report 2026-10-15; the user's file is docs/evidence/S36_user_report_audio_resize.txt)
+
+== What the user's report shows (real PC, Direct3D, 180 Hz, smooth pacing, ambient surround) ==
+Window resized at about 8 s. Afterwards: Audio: 114 underruns (54,592 samples = 1.1 s of silence), 37,936 samples dropped (queue full), pitch scale pushed to the limit 1.0250 (956 of 967 frames more than 0.5 % off), sound queue average 496 ms, largest 682.7 ms (the whole 32,768-sample queue). Earlier user reports with no resize (X48_user_frametime_*.txt): 0 underruns, 0 dropped, queue average 26 ms.
+Measured tick rate in the report: 60.662 per second although the smooth pacing is meant to give exactly 60.000: the game ran fast for a moment.
+
+== Cause ==
+In smooth pacing the game ticked on every 3rd screen refresh and never looked at the clock. A resize on Windows can make the Direct3D screen present without waiting for the refresh for a moment; the game then ran several times too fast and put sound in the queue faster than the card plays it. The pitch controller can only move the pitch by 2.5 %, so the queue stayed long (delay), filled up (dropped sound = crackling) and the pitch stayed off until it drained.
+
+== Reproduction here (new test aid --burst TICK:MS: the simulated 180 Hz screen runs 4x too fast for MS ms) ==
+BEFORE the fix (same smooth 180 Hz run, --burst 500:400): queue largest 682.7 ms, 40 underruns, 69,197 samples dropped, tick rate 63.7; with --burst 500:1000: queue largest 682.7 ms, 204,487 samples dropped, tick rate 83.2. These are the user's symptoms (queue 682.7 ms, drops, pitch limit 1.0250). Note: the 'before' runs used an earlier, harsher version of the test aid (screen without any waiting); the 'after' runs and the permanent test use the 4x version.
+
+== The fix (src/app/main.cpp, src/audio/audio_out.*) ==
+1. Smooth pacing now also follows the clock: a tick needs the refreshes AND the clock time (never faster than 60.000 per second on average; no catching up after a freeze).
+2. Safety valve for the sound: when more than 150 ms of sound is already queued the new block is dropped (RingGuard::decide, new 'high' parameter) - a tiny click instead of a long delay.
+3. Version 1.0.1 (dist/res/app.rc, README-PACKAGE.txt, tools/package.sh).
+
+== Result ==
+  none: tick rate 60.039, underruns 0 (0 samples), dropped 0, queue largest 42.6 ms
+  ok
+  burst400: tick rate 59.793, underruns 1 (38 samples), dropped 0, queue largest 96.5 ms
+  ok
+  burst1500: tick rate 60.053, underruns 0 (0 samples), dropped 0, queue largest 67.2 ms
+  ok
+  freeze204: tick rate 59.425, underruns 18 (8343 samples), dropped 0, queue largest 56.1 ms
+  ok
+RESULT: PASS
+
+PASS test_audio_stall: 15 checks, 0 failures
+test_purist PASS, test_replay PASS, test_package PASS (wine runs the 1.0.1 exe), test_soak 8 min PASS (tick rate 59.968, memory flat)
+
+2a04fe8888bdd9efc51ee4e9a0b250e3cd8eadc8  dist/MazeChase-1.0.1-win64.zip

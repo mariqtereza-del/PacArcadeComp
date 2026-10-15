@@ -1,0 +1,42 @@
+tests/test_achievements.sh: ok
+tests/test_assist.sh: ok
+tests/test_audio_stall.sh: ok
+tests/test_autopause.sh: ok
+tests/test_bindings.sh: ok
+tests/test_cabinet.sh: ok
+tests/test_chain_ach.sh: ok
+tests/test_controls.sh: ok
+tests/test_cpu_parity.sh: ok
+tests/test_crt.sh: ok
+tests/test_crt_look.sh: ok
+tests/test_curve.sh: ok
+tests/test_curve_menu.sh: ok
+tests/test_events.sh: ok
+tests/test_fruit_ach.sh: ok
+tests/test_glow.sh: ok
+tests/test_haptics.sh: ok
+tests/test_hints.sh: ok
+tests/test_lastdevice.sh: ok
+tests/test_lightbar.sh: ok
+tests/test_lightbar2.sh: ok
+tests/test_menu.sh: ok
+tests/test_mouse.sh: ok
+tests/test_mouse2.sh: ok
+tests/test_padbuttons.sh: ok
+tests/test_padtypes.sh: ok
+tests/test_pause_ach.sh: ok
+tests/test_progress_ach.sh: ok
+tests/test_purist.sh: ok
+tests/test_records.sh: ok
+tests/test_records_window.sh: ok
+tests/test_replay.sh: ok
+tests/test_round_ach.sh: ok
+tests/test_rumble.sh: ok
+tests/test_scenarios.sh: ok
+tests/test_slots.sh: ok
+tests/test_state.sh: ok
+tests/test_stats.sh: ok
+tests/test_surround.sh: ok
+check_docs OK: 29 cited paths exist, all 9 sections present
+ALL TESTS PASSED
+DONE

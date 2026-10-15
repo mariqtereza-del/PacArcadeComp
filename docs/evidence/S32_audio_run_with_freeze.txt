@@ -1,0 +1,18 @@
+Renderer: software (vsync on), first window 448x576
+Display refresh rate: 60 Hz
+Audio: opened, 48000 Hz mono, device buffer 480 samples (10.000000 ms)
+Controls: no settings file yet (/root/.config/pacman-port/controls.cfg), using the standard controls
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+Test: freezing for 300 ms at tick 1500
+Note: the program was frozen for 300 ms before machine tick 1500 (the sound queue is re-set after a freeze)
+Machine at exit: main state 3, lives 2, dots eaten 46, score 460, credits 0.
+Ran 30.00 s: 1804 machine ticks, 1800 pictures drawn
+Measured tick rate: 60.133 per second (arcade: 60.606)
+Pacing: 59952 presents, 1804 machine ticks, 1800 pictures finished. Refreshes each picture stayed on screen: 1 x 1 4 x 1 8 x 1 9 x 1797
+Pacing: time between presents average 0.500 ms, longest 302.097 ms
+Machine hash after 1804 ticks: 070629fda5ff80f8
+Audio: 1804 frames of sound made, 2959 callbacks, 28 underruns (13166 samples missing), 0 samples dropped (queue full)
+Audio pitch: resampler scale smallest 0.9995, largest 1.0250; 1754 of 1804 sound frames more than 0.5 % off nominal, 1211 more than 1 % off
+Audio guard: 6 times the queue was re-set after a dry card or a burst, 5 sound frames dropped as too late
+Audio delay: device buffer 10.0 ms + queue (average 31.1 ms, smallest 0.0, largest 54.6) = about 41.1 ms on average, at most 64.6 ms

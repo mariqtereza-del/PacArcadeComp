@@ -1,0 +1,65 @@
+S35 package evidence (2026-10-15)
+
+== test_firstrun.sh ==
+20 checks, 0 failed
+RESULT: PASS
+  ok: no ROM: exit code 2 (clean stop) (2)
+  ok: no ROM: friendly message in the log (1)
+  ok: text.zip: exit code 2 (2)
+  ok: text.zip: friendly message in the log (1)
+  ok: empty.zip: exit code 2 (2)
+  ok: empty.zip: friendly message in the log (1)
+  ok: badcrc.zip: exit code 2 (2)
+  ok: badcrc.zip: friendly message in the log (1)
+  ok: cut.zip: exit code 2 (2)
+  ok: cut.zip: friendly message in the log (1)
+  ok: ROM next to the program: starts and exits normally (0)
+  ok: ROM next to the program: log says which ROM is used (1)
+  ok: the ROM file is unchanged (dcb0bbc7e7fa5a22269715b79feb9140d4ee1b05)
+RESULT: PASS
+
+== test_package.sh (includes the real Windows exe run under Wine) ==
+package: dist/MazeChase-1.0.0-rc1-win64.zip
+  listing: MazeChase/ MazeChase/MazeChase.exe MazeChase/README.txt MazeChase/THIRD-PARTY-LICENSES.txt 
+  ok: listing is exactly the folder, program, README, licences (MazeChase/ MazeChase/MazeChase.exe MazeChase/README.txt MazeChase/THIRD-PARTY-LICENSES.txt )
+  ok: no zip, ROM or rom-like file inside (0)
+  searching 686 ROM pieces of 32 bytes in 4 blobs
+  ok: no ROM bytes found anywhere in the package
+  ok: exe: version information present (Maze Chase) (1)
+  ok: exe: resource section (icon and version) present (yes)
+  ok: exe: window title uses our name (yes)
+  ok: exe: the original game's name is not in the window titles (0)
+  ok: README names MazeChase.exe and pacman.zip (3+)
+  ok: licences file lists SDL and miniz (2)
+  ok: wine, no ROM: friendly message in the report (1)
+  ok: wine, ROM next to the exe: it runs and reports its pictures (1)
+  ok: wine: the ROM was found next to the exe (1)
+RESULT: PASS
+
+== fast check of the affected tests (window titles renamed, startup changed) ==
+tests/test_firstrun.sh: ok
+tests/test_package.sh: ok
+tests/test_assist.sh: ok
+tests/test_autopause.sh: ok
+tests/test_mouse.sh: ok
+tests/test_mouse2.sh: ok
+tests/test_menu.sh: ok
+tests/test_controls.sh: ok
+tests/test_purist.sh: ok
+tests/test_replay.sh: ok
+tests/test_integration.sh: ok
+tests/test_cabinet.sh: ok
+DONE
+
+Package: dist/MazeChase-1.0.0-rc1-win64.zip = MazeChase/MazeChase.exe, README.txt, THIRD-PARTY-LICENSES.txt. Name decision: 'Maze Chase' (the marquee wording of X45); the settings folder is still %APPDATA%\PacmanPort (kept so that existing settings are not lost; to be decided in S37).
+Archive:  dist/MazeChase-1.0.0-rc1-win64.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  2026-10-15 04:20   MazeChase/
+  3267584  2026-10-15 04:20   MazeChase/MazeChase.exe
+     2576  2026-10-15 04:20   MazeChase/README.txt
+     3551  2026-10-15 04:20   MazeChase/THIRD-PARTY-LICENSES.txt
+---------                     -------
+  3273711                     4 files
+61b02d2edc87955996a78cd6a1007c862138fe87  dist/MazeChase-1.0.0-rc1-win64.zip
+e2f2940567b1b0006faa199b9011e788181d612f  dist/MazeChase/MazeChase.exe

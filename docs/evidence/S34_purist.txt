@@ -1,0 +1,44 @@
+S34 evidence: Options menu, key-help panel and Purist mode (2026-10-12)
+
+What was built
+  src/app/menu.{h,cpp}  menu pages, navigation, Purist locks, key-help panel, settings.cfg; src/app/main.cpp wiring (PLAN CHANGE: S34 listed only menu.*; the wiring needs main.cpp as in S31 to S33).
+  Esc = pause + menu; every F key and its menu item run the same action (do_cmd). Game options (lives, bonus life, difficulty, ghost names) = the ROM's DIP switch 1 bits, applied by a machine restart.
+  Purist mode (menu or --purist) turns off: overlay, scanlines, fill scaling, smooth pacing, one-button start, save state / load state, rewind, saved high score; it restarts the machine.
+  New test aids: --replay FILE, --hashlog FILE, --fast.
+
+VERIFY (S34.md): replay hashes in Purist mode equal the S27 prototype hashes -> IDENTICAL
+  tests/test_purist.sh plays the S27 replay (7,273 frames, one-player game then a two-player game) through the window program (--replay --fast --hashlog) and compares with tools/analysis/oracle_replay.py (the Python prototype):
+    Purist run                          7273 hashes identical to the prototype; the saved high score file (set to 5000) untouched
+    normal run, no saved high score     identical too
+    normal run, saved high score 5000   differs from frame 297 (the high score is put into the game at the first attract screen), so the proof can see an addition
+  Full output below.
+
+Other checks
+  tests/test_menu.sh: 83 checks (navigation, every F key has a labelled item, Purist locks, settings round trip, drawing).
+  Real-window run on a virtual screen (docs/evidence/S34_menu_pages.png, S34_menu_in_game_and_purist.png, S34_window_run*.txt): Esc opens the menu with the key panel; Game options changed lives to 5, bonus 15000, difficulty hard and "RESTART NEEDED" showed;
+  Apply - restart gave DIP CD (lives 5 = 0xC9 with lives bits 11); the next game ran with 5 lives (exit line: lives 5); Purist ON: items show LOCKED, F2/F3/F5 did nothing ("switched off in Purist mode"), one-button Start did nothing with no credit; settings were remembered in settings.cfg across runs.
+  Scripted hashes unchanged: 60c4b12eb084ed7e (2400 ticks), d7d39438e9e8d70c (3000 ticks).
+
+Full test output
+== scripted hashes (must equal S31/S32/S33: 60c4b12eb084ed7e, d7d39438e9e8d70c)
+Machine hash after 2400 ticks: 60c4b12eb084ed7e
+Machine hash after 3000 ticks: d7d39438e9e8d70c
+== tests/test_menu.sh
+PASS: 83 checks, 0 failures
+== tests/test_purist.sh
+PASS: Purist run: 7273 frame hashes identical to the Python prototype and the high score file untouched; normal run without a saved score identical; normal run with a saved score of 5000 differs from frame 297 (so the extras are real and Purist really removes them)
+== tests/test_state.sh
+  F3b debug: score at assist 0, state 3, file 20
+PASS test_state: 42 checks, 0 failures
+== tests/test_controls.sh
+PASS test_controls: 45 checks, 0 failures
+== tests/test_audio_stall.sh
+300 ms freeze, one frame per pass (smooth-like), guard on: max pitch error 0.49 %
+PASS test_audio_stall: 12 checks, 0 failures
+== tests/test_replay.sh
+PASS: 7273 frame hashes identical (C++ run 1 = run 2 = Python prototype); recorder round trip identical
+  replay played: 7273 frames, 7172 distinct frame states, main state changed 38 times, 3 games started, most dots on a level 240, highest P1 score 700, two-player game seen: yes
+== tests/run_all.sh
+check_docs OK: 29 cited paths exist, all 9 sections present
+ALL TESTS PASSED
+DONE

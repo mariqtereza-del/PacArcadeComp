@@ -1,0 +1,16 @@
+S17 bus evidence, 2026-10-08
+Code: src/board/bus.{h,cpp}. Test: tests/test_bus.cpp. Build: g++ -std=c++17 -Wall -Wextra tests/test_bus.cpp src/board/bus.cpp -o test_bus
+Part A compares all 65,536 addresses (read and write) with an independent expansion of MAME's pacman_map() (pacman.cpp lines 1049-1064, mirror masks applied as 'address bits in the mask may have any value'). Part B tests each region (read, write, mirror, boundaries) and cites its row in docs/notes/hardware_facts.md.
+
+== native
+Part A: 65536 read decodes and 65536 write decodes compared with MAME's map: 0 read and 0 write differences
+PASS test_bus: 40 checks, 0 failures
+
+== mingw build under wine 9.0
+Part A: 65536 read decodes and 65536 write decodes compared with MAME's map: 0 read and 0 write differences
+PASS test_bus: 40 checks, 0 failures
+
+Decoded map (derived and tested): ROM 0000-3FFF and 8000-BFFF; with bit 14 set, bits 13 and 15 are ignored, so 4000-5FFF repeats at 6000-7FFF, C000-DFFF, E000-FFFF; 4000-43FF video RAM, 4400-47FF colour RAM, 4800-4BFF reads BF / writes ignored, 4C00-4FEF work RAM, 4FF0-4FFF sprite RAM; 5000-5FFF I/O decoded on the low byte: write 00-3F latch (index = address & 7), 40-5F sound, 60-6F sprite coordinates, 70-BF ignored, C0-FF watchdog; read 00-3F IN0, 40-7F IN1, 80-BF DSW1, C0-FF DSW2.
+
+Finding: hardware_facts.md says video/colour/sprite RAM are 'repeated at A000 (mirror 0xA000)'. MAME's 0xA000 is a mask of address bits (13 and 15), so the copies are at 6000, C000 and E000; A000-BFFF is the ROM copy. The test checks the MAME reading; the note was not edited (outside this step's file list).
+Behaviour change versus the Python prototype (already documented in S07, E14): reads of 4800-4BFF return BF, the prototype returned 0; the prototype has no mirrors at all.

@@ -1,0 +1,108 @@
+S30A high-level behaviour tests (levels 5, 21 and 256). The game code is not changed. Each level is reached by the ROM's own progression (one dots-eaten shortcut per level); other writes are marked 'harness'.
+
+================ level 5 (counter 4, expected table = level 5 of the ROM table) ================
+  [PASS] the ROM reached this level by itself (dots-eaten shortcut once per level)
+
+A. Parameter tables
+  pac 100, pac-fright 100, elroy2 105, elroy1 100, ghost 95, ghost-fright 60, tunnel 50 %, fright word 240 (= 2 s), house 0/0/0, Elroy dots 40/20
+  [PASS] speeds, fright time, ghost-house limits and Elroy dot counts equal the ROM table for this level
+  mode timer table 4D86: 300 1500 1800 3000 3300 65534 65535 (cumulative frames; 65534/65535 = chase for ever)
+  [PASS] the scatter/chase schedule in RAM equals the table of this level's speed record (Dossier: 5 s scatter, 20 s chase on levels 5 and up)
+  first phase change: mode counter 300, after 300 ticks (table says 300)
+  [PASS] the first scatter phase ends after exactly the tabled number of frames (no time jump)
+
+C/D. Speeds and power pill (harness: ghosts released, energizers put under Pac-Man)
+  [PASS] the level did not change during the measurement
+  Pac-Man without a power pill: 1.2495 steps per frame = 100.0 % over 7819 ticks (table 100 % = 1.2500)
+  [PASS] Pac-Man without a power pill: 1.2495 steps per frame = 100.0 % over 7819 ticks (table 100 % = 1.2500)
+  Blinky without Elroy and without a power pill: 1.1871 steps per frame = 95.0 % over 6562 ticks (table 95 % = 1.1875)
+  [PASS] Blinky without Elroy and without a power pill: 1.1871 steps per frame = 95.0 % over 6562 ticks (table 95 % = 1.1875)
+  power pills forced (harness) 5, pill windows seen 5, longest 180 frames, fright word 240 = 120 frames
+  Pac-Man with a power pill: 1.2513 steps per frame = 100.1 % over 1138 ticks (table 100 % = 1.2500)
+  [PASS] Pac-Man with a power pill: 1.2513 steps per frame = 100.1 % over 1138 ticks (table 100 % = 1.2500)
+  pill windows (frames): 119 119 180 175 120 (a window longer than the fright time = a second energizer eaten before the first ended; shorter = Pac-Man died)
+  [PASS] at least one power pill ran its full tabled fright time (120 frames, +/- 2): 3 of 5 windows did
+
+F. Ghost targets (harness: ghosts released; 100 frames before the end of each scatter phase the mode counter is moved to the end of it)
+  [PASS] the level did not change during the measurement
+  1304 target calls
+  Blinky scatter calls 208 (corner in 208), chase calls 179 (rule in 179)
+  Pinky  scatter calls 145 (corner in 145), chase calls 188 (rule in 188), facing up: 42 calls, 42 as the overflow bug says
+  Inky   scatter calls 112 (corner in 112), chase calls 179 (rule in 179), facing up: 45 calls, 45 as the overflow bug says
+  Clyde  scatter calls 112 (corner in 112), chase calls 181 (rule in 181)
+  [PASS] every ghost target on this level follows the Dossier's rules (1304 calls; scatter corners, Blinky, Pinky 4 ahead, Inky via Blinky, Clyde's 8 tiles, up-facing bug)
+  [PASS] the up-facing overflow bug is present on this level too (Pinky and Inky both seen facing up)
+
+E. Cruise Elroy dot counts (fresh run, harness: Clyde set out, 4DA3 = 3; the dots-eaten counter is written before every frame, counting down one dot at a time)
+  seed 2: Elroy 1 first seen with 40 dots left, Elroy 2 first seen with 21 dots left (table: 40 and 20); frames checked 48, frames contradicting the rule 0
+  [PASS] Elroy 1 switches on at 40 dots left and Elroy 2 at 20, not before (the level's table)
+
+================ level 21 (counter 20, expected table = level 21 of the ROM table) ================
+  [PASS] the ROM reached this level by itself (dots-eaten shortcut once per level)
+
+A. Parameter tables
+  pac 90, pac-fright 90, elroy2 105, elroy1 100, ghost 95, ghost-fright 45, tunnel 50 %, fright word 1 (= 0 s), house 0/0/0, Elroy dots 120/60
+  [PASS] speeds, fright time, ghost-house limits and Elroy dot counts equal the ROM table for this level
+  mode timer table 4D86: 300 1500 1800 3000 3300 65534 65535 (cumulative frames; 65534/65535 = chase for ever)
+  [PASS] the scatter/chase schedule in RAM equals the table of this level's speed record (Dossier: 5 s scatter, 20 s chase on levels 5 and up)
+  first phase change: mode counter 300, after 300 ticks (table says 300)
+  [PASS] the first scatter phase ends after exactly the tabled number of frames (no time jump)
+
+C/D. Speeds and power pill (harness: ghosts released, energizers put under Pac-Man)
+  [PASS] the level did not change during the measurement
+  Pac-Man without a power pill: 1.1248 steps per frame = 90.0 % over 6995 ticks (table 90 % = 1.1250)
+  [PASS] Pac-Man without a power pill: 1.1248 steps per frame = 90.0 % over 6995 ticks (table 90 % = 1.1250)
+  Blinky without Elroy and without a power pill: 1.1864 steps per frame = 94.9 % over 7161 ticks (table 95 % = 1.1875)
+  [PASS] Blinky without Elroy and without a power pill: 1.1864 steps per frame = 94.9 % over 7161 ticks (table 95 % = 1.1875)
+  power pills forced (harness) 4, pill windows seen 0, longest 0 frames, fright word 0 = 0 frames
+  [PASS] no fright time on this level: the power-pill flag lasts at most 2 frames (longest 0, 0 windows, 4 energizers forced)
+
+F. Ghost targets (harness: ghosts released; 100 frames before the end of each scatter phase the mode counter is moved to the end of it)
+  [PASS] the level did not change during the measurement
+  1472 target calls
+  Blinky scatter calls 228 (corner in 228), chase calls 199 (rule in 199)
+  Pinky  scatter calls 164 (corner in 164), chase calls 222 (rule in 222), facing up: 24 calls, 24 as the overflow bug says
+  Inky   scatter calls 132 (corner in 132), chase calls 199 (rule in 199), facing up: 23 calls, 23 as the overflow bug says
+  Clyde  scatter calls 132 (corner in 132), chase calls 196 (rule in 196)
+  [PASS] every ghost target on this level follows the Dossier's rules (1472 calls; scatter corners, Blinky, Pinky 4 ahead, Inky via Blinky, Clyde's 8 tiles, up-facing bug)
+  [PASS] the up-facing overflow bug is present on this level too (Pinky and Inky both seen facing up)
+
+E. Cruise Elroy dot counts (fresh run, harness: Clyde set out, 4DA3 = 3; the dots-eaten counter is written before every frame, counting down one dot at a time)
+  seed 2: Elroy 1 first seen with 121 dots left, Elroy 2 first seen with 61 dots left (table: 120 and 60); frames checked 48, frames contradicting the rule 0
+  [PASS] Elroy 1 switches on at 120 dots left and Elroy 2 at 60, not before (the level's table)
+
+================ level 256 (counter 255, expected table = level 21 of the ROM table) ================
+  [PASS] the ROM reached this level by itself (dots-eaten shortcut once per level)
+
+A. Parameter tables
+  pac 90, pac-fright 90, elroy2 105, elroy1 100, ghost 95, ghost-fright 45, tunnel 50 %, fright word 1 (= 0 s), house 0/0/0, Elroy dots 120/60
+  [PASS] speeds, fright time, ghost-house limits and Elroy dot counts equal the ROM table for this level
+  mode timer table 4D86: 300 1500 1800 3000 3300 65534 65535 (cumulative frames; 65534/65535 = chase for ever)
+  [PASS] the scatter/chase schedule in RAM equals the table of this level's speed record (Dossier: 5 s scatter, 20 s chase on levels 5 and up)
+  first phase change: mode counter 300, after 300 ticks (table says 300)
+  [PASS] the first scatter phase ends after exactly the tabled number of frames (no time jump)
+
+C/D. Speeds and power pill (harness: ghosts released, energizers put under Pac-Man)
+  [PASS] the level did not change during the measurement
+  Pac-Man without a power pill: 1.1248 steps per frame = 90.0 % over 7205 ticks (table 90 % = 1.1250)
+  [PASS] Pac-Man without a power pill: 1.1248 steps per frame = 90.0 % over 7205 ticks (table 90 % = 1.1250)
+  Blinky without Elroy and without a power pill: 1.1865 steps per frame = 94.9 % over 7351 ticks (table 95 % = 1.1875)
+  [PASS] Blinky without Elroy and without a power pill: 1.1865 steps per frame = 94.9 % over 7351 ticks (table 95 % = 1.1875)
+  power pills forced (harness) 6, pill windows seen 0, longest 0 frames, fright word 0 = 0 frames
+  [PASS] no fright time on this level: the power-pill flag lasts at most 2 frames (longest 0, 0 windows, 6 energizers forced)
+
+F. Ghost targets (harness: ghosts released; 100 frames before the end of each scatter phase the mode counter is moved to the end of it)
+  [PASS] the level did not change during the measurement
+  1670 target calls
+  Blinky scatter calls 254 (corner in 254), chase calls 231 (rule in 231)
+  Pinky  scatter calls 190 (corner in 190), chase calls 235 (rule in 235), facing up: 81 calls, 81 as the overflow bug says
+  Inky   scatter calls 153 (corner in 153), chase calls 226 (rule in 226), facing up: 80 calls, 80 as the overflow bug says
+  Clyde  scatter calls 153 (corner in 153), chase calls 228 (rule in 228)
+  [PASS] every ghost target on this level follows the Dossier's rules (1670 calls; scatter corners, Blinky, Pinky 4 ahead, Inky via Blinky, Clyde's 8 tiles, up-facing bug)
+  [PASS] the up-facing overflow bug is present on this level too (Pinky and Inky both seen facing up)
+
+E. Cruise Elroy dot counts (fresh run, harness: Clyde set out, 4DA3 = 3; the dots-eaten counter is written before every frame, counting down one dot at a time)
+  seed 2: Elroy 1 first seen with 120 dots left, Elroy 2 first seen with 60 dots left (table: 120 and 60); frames checked 48, frames contradicting the rule 0
+  [PASS] Elroy 1 switches on at 120 dots left and Elroy 2 at 60, not before (the level's table)
+
+S30A high-level tests: 37 checks, 0 failed. PASS

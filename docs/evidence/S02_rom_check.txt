@@ -1,0 +1,11 @@
+pacman.6e    size= 4096 crc32=c1e6ab10 OK
+pacman.6f    size= 4096 crc32=1a6fb2d4 OK
+pacman.6h    size= 4096 crc32=bcdd1beb OK
+pacman.6j    size= 4096 crc32=817d94e3 OK
+pacman.5e    size= 4096 crc32=0c944964 OK
+pacman.5f    size= 4096 crc32=958fedf9 OK
+82s123.7f    size=   32 crc32=2fc650bd OK
+82s126.4a    size=  256 crc32=3eb3a8e4 OK
+82s126.1m    size=  256 crc32=a9cc86bf OK
+82s126.3m    size=  256 crc32=77245b66 OK
+RESULT: PASS, standard Midway pacman set

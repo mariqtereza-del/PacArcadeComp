@@ -1,0 +1,26 @@
+Settings: no settings file yet (build/s34/rw/cfg2/settings.cfg), using the standard settings
+Purist mode: off
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: no settings file yet (build/s34/rw/cfg2/controls.cfg), using the standard controls
+High score: no saved score yet (build/s34/rw/cfg2/highscore.txt)
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+Menu: opened (the game is paused)
+Game options: lives 5 (restart the game to apply)
+Game: restarted (from the menu), DIP switches now CD
+Menu: opened (the game is paused)
+Purist mode: ON (no overlay, filters, one-button start, save states, rewind or saved high score)
+Pacing: exact (60.606 ticks per second)
+Game: restarted (Purist mode on), DIP switches now CD
+State: that is switched off in Purist mode
+State: that is switched off in Purist mode
+State: that is switched off in Purist mode
+Menu: opened (the game is paused)
+Menu: quit
+Machine at exit: main state 16, lives 80, dots eaten 176, score 704010, credits 176.
+Ran 24.78 s: 1422 machine ticks, 1500 pictures drawn
+Measured tick rate: 57.389 per second (arcade: 60.606)
+Pacing: 1566 presents, 1422 machine ticks, 1418 pictures finished. Refreshes each picture stayed on screen: 1 x 1352 2 x 64 9 x 2
+Pacing: time between presents average 15.823 ms, longest 43.539 ms
+Machine hash after 1422 ticks: 1212ca84bf8ff783

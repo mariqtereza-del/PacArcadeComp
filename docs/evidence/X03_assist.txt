@@ -1,0 +1,14 @@
+X03: one shared 'assisted game' rule (2026-10-14)
+75 checks, 0 failed
+RESULT: PASS
+  ok: title before any help (Pac-Man)
+  ok: title right after the load shows the loaded notice (1)
+  ok: title afterwards says ASSISTED with the reason (Pac-Man - ASSISTED: STATE LOADED)
+  ok: menu open: title is MENU (Pac-Man - MENU)
+  ok: menu closed: ASSISTED title back (Pac-Man - ASSISTED: STATE LOADED)
+  ok: log says why, once (1)
+RESULT: PASS
+
+--- Other checks ---
+test_state PASS (42 checks, unchanged), test_menu PASS (149), test_purist PASS and test_replay PASS (7273 hashes identical), test_events PASS.
+Screenshot: docs/evidence/X03_menu_assisted.png (menu footer 'ASSISTED REWIND' after holding Backspace; the window title was 'Pac-Man - ASSISTED: REWIND', the log: 'ASSISTED: this game rewound the game, so it does not count for records.')

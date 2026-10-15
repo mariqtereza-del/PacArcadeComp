@@ -1,0 +1,41 @@
+X11 Lightbar: death, extra life and game over  (2026-10-14)
+Built (src/app/lightbar.h, wiring in main.cpp; RAM is only read; Purist off; LIGHTBAR option off switches it all off):
+- ONE table of flashes (flash_def): death = red, 2 pulses over 72 frames; extra life = green, 3 pulses over 60 frames; round cleared = white, 3 pulses over 96 frames. Each pulse starts at full colour and dies away; the flash lies over the playing colour.
+- Death = 4DA5 goes from 0 to non-zero; extra life = lives +1 with a score step (same player); round cleared = dot counter 4E0E becomes 244 (the same recognition rules as events.h, verified in X01).
+- Dark (fades to black in a few frames): during the board's self-test (first 320 frames), the attract screens and coin-waiting state (4E00 not 3) and game over (4E04 = 7). A new game (4E00 becomes 3) jumps straight to yellow and clears any leftover flash.
+- Menu / pause: dim blue only, the flash timers wait; after a load, rewind or restart nothing is compared with an old frame.
+Tests:
+- tests/test_lightbar.sh: 96 unit checks (each situation: far / 27 px / 28 px / brightness / blue ghost / not in maze / dying / attract dark / game over dark / frightened; fades; every flash: death, extra life, round cleared, lives +1 without a score step, player switch, repeated 244; game over, attract, new game; menu inside a flash; load/rewind; restart; option off; Purist) + pretend PS4 / PS5 / Xbox / Purist runs
+- tests/test_lightbar_scen.cpp (real machine, run by test_lightbar2.sh): compared with the event reader's frames
+    S27 replay: red flashes at 1886 2929 4074 6000 7117 | events DEATH at 1886 2929 4074 6000 7117 
+      ok: S27: a red flash at every DEATH event frame (5)
+      ok: S27: no green or white flash in the plain replay 
+      game over events at 4296 | dark begins at 1 4296 | game starts at 559 4670 | yellow comes back at 559 4670 
+      ok: S27: the bar goes dark at the first frame of every GAME OVER 
+      ok: S27: yellow comes back at the frame of every GAME START (after the first one) 
+    score poke: green flash at 714 | EXTRA LIFE event at 714 
+      ok: extra life: one green flash, at the EXTRA LIFE event frame 
+    round poke: white pulse at 705 | ROUND CLEARED event at 705 
+      ok: round cleared: one white pulse, at the ROUND CLEARED event frame 
+    6 checks, 0 failed
+    RESULT: PASS
+      info: red starts at [1554, 1568, 1599, 1686, 1858, 2781, 4023, 5794, 5914, 5972, 7010] ... ( 11 )
+      info: heartbeats at [1554, 1568, 1592, 1599, 1623, 1647, 1686, 1710, 1734, 1858, 1882, 2781] ... ( 32 )
+      info: blue-white starts [1006, 4963] energizers [1006, 4963] ends [1365, 5322] fright end events [1365, 5322]
+      ok: the replay gave red moments (a ghost came close) (11)
+      ok: every red start is at the frame of a GHOST NEAR heartbeat event (not matching: [])
+      ok: two frightened periods (the two energizers) ([1006, 4963] / [1006, 4963])
+      ok: blue-white starts at the energizer frame (within 2 frames) ([1006, 4963] vs [1006, 4963])
+      ok: blue-white ends at the FRIGHT END event frame (within 1 frame) ([1365, 5322] vs [1365, 5322])
+      ok: red colours are red (g = b = 0)
+      ok: the program's colour log has a red flash at each DEATH vibration frame ([1886, 2929, 4074, 6000, 7117] vs [1886, 2929, 4074, 6000, 7117])
+      ok: the log starts dark (self-test / attract) and goes dark again at game over
+      ok: blue-white colour is 140,190,255
+      ok: the pretend DualSense received many fading colour commands (710 commands for 30 mood changes)
+      ok: and the last one is the neutral blue put back on exit
+      ok: Xbox pretend pad: no light bar commands and no colour log
+      ok: Purist: no light bar commands and no colour log
+    PASS: the light bar log changes at the same frames as the near-ghost and frightened events of the replay
+- tests/test_lightbar2.sh (program, S27 replay on a pretend DualSense): red flashes at the 5 DEATH vibration frames (1886 2929 4074 6000 7117), near-ghost red and frightened blue-white as in X10, Xbox pad and Purist get nothing
+- test_purist (7,273 hashes identical to the Python prototype), test_replay, test_rumble, test_hints, test_autopause, test_mouse, test_padbuttons, test_events, test_state, test_menu (203) and run_all: PASS
+Result: PASS

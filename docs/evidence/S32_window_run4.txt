@@ -1,0 +1,13 @@
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: loaded controls.cfg
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+Controls: saved to controls.cfg
+Controls: back to the standard controls
+Machine at exit: main state 2, lives 0, dots eaten 0, score 0, credits 1.
+Ran 10.79 s: 653 machine ticks, 652 pictures drawn
+Measured tick rate: 60.500 per second (arcade: 60.606)
+Pacing: 679 presents, 653 machine ticks, 652 pictures finished. Refreshes each picture stayed on screen: 1 x 626 2 x 26
+Pacing: time between presents average 15.896 ms, longest 21.507 ms
+Machine hash after 653 ticks: 04cc93502eae4093

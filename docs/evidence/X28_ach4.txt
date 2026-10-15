@@ -1,0 +1,87 @@
+  ok: round 1 cleared: the round achievements so far
+  ok: round 2 cleared: the round achievements so far
+  ok: round 3 cleared: the round achievements so far
+  ok: round 4 cleared: the round achievements so far
+  ok: round 5 cleared: the round achievements so far
+  ok: round 6 cleared: the round achievements so far
+  ok: round 7 cleared: the round achievements so far
+  ok: round 8 cleared: the round achievements so far
+  ok: round 9 cleared: the round achievements so far
+  ok: round 10 cleared: the round achievements so far
+  ok: round 11 cleared: the round achievements so far
+  ok: round 12 cleared: the round achievements so far
+  ok: round 13 cleared: the round achievements so far
+  ok: round 14 cleared: the round achievements so far
+  ok: round 15 cleared: the round achievements so far
+  ok: round 16 cleared: the round achievements so far
+  ok: round 17 cleared: the round achievements so far
+  ok: round 18 cleared: the round achievements so far
+  ok: being in round 2 is not clearing it
+  ok: clearing round 2 unlocks WARMING UP
+  ok:   only it
+  ok: two clean rounds: not yet PEACEFUL RUN
+  ok: the third clean round: PEACEFUL RUN
+  ok: a ghost eaten in round 2 breaks the streak: after rounds 3 and 4 not yet
+  ok:   three clean rounds after it: PEACEFUL RUN
+  ok: a death in round 2 breaks the streak
+  ok:   three clean rounds after it: PEACEFUL RUN
+  ok: a death in round 1 (the first of three) means the next two rounds are only two clean ones
+  ok: a new game starts the streak again (2 + 1 clean rounds in two games)
+  ok: a helped game: nothing after the help (no WARMING UP, no PEACEFUL RUN)
+  ok: player 2's rounds: nothing
+  ok: 5 lives: nothing
+  ok: test mode (cheat page): clearing round 2 is a test unlock only
+  ok: name fits and text is in the game font: WARMING UP
+  ok: name fits and text is in the game font: HIGH FIVE
+  ok: name fits and text is in the game font: NINE LIVES
+  ok: name fits and text is in the game font: LUCKY THIRTEEN
+  ok: name fits and text is in the game font: SEVENTEEN
+  ok: name fits and text is in the game font: PEACEFUL RUN
+  ok: all keys and names are different
+Part 2: real machine
+  ok: round 2 reached (level counter 2)
+  ok:   jumping into it unlocked no round achievement
+  ok:   the game's own code clears round 2
+  ok:   exactly WARMING UP unlocked, once
+  ok:   nobody died
+  ok:   still once after 100 more frames
+  ok: round 5 reached (level counter 5)
+  ok:   jumping into it unlocked no round achievement
+  ok:   the game's own code clears round 5
+  ok:   exactly HIGH FIVE unlocked, once
+  ok:   nobody died
+  ok:   still once after 100 more frames
+  ok: round 9 reached (level counter 9)
+  ok:   jumping into it unlocked no round achievement
+  ok:   the game's own code clears round 9
+  ok:   exactly NINE LIVES unlocked, once
+  ok:   nobody died
+  ok:   still once after 100 more frames
+  ok: round 13 reached (level counter 13)
+  ok:   jumping into it unlocked no round achievement
+  ok:   the game's own code clears round 13
+  ok:   exactly LUCKY THIRTEEN unlocked, once
+  ok:   nobody died
+  ok:   still once after 100 more frames
+  ok: round 17 reached (level counter 17)
+  ok:   jumping into it unlocked no round achievement
+  ok:   the game's own code clears round 17
+  ok:   exactly SEVENTEEN unlocked, once
+  ok:   nobody died
+  ok:   still once after 100 more frames
+  ok: real: rounds 1 and 2 cleared by the game
+  ok:   round 2 cleared: WARMING UP
+  ok:   two clean rounds: no PEACEFUL RUN yet
+  ok: real: round 3 cleared
+  ok:   the third clean round: PEACEFUL RUN once
+  ok:   nobody died, no ghost eaten
+  ok: real: round 1 cleared, then in round 2 four ghosts are eaten
+  ok:   three more rounds cleared
+  ok:   the round with the ghost broke the streak: no PEACEFUL RUN after the rounds 2, 3, 4
+  ok:   nobody died
+  ok:   one more clean round (round 5): three clean ones in a row (3, 4, 5)
+  ok:   PEACEFUL RUN once
+  ok: helped game, real ROM: three rounds cleared
+  ok:   nothing unlocks
+84 checks, 0 failed
+RESULT: PASS

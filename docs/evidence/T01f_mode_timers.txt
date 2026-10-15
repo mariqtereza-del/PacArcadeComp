@@ -1,0 +1,38 @@
+T01f evidence: mode timers (scatter/chase timer, frightened timer, turn-round flags, level settings) as readable code (src/logic/mode_timers.h) versus the ROM (2026-10-15)
+
+== What was written ==
+src/logic/mode_timers.h: the scatter/chase timer (ROM 0E36: the frame counter 4DC2 against the level's seven phase limits at 4D86, the phase number 4DC1, frozen while ghosts are blue, and the four turn-round flags 4DB1-4DB4 set at each phase change), the frightened timer (ROM 1376: the counter 4DCB, and the end of the effect: Pac-Man colour 4C0B, the blue flags of ghosts that are not dead, 4DA6, siren 4DC8, ghost chain 4DD0, sound bits 4EAC) and the level start (ROM 070E, which copies the level's speed patterns for Pac-Man and the four ghosts, the seven phase limits, the ghost house dot limits, the two Cruise Elroy limits, the frightened time and the inactivity time; the ROM tables at 0796, 0843-0873 and 330F are written as readable tables: 7 speed rows of 7 speed patterns and 7 phase limits, 21 level rows, ...). The power pill start itself (1A70) is the T01c code.
+
+== How it was proved ==
+Compared after every call: ALL work RAM (4C00-4FEF) except the bytes under the stack pointer; for 0E36 and 1376 also the video RAM and the colour RAM. For 070E only the work RAM (the level start also draws the level's fruits in video RAM, ROM 2BEA, which is not copied).
+Part A (live): a scripted player for 3,000,000 frames; at every entry of 0E36, 1376 and 070E the readable version gets a copy of the memory; at the return both must be identical.
+Part B1: 0E36 alone: every phase number 0-255 x frightened or not x the counter just before / at / after the limit, and EVERY counter value 0-65535 for each phase 0-7: 534,528 calls.
+Part B2: 1376 alone: every combination of frightened flag (0,1,2) x the four blue flags x the four dead flags x ten counter values (0, 1, 2, 3, FFFF, ...): 30,720 calls.
+Part B3: 070E alone: every level row 0-20, also through the demo pointer (level number 0, the level number then comes from the byte at the ROM address in 4E0A), on random memory: 1,640 calls.
+Part B4: 1,000,000 random runs of each of the three routines on completely random memory.
+
+== Result (full run: 3,000,000 frames, 1,000,000 random runs per routine) ==
+part A: 3000000 frames (13.8 hours of game time): mode timer 2024532 calls (phase changes 1495, frozen by a power pill 683898; phases reached 0-7: 994038 994856 35620 18 0 0 0 0), frightened timer 3437957 calls (1200067 while frightened, the end seen 1611 times), level start 1800 calls (2 different level rows, 0 calls with a level number outside the table, not compared); differences 0
+part B1: the phase timer alone: every phase number 0-255 x frightened x counter around the limit, and every counter value 0-65535 for each phase 0-7: 534528 calls, differences so far 0
+part B2: the frightened timer alone: every combination of frightened flag x blue flags x dead flags x counter values: 30720 calls, differences so far 0
+part B3: the level start alone: every level row 0-20 (also through the demo pointer, level number 0) on random memory: 1640 calls, differences so far 0
+part B4: 1000000 random runs of each routine (phase timer 1000000, frightened timer 1000000, level start 1000000): differences 0
+PASS test_logic_timers: 5464289 live calls and 3566888 isolated calls compared, 0 differences
+
+== The test can fail (deliberately broken versions, 20,000 frames + full B1-B3 + 3,000 random) ==
+Phase timer not frozen by a power pill: 9,098 differences. Last phase 6 instead of 7: 131,586. Next phase +2: 230,709. Turn-round flags for three ghosts only: 230,563. Blue flag cleared for the wrong ghosts: 2,241. Pac-Man colour 8 instead of 9: 3,550. Frightened end one count early: 2,343. Sound bit 7 kept: 1,529. Ghosts copy the wrong speed pattern: 4,653. Wrong ghost house limit row: 4,653. Elroy limits swapped: 4,653. Inactivity time 181 instead of 180: 3,937. Siren not cleared: 3,545. 4DB0 not copied: 4,635. A frightened time (600 -> 601), a speed pattern and a phase limit of rows that levels use: 635, 49, 49.
+NOT caught at first: a change of table cells in rows that NO level uses (frightened time row 0 = 960, speed row 0). Those are equivalent versions: the level table never points at them (the levels use speed rows 3-6 and frightened rows 2-8); the same change in a used row is caught (last three results above). Original restored (cmp clean).
+
+== Other checks ==
+tests/run_all.sh, tests/test_purist.sh and tests/test_replay.sh: see the line at the end of this file. The game code was not changed.
+
+== Honest limits ==
+1. The readable code is not used by the game yet; the full 85-minute regression was not rerun (no game code changed).
+2. In live play the scripted player only reached phase 3 and 2 different level rows (levels 1 and the demo); phases 4-7 and the other 19 level rows are proved by the isolated runs (all 256 phase numbers, all 65,536 counter values, all 21 level rows). The phase number is doubled in one byte like the ROM does (only phases 0-7 occur in the game).
+3. The level start is compared on work RAM only (the fruit drawing, ROM 2BEA, is not copied). Level numbers above the table (more than 21 rows) are not modelled (the ROM would then read beyond its table); the live run saw none.
+4. NOT part of T01f: the ghost house release rules and the release at 1066, which the earlier steps do not cover either; the game state machine around these routines.
+5. With T01f all six pieces of Track B (T01a-T01f) are written and proved; T01 itself stays PARTIAL because the game does not use the readable code yet.
+tests/run_all.sh ALL TESTS PASSED (short versions of the six logic tests); tests/test_purist.sh PASS; tests/test_replay.sh PASS. Game code unchanged.
+
+== Added during S37 (2026-10-15): table layout and re-run ==
+For the GitHub copy the tables in src/logic/mode_timers.h were re-arranged BY KIND (one table for each kind of value, for example all the Pac-Man normal speeds, then all the ghost tunnel speeds) instead of in the order of the ROM, so that no run of 16 values copies the ROM byte for byte (see docs/evidence/S37_github.txt). The values are the same. Re-run after the change, full size: tests/test_logic_timers.sh 3000000 1000000 -> PASS, 5,464,289 live calls and 3,566,888 isolated calls compared, 0 differences (the same call counts as above). The file was also formatted with clang-format (layout only). The description of the tables above (kept as written) refers to the first layout.

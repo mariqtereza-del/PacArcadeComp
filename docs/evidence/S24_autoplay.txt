@@ -1,0 +1,29 @@
+S24 evidence: first playable build (src/app/main.cpp, keyboard + gamepad)
+Date: 2026-10-09
+
+== 1. Scripted run (no window): coin at frame 400, start at 420, then 10 s of joystick play through the same Inputs path as the keyboard ==
+Command: build/app/pacman-port --rom roms/pacman.zip --autoplay 10
+Autoplay: 1030 frames run (10.0 s of play after start). Game started at frame 558.
+End state: main state 3, level state 3, lives 3, dots eaten 20, score 200, credits 0.
+PASS autoplay: the game started and Pac-Man ate dots under joystick control.
+
+Longer run (60 s of play, random joystick): ended in game over after 90 dots, no crash:
+End state: main state 1, level state 0, lives 0, dots eaten 90, score 900, credits 0.
+PASS autoplay: the game started and Pac-Man ate dots under joystick control.
+
+Windows exe under wine, same script: identical end state and an identical last picture (0 differing pixels vs native):
+Autoplay: 1030 frames run (10.0 s of play after start). Game started at frame 558.
+End state: main state 3, level state 3, lives 3, dots eaten 20, score 200, credits 0.
+PASS autoplay: the game started and Pac-Man ate dots under joystick control.
+
+== 2. Real keyboard path: the window app on a virtual X screen, keys sent with xdotool (5 coin, 1 start, then arrows), 32 s real time ==
+Script: build/s23/keytest.sh (not stored). Result:
+Renderer: opengl (vsync on), first window 448x576
+Machine at exit: main state 3, lives 2, dots eaten 15, score 150, credits 0.
+Ran 32.01 s: 1939 machine ticks, 1939 pictures drawn
+Measured tick rate: 60.573 per second (arcade: 60.606)
+Picture at exit: docs/evidence/S24_keyboard_run.png
+Finding: a coin pressed in the first ~2 s after the program starts was not counted (the ROM is still starting); the test presses it after 7 s. A real player will not notice, but keep in mind.
+
+== Not tested here ==
+Gamepad (no pad in the workspace), W A S D and key 2, the Windows window itself. WASD/2 use the same code as arrows/1.

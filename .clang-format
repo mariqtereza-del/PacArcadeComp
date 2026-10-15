@@ -1,0 +1,22 @@
+# Layout only. Run: clang-format -i <file>   (the project formats src/ and tests/ except the third-party code in src/core/z80.h and src/third_party/)
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 170
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+BinPackArguments: true
+BinPackParameters: true
+SortIncludes: Never
+ReflowComments: false
+AlignTrailingComments: true
+PointerAlignment: Right
+NamespaceIndentation: None

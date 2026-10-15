@@ -1,0 +1,10 @@
+X09 Lightbar: yellow while you play  (2026-10-14)
+Built: src/app/lightbar.h (pure decision logic, no SDL): playing = Pac-Man yellow (255,204,0); menu / paused / bindings screen / window-focus pause = dim blue (0,0,48); option off = bar put out (0,0,0); exit = neutral blue (0,32,255) put back once (SDL gives the bar back to the system on close). Only changes are sent. Pads without a light bar (Xbox, DS4Windows-wrapped) are never asked: nothing happens. Purist: the bar is never touched (if a colour had been set before, the neutral blue is put back once). main.cpp: SDL_GameControllerHasLED / SDL_GameControllerSetLED once per frame, outside the machine. Controls page: new item LIGHTBAR ON / OFF (locked in Purist), settings.cfg key "lightbar", default on. Test pad: the SDL virtual joystick has a SetLED callback for the pretend PS4 and PS5 only.
+Tests:
+- tests/test_lightbar.sh: unit test (26 checks) + real program with pretend pads:
+  ps4 and ps5: pad told 255,204,0 -> 0,0,48 (menu opened) -> 255,204,0 (menu closed) -> 0,32,255 (exit); 4 commands received, last 0,32,255
+  option off: 0,0,0 then 0,32,255 on exit
+  Xbox 360 pretend pad: 0 commands; Purist with a PS4 pad: 0 commands
+- tests/test_menu.sh 203 checks (LIGHTBAR value text, Purist lock, line fits, settings round trip, default on)
+- test_purist (7273 hashes identical to the Python prototype), test_replay identical; older tests and run_all see docs/PROJECT_STATUS.md
+Result: PASS

@@ -1,0 +1,17 @@
+S32 Controls: remapping and gamepad - evidence (2026-10-12)
+
+1. Unit + ROM test (tests/test_controls.sh, 45 checks, PASS; output in S32_test_controls.txt): standard bindings equal the S24 keys; settings text <-> parse round trip;
+   save into a new folder, 'restart' (fresh object) reads the same settings; bad lines reported and ignored; Esc/F keys refused; remap dialogue for keys and pad
+   (order, one key one control, Esc cancels with no change, Backspace = none on the pad); pad announced once; one-button Start on the real ROM:
+   one held Start from the attract screen -> credit -> game started (state 3), only IN0 bit 5 (coin 1) and IN1 bit 5 (start 1) ever differ from idle, a press during
+   start-up is remembered, nothing is added when a credit exists, when a game runs, or when the feature is off.
+2. Real window on a virtual screen (Xvfb, xdotool key presses; docs/evidence/S32_window_run1-4.txt, S32_controls_after_remap_and_F12.cfg):
+   run1 no settings file -> standard controls; ONE press of key 1 -> game running (main state 3, dots eaten 7); F9 -> seven keys remapped (I K J L Space Return, Shift) -> 'saved'; F9 + Esc -> 'cancelled, nothing changed'.
+   run2 restart: 'loaded controls.cfg'; Space (new coin key) -> credits 1.   run3 restart: key 5 (old coin key) -> credits 0 (no longer bound).
+   run4 restart: F12 -> 'back to the standard controls', saved; key 5 -> credits 1 again.
+3. HASHES UNCHANGED (the emulated input bits and the machine are not touched):
+   scripted 2400 ticks at 180 Hz exact and smooth (with a settings file given): 60c4b12eb084ed7e = the S31 value; scripted 3000 ticks: d7d39438e9e8d70c = the S31 value.
+   tests/test_replay.sh: 7273 frame hashes identical (C++ run 1 = run 2 = Python prototype), recorder round trip identical. tests/run_all.sh: ALL TESTS PASSED.
+4. NOT TESTED HERE: a real pad (this machine has none): the 'controller announced twice' fix is proven for the announcer logic only (same name within 2 s is said once;
+   unplug then re-plug is said again); real hot-plug on Windows with the PS4 pad; F10 pad remap with real buttons; the Windows AppData path (%APPDATA%\PacmanPort\controls.cfg).
+   These are the user's test. The cause of the S03 double line was not reproduced (no pad): SDL reports an already-plugged pad as 'added' again at start; the fix covers that case.

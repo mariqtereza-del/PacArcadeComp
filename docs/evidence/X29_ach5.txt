@@ -1,0 +1,38 @@
+  ok: no help: counts for achievements
+  ok: a loaded state: still counts for achievements
+  ok:   but the game no longer counts for records and statistics
+  ok:   and it is not a cheat-only game
+  ok: a loaded state and a rewind: does not count
+  ok: cheat only: does not count, but is a test game
+  ok: cheat and a loaded state: still a test game
+  ok: cheat, load and rewind: nothing
+  ok: start-at-level help: not for achievements
+  ok: after a load the game is still eligible
+  ok: an energizer after the load unlocks POWER UP
+  ok: a chain after the load unlocks GHOST BUSTER
+  ok: the round counter was set from the loaded round (4): clearing it unlocks no earlier round
+  ok: a state loaded outside a running game (or with 5 lives, or as player 2): nothing
+  ok: a new game after a load starts normally
+  ok: FRUIT BASKET has a count of 5
+  ok:   0 at the start
+  ok:   two different kinds (a repeat does not count): 2
+  ok: DOUBLE, TRIPLE and REACTION count the chains of this round (need 2, 3, 4)
+  ok: one chain: 1 of each
+  ok: GHOST FEAST counts chains and fruits together (need 6): 1 chain + 2 fruits = 3
+  ok: a new round starts the chain count again
+  ok: PEACEFUL RUN (need 3): the round with a ghost was not clean: 0
+  ok:   a clean round 2: 1
+  ok:   a clean round 3: 2
+  ok: round achievements: need = the round number, have = rounds cleared (level - 1): in round 4
+  ok:   WARMING UP is already unlocked (round 2 cleared), its count is capped
+  ok: achievements without a count: need 0
+  ok: outside a game every progress is 0
+  ok: two kinds before the load
+  ok: a load restarts the counts (the old timeline is gone): 0
+  ok:   the round count is the loaded round's: level 3 means 2 rounds cleared
+32 checks, 0 failed
+RESULT: PASS
+  ok: a state was saved and loaded in the middle of the game (1L)
+  ok: the game became assisted (records stop counting) (yes)
+  ok: the game still counts for achievements after the load (the log says so) (1)
+RESULT: PASS

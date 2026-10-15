@@ -1,0 +1,13 @@
+X22 per-run statistics, 2026-10-14
+- src/app/stats.h: collector fed by events.h (reads memory only); counters: score, level, dots, energizers, ghosts, longest chain, fruit, deaths, extra lives, time. Frozen and marked NOT COUNTED once the assist rule says the game was helped. Not run in Purist.
+- tests/test_stats.cpp: 34 checks on made-up frames (every counter, assist rule, two players, power-on restart, time text).
+- tests/test_stats.sh on the real S27 replay (7,273 frames): statistics lines add up to the game's own counters (independent --events log): dots 119, energizers 2, deaths 5, ghosts 0; every score equals the score in RAM; hashes with statistics = without; Purist hashes identical and Purist writes no statistics.
+
+GAMEOVER P1 frame 4296 score=700 ram_score=700 level=1 dots=65 energizers=1 ghosts=0 chain=0 fruit=0 deaths=3 extra=0 frames=3737 seconds=62 counted=1
+ACTIVE P1 frame 7273 score=410 ram_score=410 level=1 dots=36 energizers=1 ghosts=0 chain=0 fruit=0 deaths=1 extra=0 frames=1552 seconds=26 counted=1
+ACTIVE P2 frame 7273 score=180 ram_score=180 level=1 dots=18 energizers=0 ghosts=0 chain=0 fruit=0 deaths=1 extra=0 frames=1052 seconds=17 counted=1
+
+- tests/test_stats_window.sh (real window, Xvfb): one-life game, page appears by itself at game over (picture docs/evidence/X22_summary_page.png), a key closes it, RUN SUMMARY off hides it (stats still collected), Purist shows nothing.
+- tests/test_menu.cpp: 221 checks (8 new for RUN SUMMARY on the Display page, locked in Purist, saved in settings.cfg as run_summary).
+- All regression tests ran green (every tests/test_*.sh except the 20-minute test_level256_full and the new window test, which passed separately) and tests/run_all.sh docs checks: ALL TESTS PASSED.
+- Not covered by the replay: ghosts, fruit, level changes and extra lives on the real machine (the S27 replay has none); those paths are covered by the unit test on made-up events.

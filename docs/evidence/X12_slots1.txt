@@ -1,0 +1,32 @@
+X12 Save slots: eight slots and a picker  (2026-10-14)
+Built (src/app/state.*, src/app/menu.*, wiring in main.cpp):
+- Slot file = 20-byte header ("PMSL", version 1, player, lives, level, score, time) + the S33 state bytes, unchanged. Slot 1 = quicksave.sav (the old quick save), slots 2..8 = slot2.sav .. slot8.sav, next to controls.cfg. A file without the header (the old quicksave.sav) is read as it is: shown as "OLD SAVE <date>" with the date of the file.
+- Menu: SAVE STATE and LOAD STATE on the main page now open pickers (pages "SAVE STATE" / "LOAD STATE") with eight lines "3 10-14 0424 L1 70" (slot, month-day, hour-minute, level, score; the game font has no colon) or "3 EMPTY", and BACK. Enter on a slot saves / loads it; a mouse click works too; saving stays in the menu ("SAVED TO SLOT 3"); loading an empty slot says "SLOT 5 IS EMPTY" and stays in the menu; a load closes the menu.
+- F2 / F4 / the pad save and load buttons still use slot 1 with the same messages. Loading marks the game assisted (as before). Purist: SAVE STATE and LOAD STATE stay LOCKED and no slot is touched.
+- If a file cannot be written the state is kept in memory for the session (as before).
+Tests:
+- tests/test_slots.sh part 1 (tests/test_slots.cpp, 30 checks): header fields equal the machine's RAM (player, lives, level, score), time, 20-byte header, state inside byte for byte, a slot loaded into a BRAND NEW machine gives the same next 300 frames, file names, old headerless file read as slot 1 and restorable, cut / empty / unknown-version files, picker lines (24 characters at most).
+- part 2 (real window, xdotool; the pretend player holds each key for 0.15 s because the game looks at the keys once per frame): play, Esc > SAVE STATE > slot 3, play on (Pac-Man loses a life), Esc > LOAD STATE > slot 3 (lives and score are the saved ones again), empty slot 5, F2 / F4, old quicksave.sav, Purist:
+    30 checks, 0 failed
+    RESULT: PASS
+      ok: slot 3 file written (yes)
+      ok: slot 3 file has the header (PMSL)
+      log: State: slot 3 saved (10-14 0454 L1 70, lives 3)
+      log: State: slot 3 loaded (10-14 0454 L1 70; score before the load 70, in the machine now 70; lives before the load 2, in the machine now 3)
+      ok: the saved score is above 0 (the game was really played) (yes)
+      ok: after loading slot 3 the machine has the saved score (70)
+      ok: after loading slot 3 the machine has the saved number of lives (3)
+      ok: and the game had moved on before the load (more points or fewer lives: before 70 points / 2 lives, saved 70 / 3) (yes)
+      ok: the load was marked as assisted (yes)
+      ok: loading the empty slot 5 says so in the log (yes)
+      ok: the menu stayed open after the empty slot (the window is wide: the key panel is showing) (open)
+      ok: slot 5 was not created (none)
+      ok: F2 wrote slot 1 (quicksave.sav) with the header (PMSL)
+      ok: F4 loaded slot 1 (1)
+      ok: the old headerless quicksave.sav loads with F4 (1)
+      ok: Purist: no slot activity at all (0)
+    RESULT: PASS
+- tests/test_menu.sh 213 checks (picker pages, EMPTY lines, Enter gives SaveSlot / LoadSlot with the slot number, Left does nothing, Esc / BACK, mouse click on a slot, Purist locked); tests/test_padbuttons.sh updated for the picker (A twice) and passes
+- test_state (42), test_purist (7,273 hashes identical to the Python prototype), test_replay, test_assist, test_mouse, test_mouse2, test_autopause, test_hints, test_lightbar2, test_bindings, run_all: PASS
+- Screenshots: docs/evidence/X12_pickers.png (save picker with slot 3 used, load picker, empty slot message, old save)
+Result: PASS

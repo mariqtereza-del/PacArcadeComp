@@ -1,0 +1,51 @@
+Scenario FRUIT (dot counter 69, then Pac-Man on the fruit)
+  ok: maze running (1)
+  ok: fruit came and was eaten (1)
+    559 P1 GAME START 3
+    701 P1 FRUIT APPEARED CHERRY
+    722 P1 FRUIT EATEN CHERRY
+  ok: FRUIT APPEARED once (1)
+  ok: FRUIT EATEN once (1)
+  ok: level 1 fruit is the cherry (0)
+  ok: score rose by 100 for the cherry (RAM) (1)
+Scenario GHOSTS (energizer, then four ghosts on Pac-Man)
+  ok: four ghosts eaten (1)
+    559 P1 GAME START 3
+    705 P1 ENERGIZER
+    706 P1 GHOST EATEN place 1
+    767 P1 GHOST EATEN place 2
+    828 P1 GHOST EATEN place 3
+    889 P1 GHOST EATEN place 4
+  ok: ENERGIZER seen (1)
+  ok: GHOST EATEN x4 (4)
+  ok: score = 50 (energizer) + 200 + 400 + 800 + 1600 + dots (RAM) (1)
+  ok: ghost chain place in order (1)
+  ok: ghost chain place in order (2)
+  ok: ghost chain place in order (3)
+  ok: ghost chain place in order (4)
+Scenario ROUND (one dot left)
+  ok: round cleared and next level started (1)
+    559 P1 GAME START 3
+    701 P1 ROUND CLEARED
+    938 P1 LEVEL 2
+  ok: ROUND CLEARED once (1)
+  ok: LEVEL event says 2 (2)
+  ok: RAM level counter 4E13 = 1 (1)
+  ok: dot counter restarted (small number) (1)
+Scenario LEVEL 17
+  ok: level 17 reached (1)
+    559 P1 GAME START 3
+    701 P1 ROUND CLEARED
+    701 P1 LEVEL 16
+    938 P1 LEVEL 17
+  ok: the last LEVEL event says 17 (an earlier one, 16, is the test's own poke of 4E13) (17)
+  ok: RAM level counter 4E13 = 16 (16)
+    level-order pointer 4E0A = 78 (level 1 is 68, level 2 69, one more per round)
+  ok: level-order pointer 4E0A moved on by one round (0x68 + 16) (120)
+  ok: the entry it points to (ROM 0078) is 16 = the 17th level record (16)
+  ok: fruit shown on level 17 is the key (points index 13) (13)
+25 checks, 0 failed
+RESULT: PASS
+
+--- Other checks (2026-10-14) ---
+run_all.sh: ALL TESTS PASSED (ram_map check included). test_purist PASS and test_replay PASS (7273 hashes identical); test_events PASS. No program source changed in this step.

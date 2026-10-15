@@ -1,0 +1,82 @@
+X48 integration check evidence (2026-10-15)
+
+== Full regression (sh /tmp/runall.sh = every tests/test_*.sh except test_stats_window.sh and test_level256_full.sh, then tests/run_all.sh) ==
+tests/test_achievements.sh: ok
+tests/test_assist.sh: ok
+tests/test_audio_stall.sh: ok
+tests/test_autopause.sh: ok
+tests/test_bindings.sh: ok
+tests/test_cabinet.sh: ok
+tests/test_chain_ach.sh: ok
+tests/test_controls.sh: ok
+tests/test_cpu_parity.sh: ok
+tests/test_crt.sh: ok
+tests/test_crt_look.sh: ok
+tests/test_curve.sh: ok
+tests/test_curve_menu.sh: ok
+tests/test_events.sh: ok
+tests/test_fruit_ach.sh: ok
+tests/test_glow.sh: ok
+tests/test_haptics.sh: ok
+tests/test_hints.sh: ok
+tests/test_lastdevice.sh: ok
+tests/test_lightbar.sh: ok
+tests/test_lightbar2.sh: ok
+tests/test_menu.sh: ok
+tests/test_mouse.sh: ok
+tests/test_mouse2.sh: ok
+tests/test_padbuttons.sh: ok
+tests/test_padtypes.sh: ok
+tests/test_pause_ach.sh: ok
+tests/test_progress_ach.sh: ok
+tests/test_purist.sh: ok
+tests/test_records.sh: ok
+tests/test_records_window.sh: ok
+tests/test_replay.sh: ok
+tests/test_round_ach.sh: ok
+tests/test_rumble.sh: ok
+tests/test_scenarios.sh: ok
+tests/test_slots.sh: ok
+tests/test_state.sh: ok
+tests/test_stats.sh: ok
+tests/test_surround.sh: ok
+tests/test_ultrawide.sh: ok
+check_docs OK: 29 cited paths exist, all 9 sections present
+ALL TESTS PASSED
+DONE
+
+== Integration test (settings file, Purist table, help panel keys) ==
+  LoadSlot       locked
+44 checks, 0 failed
+RESULT: PASS
+  ok: help panel lists BKSP (yes)
+  ok: help panel lists F1 (yes)
+  ok: help panel lists F10 (yes)
+  ok: help panel lists F11 (yes)
+  ok: help panel lists F12 (yes)
+  ok: help panel lists F2 (yes)
+  ok: help panel lists F3 (yes)
+  ok: help panel lists F4 (yes)
+  ok: help panel lists F5 (yes)
+  ok: help panel lists F6 (yes)
+  ok: help panel lists F7 (yes)
+  ok: help panel lists F8 (yes)
+  ok: help panel lists F9 (yes)
+  ok: help panel lists ESC (yes)
+  ok: number of keys handled (F1 to F12 and Backspace) (13)
+RESULT: PASS
+
+== Frame time at full screen 1920x1080 (software-drawn test display, 20 s each; budget 16.5 ms) ==
+Measured with tests/test_frametime.sh and by hand (software-drawn test display, no graphics card; "time between presents", average):
+  everything off            16.003 ms   (pass)
+  Purist                    15.896 ms   (pass)
+  mask strong only          16.269 ms | glow strong only 16.041 | curve strong only 16.119 | Ambient only 15.913 | Cabinet only 16.053 | scanlines only 15.925 | overlay only 15.899   (all pass)
+  mask+glow+curve strong    16.214 ms   (pass)
+  mask+glow+curve strong + scanlines + overlay   16.804 ms   (just over the 16.5 ms budget)
+  EVERYTHING ON (mask, glow, curve strong, Ambient, scanlines, overlay)   20.037 ms   (FAIL on this display)
+Reading: on this test machine every single extra and every common combination stays at the 60 Hz rhythm (about 16 ms); only the "everything at the strongest setting at once" case is over, because the test display draws every full-window pass in software on the processor. A real graphics card does these passes (stretching and blending a picture over the window) almost for free, so this is NOT proof that a real PC stays inside the budget. The check on the user's PC is tools/frametime_test.bat (sent with the zip): its two result files decide this item.
+
+== User's real PC (2026-10-15, Direct3D, 180 Hz display, FULL SCREEN 2560x1440 = 1.78x the pixels of 1080p; files X48_user_frametime_all_on.txt / _all_off.txt) ==
+All extras on (mask, glow, curve strong, Ambient, scanlines, overlay): 3599 presents in 20 s = 180 per second, average 5.558 ms between presents (= exactly the 180 Hz refresh, 5.556 ms), 1212 pictures drawn at 60.584 machine ticks per second, 0 audio underruns. Every picture stayed on screen 3 refreshes (1167 of 1212); the longest present gap 26.9 ms is the start / full-screen switch.
+Everything off: average 5.350 ms, 60.549 ticks per second, longest 13.8 ms.
+Result: the 16.5 ms budget is met with a large margin on the real PC, even with everything at its strongest at 1440p; the software-display figure of 20 ms (above) was a test-display artefact. ITEM CLOSED.

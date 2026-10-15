@@ -1,0 +1,28 @@
+Settings: no settings file yet (build/s34b/t/n/settings.cfg), using the standard settings
+Purist mode: off
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: loaded build/s34b/t/n/controls.cfg
+High score: no saved score yet (build/s34b/t/n/highscore.txt)
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+State: rewinding (release Backspace or the pad button to play on)
+State: rewind stopped 37 frames back (what you score from now on in this game will not count for the high score)
+Menu: opened (the game is paused)
+State: saved (F4 loads it)
+Menu: resumed
+State: saved (F4 loads it)
+Menu: opened (the game is paused)
+State: loaded (the high score is now the one this state had; what you score from now on in this game will not count)
+State: paused
+State: resumed
+State: loaded (the high score is now the one this state had; what you score from now on in this game will not count)
+Menu: opened (the game is paused)
+Menu: resumed
+Note: the program was frozen for 66 ms before machine tick 748 (the sound queue is re-set after a freeze)
+Machine at exit: main state 1, lives 1, dots eaten 1, score 0, credits 0.
+Ran 27.42 s: 1500 machine ticks, 1627 pictures drawn
+Measured tick rate: 54.707 per second (arcade: 60.606)
+Pacing: 1733 presents, 1500 machine ticks, 1491 pictures finished. Refreshes each picture stayed on screen: 1 x 1414 2 x 73 9 x 4
+Pacing: time between presents average 15.822 ms, longest 66.646 ms
+Machine hash after 1500 ticks: ab7f1125579e0cff

@@ -1,0 +1,34 @@
+T01d evidence: ghost targeting (four target rules) and the direction chooser as readable code (src/logic/ghost_targeting.h) versus the ROM (2026-10-15)
+
+== What was written ==
+src/logic/ghost_targeting.h: the direction chooser (ROM 2966, with the distance helper 29EA and the multiply helper 2A12) and the four target tasks: Blinky 2730, Pinky 276C, Inky 27A9, Clyde 27F1. Rules as written: never turn back; walls (maze tile code & C0 = C0) are skipped; the neighbour nearest the target by squared distance wins and on a tie the LATER direction (right, down, left, up order of the ROM table) wins; if every way is blocked the ghost keeps its direction. Scatter corners for the even phases of a running maze (Blinky only when not Cruise Elroy); chase: Blinky = Pac-Man's tile, Pinky = four steps ahead of Pac-Man, Inky = twice the point two steps ahead minus Blinky's tile, Clyde = Pac-Man's tile unless nearer than 8 tiles (squared distance under 64). The ROM's quirks are kept on purpose (the 16-bit carry that makes Pinky's and Inky's 'ahead' point go sideways when Pac-Man moves up/left). The chooser's working bytes (4D3B-4D45, 4DC7) are written exactly as the ROM does. VideoRam reads outside 4000-43FF now return 0 (work_ram.h).
+
+== How it was proved ==
+Compared after every call: ALL work RAM (4C00-4FEF), the whole video RAM, the colour RAM (except the bytes under the stack pointer used by the routine's own calls); for the chooser also its answer in A (direction) and HL (step).
+Part A (live): a scripted player for 3,000,000 frames; at each entry of 2966, 2730, 276C, 27A9, 27F1 the readable version gets a copy of memory (and the registers); at the return both must be identical.
+Part B1: 2A12 for all 256 inputs; 29EA for every pair of values on each axis (131,072 pairs).
+Part B2: the chooser alone for EVERY ghost tile of the maze area (959 tiles whose four neighbours are on the screen) x EVERY target tile of the maze area (a,b = 1E-40) x 4 directions, random walls around the ghost: 4,699,100 calls.
+Part B3: 1,000,000 random choosers (any such ghost tile, any 16-bit target, any direction, random memory and maze).
+Part B4: 1,000,000 random runs of each of the four target tasks (random phase, Cruise Elroy, level state, tiles, directions, Pac-Man's step bytes incl. odd ones to exercise the carry).
+
+== Result (full run: 3,000,000 frames, 1,000,000 random cases) ==
+part A: 3000000 frames (13.8 hours of game time): chooser 635159 calls (direction changed 100447 times; chosen right 205762 down 129611 left 208015 up 91771); target tasks Blinky 130013 (scatter 53280, chase 76733, of which Cruise Elroy 0), Pinky 109115 (scatter 37233, chase 71882), Inky 70082 (scatter 5737, chase 64345), Clyde 55614 (scatter 631, chase 54983); differences 0
+part B1: the multiplication helper (all 256 inputs) and the distance (every pair of values on each axis, 131,072 pairs): 131328 calls, differences so far 0
+part B2: the chooser for every ghost tile (959 tiles of the maze area with all four neighbours on the screen) x every target tile of the maze area x 4 directions, random walls: 4699100 calls, differences so far 0
+part B3: 1000000 random choosers (any ghost tile that has its neighbours on the screen, any target, any direction, completely random memory and maze): differences so far 0
+part B4: 1000000 random runs of each target task (Blinky 1000000, Pinky 1000000, Inky 1000000, Clyde 1000000): differences 0
+PASS test_logic_ghosts: 999983 live calls and 9830428 isolated calls compared, 0 differences
+
+== The test can fail (deliberately broken versions, 20,000 frames + full B1/B2) ==
+Tie goes to the earlier direction: 61,112 differences. Reverse rule off: 1,993,321. Wall mask C0 -> 80: 1,373,564. Pinky x4 -> x3: 2,381. Inky x2 -> x3: 2,358. Inky doubling off by one: 2,358. Clyde threshold 40 -> 41: 26. Blinky ignoring Cruise Elroy: 359. Scatter phase parity flipped: 10,132. Pinky's corner replaced by Blinky's: 1,398. Distance cut to 8 bits: 2,321,724. Step table changed: 3,563,349. All 12 caught.
+
+== Other checks ==
+tests/run_all.sh, tests/test_purist.sh, tests/test_replay.sh: see the line at the end of this file. The game code was not changed.
+
+== Honest limits ==
+1. The readable code is not used by the game yet; the full 85-minute regression was not rerun (no game code changed).
+2. In live play the scripted player never reached Cruise Elroy (0 cases); Elroy is proved by the 1,000,000 isolated Blinky runs. Live play also only reached the first level, and Clyde scattered rarely live (631 times); the isolated runs cover all of it.
+3. The chooser's exhaustive check covers target tiles of the maze area (1E-40 each axis) and ghost tiles whose four neighbours lie in the video RAM (those outside never occur in the maze); wider targets and random memory are in B3.
+4. The ghost's own tile outside the video RAM and the effect of the chooser on tiles beyond 4000-43FF are not modelled (reads return 0).
+5. Moving the ghosts themselves (speed, turning at tile centres, tunnels) and the mode timers are NOT part of T01d (T01e, T01f).
+tests/run_all.sh ALL TESTS PASSED (short versions of the four logic tests); tests/test_purist.sh PASS; tests/test_replay.sh PASS. Game code unchanged.

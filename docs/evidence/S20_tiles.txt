@@ -1,0 +1,26 @@
+S20 tile layer evidence, 2026-10-08
+C++: src/video/tilemap.cpp (render_tilemap). Test: tests/test_tilemap.cpp (build line in its header). Reference: the prototype's render.py render(mem, gfx, sprites=False) on the exact-frame, mirror-correct board of tools/analysis/oracle_dump.py (the S18 oracle); the plain harness is not used because its RAM differs from the real board after frame 296 (see S18). Reference images are made with:
+  python3 - <<'EOF'      (run from the project folder)
+  import sys; sys.path.insert(0,'tools/analysis')
+  from oracle_dump import MirrorBoard, run_frame_exact
+  from render import render
+  from harness import load_roms
+  prog, gfx = load_roms(); b = MirrorBoard()
+  for f in range(1, 1501):
+      run_frame_exact(b)
+      if f in (700, 1500):
+          open('build/s20/py_%d.rgb' % f, 'wb').write(render(b.mem, gfx, sprites=False).convert('RGB').tobytes())
+  EOF
+
+== native
+frame 700: 0 of 64512 pixels differ; 2630 non-black pixels, 103 non-blank tiles
+frame 1500: 0 of 64512 pixels differ; 3683 non-black pixels, 208 non-blank tiles
+PASS test_tilemap
+
+== mingw build under wine 9.0
+frame 700: 0 of 64512 pixels differ; 2630 non-black pixels, 103 non-blank tiles
+frame 1500: 0 of 64512 pixels differ; 3683 non-black pixels, 208 non-blank tiles
+PASS test_tilemap
+
+Pictures (the C++ output, viewed): docs/evidence/S20_frame700.png and S20_frame1500.png: the attract screens '1UP HIGH SCORE 2UP', 'CHARACTER / NICKNAME' with the ghost pictures (these are tiles, not sprites), the 10 PTS / 50 PTS lines and '(c) 1980 MIDWAY MFG. CO.', CREDIT 0. 'HIGH SCORE' is present because the board has the address mirrors (the old flat prototype lost it).
+Notes: colour RAM holds only values below 0x20 plus bit 7 at these frames (max 0x8F and 0x9F), so the hardware mask & 0x1F and the prototype's & 0x3F give the same colours here; the port uses & 0x1F. Picture orientation: native 288x224 turned 90 degrees clockwise, pixel (X,Y) -> (223-Y, X).

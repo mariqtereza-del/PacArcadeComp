@@ -1,0 +1,29 @@
+X43 evidence (2026-10-14): CRT presets
+
+== tests/test_crt_look.sh (unit test, real window Esc > DISPLAY > CRT LOOK, settings.cfg, restart, replay hashes) ==
+31 checks, 0 failed
+RESULT: PASS
+  log: Display: CRT look SUBTLE (mask light, glow light, curve off, scanlines off)
+  log: Display: CRT look ARCADE MONITOR (mask light, glow light, curve off, scanlines on)
+  log: Display: CRT look OLD TV (mask strong, glow strong, curve strong, scanlines off)
+  log: Display: CRT look OFF (mask off, glow off, curve off, scanlines off)
+  log: Display: CRT look OLD TV (mask strong, glow strong, curve strong, scanlines off)
+  ok: first step: SUBTLE (mask light, glow light, curve off, scanlines off) (1)
+  ok: second step: ARCADE MONITOR (mask light, glow light, curve off, scanlines on) (1)
+  ok: third step: OLD TV (mask strong, glow strong, curve strong, scanlines off) (2)
+  ok: fourth step: OFF (1)
+  ok: five steps in all (5)
+  ok: settings.cfg exists (yes)
+  settings.cfg: scanlines off curve strong glow strong crt_mask strong 
+  ok: settings.cfg holds the Old TV look (3)
+  ok: restart: the saved look is back (mask strong, glow strong, curve strong) (3)
+  ok: hash log lines (7273)
+  ok: replay hash log identical with the Old TV look on (same)
+RESULT: PASS
+
+== menu test ==
+PASS: 933 checks, 0 failures
+
+Picture of the four looks (Off, Subtle, Arcade monitor, Old TV): docs/evidence/X43_looks.png
+
+Full regression (/tmp/runall.sh then tests/run_all.sh): ALL TESTS PASSED, including tests/test_purist.sh and tests/test_replay.sh (hashes unchanged). tests/test_achievements.sh ('the pop-up was seen on the picture', a real-time screen poll) failed inside the long run, as it did once in X42; I had other window jobs running at the same moment this time. Rerun alone on an idle machine, in the same background way, it passes (RESULT: PASS). It does not touch the CRT code (all CRT settings off by default).

@@ -1,0 +1,31 @@
+S30 overlay and level-256 tests. The game code is not changed; the overlay only reads memory.
+
+1. The overlay does not affect the emulation (3,000 frames, scripted game; machine A never calls the overlay, machine B calls it every frame)
+  frames compared: 3000; memory hash differences 0 (first at frame -1); picture hash differences 0; picture buffer changed by the overlay in 0 frames
+  overlay output differs from the picture inside the picture area by at most 160 pixels (target markers only; 4 ghosts x 40 pixels allowed)
+  [PASS] memory and picture are identical on every frame with and without the overlay
+  [PASS] the overlay never writes into the picture it is given
+  [PASS] the overlay changes only target markers inside the picture area, and draws its text on the panel beside it
+  (the overlay takes only 'const Bus&' and 'const uint32_t*': it has no way to write into the machine)
+
+2. The overlay's ghost targets equal the targets the ROM uses
+  overlay picture saved (frame 859, chase phase, 2 seconds in): level 1 phase 1 counter 540 next 1620 dots 4 Pac-Man tile 12,24
+    Blinky at 18,14  chase  target 12,24
+    Pinky  at 18,20  chase  target 12,28
+    Inky   at 18,15  chase  target  6,38
+    Clyde  at 18,15  chase  target 12,24
+  ROM target calls 359, shown by the overlay as frightened (no target) 0, overlay target equal to the ROM's register in 359 of 359
+  [PASS] the overlay's target tile equals the ROM's own target on every call (scatter corners and all four chase rules)
+  [PASS] an overlay picture (S30_overlay.png) was saved
+
+3. Level 256 (harness: 4E13 = 254 and dots eaten = 243; the ROM finishes level 255 and builds level 256)
+  level counter 4E13 = 255 (the screen shows level 256); main state 3, level state 3, frame 1447
+  frame saved to S30_level256.png (written); SHA-1 of its RGB bytes: 4b744efcd5872880b4c7f7c8bdab81d982bec5a8
+  maze area pixels that differ from the normal level-1 maze: left half 1263 of 26880 (4.7 %), right half 7426 of 26880 (27.6 %)
+  (level 1 reference: level counter 0; both frames are taken once the maze is running; sprites and the player's moves make small differences on both sides)
+  the ROM kept running for 600 of 600 further frames
+  [PASS] the level-256 frame was saved
+  [PASS] the game reaches level counter 255 (level 256) and keeps running
+  [PASS] split screen: the right half of the maze is mostly different from a normal maze, the left half is not
+
+8 checks, 0 failed. PASS

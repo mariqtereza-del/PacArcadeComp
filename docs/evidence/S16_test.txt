@@ -1,0 +1,42 @@
+S16 ROM-set loader evidence, 2026-10-08
+Code: src/board/romset.{h,cpp} (reads the zip into memory with vendored miniz 11.3.2, src/third_party/miniz, MIT). Table identical to tools/check_rom.py. The loader opens the file with fopen "rb" only (grep for write modes: none) and the shipping build is compiled with -DMINIZ_NO_ARCHIVE_WRITING_APIS (no zip-writing symbols in the binary: nm count 0).
+
+Build commands (native): for f in miniz miniz_tdef miniz_tinfl miniz_zip: gcc -O2 -Wall -DMINIZ_NO_STDIO -DMINIZ_NO_TIME -c src/third_party/miniz/$f.c ; then g++ -O2 -std=c++17 -Wall -Wextra -DMINIZ_NO_STDIO -DMINIZ_NO_TIME tests/test_romset.cpp src/board/romset.cpp miniz*.o -o test_romset
+(mingw: same with x86_64-w64-mingw32-gcc/g++ and -static; test links the zip-writing part of miniz to build damaged archives in memory, the shipping flags drop it.)
+
+== native: ./test_romset roms/pacman.zip build/rom/prog.bin
+== 1. real zip (from file)
+[real file] loaded
+== 2. corrupted copy (one byte changed inside pacman.6h)
+[corrupted] REFUSED
+    The file pacman.6h has the wrong checksum (CRC32 fd6f6064, expected bcdd1beb). It is damaged or from a different version of the game.
+== 3. missing-file copy (82s126.3m removed)
+[missing file] REFUSED
+    The file 82s126.3m is missing from the zip.
+== 4. wrong size (pacman.5e one byte short)
+[wrong size] REFUSED
+    The file pacman.5e has the wrong size: 4095 bytes, expected 4096. This is not the standard Midway "pacman" set.
+== 5. not a zip
+[text file] REFUSED
+    This is not a zip file (or it is damaged), so no ROMs can be read from it.
+[zip cut in half] REFUSED
+    This is not a zip file (or it is damaged), so no ROMs can be read from it.
+== 6. damaged zip data (raw byte flipped inside the zip, not rebuilt)
+    9478 byte flips: 4619 refused with a message, 4859 loaded with data identical to the real set (flip hit an unused zip field), 0 loaded with different data
+== 7. extra files ignored
+[extra files] loaded
+== 8. file that does not exist
+[no such file] REFUSED
+    Cannot open the ROM zip "no/such/pacman.zip". Put your own pacman.zip there.
+== 9. several problems at once are all reported
+[two problems] REFUSED
+    The file pacman.6e is missing from the zip.
+The file 82s123.7f has the wrong checksum (CRC32 de1c5517, expected 2fc650bd). It is damaged or from a different version of the game.
+PASS test_romset: 16 checks, 0 failures
+
+== shipping flags, real zip:
+LOADED program=16384 bytes 
+
+== mingw build under wine 9.0 (last lines):
+The file 82s123.7f has the wrong checksum (CRC32 de1c5517, expected 2fc650bd). It is damaged or from a different version of the game.
+PASS test_romset: 16 checks, 0 failures

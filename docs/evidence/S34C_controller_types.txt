@@ -1,0 +1,23 @@
+S34C: controller types, icon and button pictures (script part; the user's test with real pads is still to come)
+
+Built: PadType (Xbox, PS4, PS5, other) from SDL_GameControllerGetType (360/One = Xbox, PS3/PS4 = PS4, PS5 = PS5, anything else or a non-standard pad = other); a controller icon (16x10, drawn in code) in the menu header, the Bindings screen header ("PS5 PAD") and the key-help panel, plus the type word in the menu footer; a 3.5 s notice "PS4 CONNECTED" / "PS4 REMOVED" with the icon when a pad is plugged in or removed (also at start-up); button pictures drawn in code (no image files): Xbox A green, B red, X blue, Y yellow discs; PlayStation cross, circle, square, triangle shapes in their colours; labelled boxes for LB/RB or L1/R1, LT/RT or L2/R2, VIEW/MENU or SHARE/CREATE/OPTIONS, L3, R3, SHARE (Xbox) / MIC (PS5), TOUCH, P1-P4; unknown pads keep the plain names. Used in the Bindings pad column and the key-help panel (pad buttons after each key).
+Files: src/app/menu.* (all drawing), src/app/main.cpp (wiring: type, notice, hot-plug). No change to emulated input bits.
+
+Tests (tests/test_padtypes.sh, real window on Xvfb with pretend pads of each type, driven by simulated pad buttons, screenshots analysed for the picture colours):
+- Xbox 360 and Xbox One: icon word XBOX; A, B, X, Y discs found in all four colours, no PlayStation shapes.
+- PS4 and PS5: icon words PS4 / PS5; cross, circle, square, triangle found in their colours, no Xbox discs.
+- Other (generic pad): icon PAD, plain names, no pictures.
+- All five: the "connected" notice is on the screen.
+Screenshots: docs/evidence/S34C_bindings_xbox.png, S34C_bindings_ps5.png (from build/s34c).
+Trigger and touch-pad pictures: L2/LT, R2/RT boxes are in the screenshots; TOUCH and SHARE/MIC are covered by the label table (tests/test_menu.cpp).
+Regression: scripted hashes unchanged (2400 ticks at 180 Hz 60c4b12eb084ed7e, 3000 ticks d7d39438e9e8d70c); test_menu, test_bindings, test_controls, test_state, test_purist (7,273 hashes = prototype), test_replay, test_padbuttons, test_rumble, test_haptics, run_all: see the end of this file.
+
+Not tested with a physical pad: how the icon/pictures look on the user's real DualShock 4, DualSense and DS4Windows pad (DS4Windows shows as Xbox, so it gets Xbox pictures: the program cannot see the real pad behind it).
+run_all and all C++ tests passed at S34C (see build/s34c/all.txt); test_menu 142
+
+== Fix after the user's first test (2026-10-13) ==
+User: "S34C - the xbox bumpers and triggers still show up as Playstation L1/R1 L2/R2" (S34B test passed: docs/evidence/S34B_user_report.txt).
+Likely cause: with DS4Windows running, Windows can show the program both the real DualShock and the fake Xbox pad; the program opens the first one, which is the DualShock, so PlayStation names are right for the device it opened. (The label table itself is tested: Xbox LB/RB/LT/RT, PlayStation L1/R1/L2/R2.)
+Fix: Esc > Controls > PAD SYMBOLS: AUTO / XBOX / PS4 / PS5 (settings.cfg line pad_symbols; --pad-symbols for tests). It changes the icon, the notice and every button picture at once. The log now lists every pad Windows shows ("Pads seen: #0 name type vendor:product") so the real cause is visible in the report file.
+Tests: test_menu 149 checks (cycling, text, settings round trip); tests/test_padtypes.sh now also runs a pretend DualShock 4 forced to XBOX symbols: green/red/blue/yellow discs, icon XBOX, no PlayStation shapes. Full suite re-run: see below.
+Full suite after the fix: bindings 167, controls 45, purist, replay, padbuttons, rumble, run_all pass; scripted hashes unchanged.

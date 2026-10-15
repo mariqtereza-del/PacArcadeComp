@@ -1,0 +1,46 @@
+S09 prototype trace: frames 0-1499, inputs: coin 1 at frames 400-404, start 1 at 410-413, no joystick.
+Frame numbering: frame N is the N-th 50,688-cycle slice; the interrupt is delivered at its end (prototype model, see S07 U1).
+
+Label                              address  confidence  first frame  times reached   expectation
+reset_entry                        0000     HIGH       0            1               frame 0 (reset)
+fill_bytes                         0008     HIGH       296          11813           
+read_table_byte                    0010     HIGH       253          12776           
+read_table_word                    0018     HIGH       253          202             
+jump_table_dispatch                0020     HIGH       298          12421           
+queue_task_inline                  0028     HIGH       299          227             
+schedule_timed_event_inline        0030     HIGH       301          5               
+rst38_lockup                       0038     MED        -            0               never reached (error trap)
+task_queue_push                    0042     HIGH       299          236             
+vblank_interrupt_handler           008D     HIGH       299          1201            frame 299: first interrupt after main_init sets 5000=1 at 238C (vector byte FC set at frame 253)
+update_frame_counters              01DC     LOW        299          1201            
+run_timed_events                   0221     MED        299          1201            
+game_mode_dispatch                 03C8     MED        299          1201            
+read_coin_inputs                   0267     MED        301          1199            
+coin_counter_pulse                 02AD     LOW        301          1199            
+update_player_labels               02FD     HIGH       301          1199            
+sound_update_group_A               2D0C     MED        299          1201            
+sound_update_group_B               2CC1     MED        299          1201            
+boot_init                          230B     HIGH       0            1               frame 0 (jumped to from 0005)
+main_init                          234B     HIGH       296          1               frame 296: after the self-test and its 8 delay loops (jump at 3295/32A4/32EA)
+task_loop                          238D     HIGH       298          1130021         frame 298: end of main_init
+task_table                         23A8     HIGH       data         0               
+clear_video_ram                    23ED     MED        298          5               
+clear_colour_ram                   240D     HIGH       297          2               
+colour_address_of_tile             2052     LOW        664          3810            
+screen_pos_to_video_address        0065     MED        664          5148            
+power_on_self_test                 3000     MED        1            1               frame 1: the first interrupt is delivered at the end of frame 0 and vectors here (vector byte FA)
+
+Where the CPU is at the end of selected frames (frame: pc, interrupts enabled by 5000 bit 0, game-mode bytes 4E00/4E01):
+  0: 3000 en=1 4E00=00/00; 1: 300D en=1 4E00=00/00; 100: 304F en=1 4E00=10/40; 252: 30DB en=1 4E00=00/00; 253: 325F en=0 4E00=00/01; 254: 32F6 en=0 4E00=00/01; 295: 32F4 en=0 4E00=00/01; 296: 0009 en=0 4E00=00/01; 297: 0009 en=0 4E00=00/00; 298: 008D en=1 4E00=00/00; 299: 008D en=1 4E00=00/01; 300: 008D en=1 4E00=01/00
+
+First frame at or after 298 (end of main_init) with a non-blank tile in the main screen area 4040-43BF (before that the self-test fills video RAM with test patterns): frame 302 (18 tiles)
+  tiles drawn at the end of frame 302: 18
+  tiles drawn at the end of frame 305: 18
+Vector byte (OUT (0),A) changes: frame 0 -> FA, frame 253 -> FC
+First writes to 5000 (frame, value, pc): [(0, 0, '2312'), (0, 1, '2349'), (253, 1, '3196'), (253, 0, '324A'), (296, 0, '0009'), (298, 1, '238C'), (299, 0, '0095'), (299, 1, '01D9')]
+Changes of the game-mode bytes 4E00/4E01: frame 0: 4E00=00 4E01=00; frame 13: 4E00=0F 4E01=02; frame 15: 4E00=0E 4E01=01; frame 18: 4E00=0D 4E01=00; frame 21: 4E00=0C 4E01=0F; frame 23: 4E00=0B 4E01=0E; frame 26: 4E00=0A 4E01=0D; frame 29: 4E00=09 4E01=0C; frame 31: 4E00=08 4E01=0B; frame 34: 4E00=07 4E01=0A; frame 37: 4E00=06 4E01=09; frame 39: 4E00=05 4E01=08; frame 42: 4E00=04 4E01=07; frame 45: 4E00=03 4E01=06
+
+One full interrupt cycle (frame 600): labelled routines in the order they are first entered (with repeats collapsed):
+  vblank_interrupt_handler(008D) > update_frame_counters(01DC) > run_timed_events(0221) > game_mode_dispatch(03C8) > jump_table_dispatch(0020) > read_table_byte(0010) > jump_table_dispatch(0020) > read_table_byte(0010) > jump_table_dispatch(0020) > read_table_byte(0010) > read_coin_inputs(0267) > coin_counter_pulse(02AD) > update_player_labels(02FD) > sound_update_group_A(2D0C) > sound_update_group_B(2CC1) > jump_table_dispatch(0020) > read_table_byte(0010) > jump_table_dispatch(0020) > read_table_byte(0010) > task_loop(238D)
+I/O writes in frame 600 (address=value at pc): 50C0=FF@0091, 5000=00@0095, 5006=01@0270, 5000=01@01D9
+Sound/sprite register writes in frame 600: 31 writes to 5040-50BF, from pcs ['00A8', '00B7', '00C6', '00D5', '018C']

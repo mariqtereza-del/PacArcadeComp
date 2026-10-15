@@ -1,0 +1,25 @@
+X10 Lightbar: red near a ghost, blue when ghosts are blue  (2026-10-14)
+Built (src/app/lightbar.h, wired in main.cpp; reads RAM only, outside the machine; Purist off; option LIGHTBAR from X09 switches all of it off):
+- yellow (255,204,0) while safe; red (255*b,0,0) with b = 0.35 + 0.65 * nearness when a ghost that is not blue is within 28 picture pixels of Pac-Man (larger of the y and x differences; the same numbers as the vibration heartbeat, haptics.h) while the maze runs (4E04 = 3), Pac-Man is alive (4DA5 = 0) and a game is on (4E00 = 3); blue-white (140,190,255) while the ghosts are frightened (4DA6 = 1; wins over red); the attract demo stays yellow.
+- Fades: 32 per channel per frame between the play colours (yellow <-> red <-> blue-white take at most 8 frames); menu (dim blue), option off (black) and the neutral blue on exit are immediate.
+- The colour is worked out after every machine frame, so the colour log can be compared frame for frame with the vibration events.
+Tests:
+- tests/test_lightbar.sh: 62 unit checks (colour for far / 27 px / 28 px / closer is brighter / larger-of-two distance / blue ghost / maze not running / dying / attract / frightened / frightened beats near; fade step size and length; driver mood changes; menu dim blue) and the X09 pretend-pad runs unchanged (PS4, PS5, off, Xbox, Purist)
+- tests/test_lightbar2.sh: the S27 replay (7,273 frames) on a pretend DualSense:
+      info: red starts at [1554, 1568, 1599, 1686, 1858, 2781, 4023, 5794, 5914, 5972, 7010] ... ( 11 )
+      info: heartbeats at [1554, 1568, 1592, 1599, 1623, 1647, 1686, 1710, 1734, 1858, 1882, 2781] ... ( 32 )
+      info: blue-white starts [1006, 4963] energizers [1006, 4963] ends [1365, 5322] fright end events [1365, 5322]
+      ok: the replay gave red moments (a ghost came close) (11)
+      ok: every red start is at the frame of a GHOST NEAR heartbeat event (not matching: [])
+      ok: two frightened periods (the two energizers) ([1006, 4963] / [1006, 4963])
+      ok: blue-white starts at the energizer frame (within 2 frames) ([1006, 4963] vs [1006, 4963])
+      ok: blue-white ends at the FRIGHT END event frame (within 1 frame) ([1365, 5322] vs [1365, 5322])
+      ok: red colours are red (g = b = 0)
+      ok: blue-white colour is 140,190,255
+      ok: the pretend DualSense received many fading colour commands (376 commands for 27 mood changes)
+      ok: and the last one is the neutral blue put back on exit
+      ok: Xbox pretend pad: no light bar commands and no colour log
+      ok: Purist: no light bar commands and no colour log
+    PASS: the light bar log changes at the same frames as the near-ghost and frightened events of the replay
+- Replay hashes (test_purist: 7,273 identical to the Python prototype; test_replay) and the older tests: see PROJECT_STATUS.md
+Result: PASS

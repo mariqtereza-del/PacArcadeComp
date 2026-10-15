@@ -1,0 +1,47 @@
+X44 evidence (2026-10-14): cabinet artwork, layout around the picture
+
+== tests/test_surround.sh (unit test of the layout rectangles at 9 window shapes x 2 content widths x 2 scalings; real windows at 4:3 1024x768, 16:9 1920x1080 and 21:9 2560x1080; Purist; window exactly the picture size; menu; settings; restart; replay hashes) ==
+1920x1080 integer layout: picture 624,108 672x864; left area 624 wide, right area 624 wide, top 108, bottom 108
+317 checks, 0 failed
+RESULT: PASS
+window 1024x768:
+  Layout: window 1024x768, picture 288,96 448x576
+  ok: layout line found (yes)
+  ok: picture place and size identical with surround black (Layout: window 1024x768, picture 288,96 448x576)
+  ok: picture place and size identical in Purist (Layout: window 1024x768, picture 288,96 448x576)
+  cabinet:   10 sample points in the surround, picture at 288,96 448x576, bezel 17 px
+  cabinet: RESULT: PASS
+  black: RESULT: PASS
+  purist: RESULT: PASS
+window 1920x1080:
+  Layout: window 1920x1080, picture 624,108 672x864
+  ok: layout line found (yes)
+  ok: picture place and size identical with surround black (Layout: window 1920x1080, picture 624,108 672x864)
+  ok: picture place and size identical in Purist (Layout: window 1920x1080, picture 624,108 672x864)
+  cabinet:   10 sample points in the surround, picture at 624,108 672x864, bezel 24 px
+  cabinet: RESULT: PASS
+  black: RESULT: PASS
+  purist: RESULT: PASS
+window 2560x1080:
+  Layout: window 2560x1080, picture 944,108 672x864
+  ok: layout line found (yes)
+  ok: picture place and size identical with surround black (Layout: window 2560x1080, picture 944,108 672x864)
+  ok: picture place and size identical in Purist (Layout: window 2560x1080, picture 944,108 672x864)
+  cabinet:   10 sample points in the surround, picture at 944,108 672x864, bezel 24 px
+  cabinet: RESULT: PASS
+  black: RESULT: PASS
+  purist: RESULT: PASS
+  ok: window exactly the picture's size: same picture with the cabinet on (same)
+  ok: menu: three steps = cabinet, black, cabinet (cabinet black cabinet )
+  ok: settings.cfg holds surround cabinet (1)
+  ok: restart: the saved surround is back (1)
+  ok: hash log lines (7273)
+  ok: replay hash log identical with the cabinet surround on (same)
+RESULT: PASS
+
+== menu test ==
+PASS: 934 checks, 0 failures
+
+Picture at the three shapes (plain test look): docs/evidence/X44_cabinet_shapes.png
+
+Full regression (/tmp/runall.sh then tests/run_all.sh): ALL TESTS PASSED, every group ok (including tests/test_purist.sh and tests/test_replay.sh: hashes unchanged).

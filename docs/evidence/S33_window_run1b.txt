@@ -1,0 +1,15 @@
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: no settings file yet (cfg2/controls.cfg), using the standard controls
+High score: no saved score yet (cfg2/highscore.txt)
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+State: rewinding (release Backspace to play on)
+State: rewind stopped 123 frames back (this game will not set a high score)
+High score: this game used save/load or rewind, so 70 is not saved
+Machine at exit: main state 3, lives 3, dots eaten 7, score 70, credits 0.
+Ran 27.81 s: 1684 machine ticks, 1681 pictures drawn
+Measured tick rate: 60.564 per second (arcade: 60.606)
+Pacing: 1749 presents, 1684 machine ticks, 1681 pictures finished. Refreshes each picture stayed on screen: 1 x 1614 2 x 67
+Pacing: time between presents average 15.898 ms, longest 23.712 ms
+Machine hash after 1684 ticks: dff07647a4919783

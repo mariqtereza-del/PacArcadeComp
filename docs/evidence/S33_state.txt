@@ -1,0 +1,26 @@
+S33 Pause, save state, rewind, high score - evidence (2026-10-12)
+
+1. THE VERIFY COMMAND (tests/test_state.sh, 38 checks, PASS, full output in S33_test_state.txt):
+   A. A real game (coin 400, start 420, random joystick, same inputs every run). State saved at frame 1800 (main state 3, score 460, 3,300 bytes). 600 frames run and hashed
+      (memory, sound registers, latches, CPU PC/SP and the 600 x 1,584 sound samples of every frame); state loaded; the same 600 inputs run again: all 600 frame hashes IDENTICAL,
+      and the complete state after the repeat equals the state of an uninterrupted run byte for byte (except the sound-chip struct's padding bytes, which are not state).
+   B. The saved bytes loaded into a BRAND NEW machine and sound chip play the same 600 frames identically (nothing is missing from the state). Also at frames 100, 350, 430, 900, 1300, 2000.
+   C. State file written/read back identical; damaged, cut-short and other-version states are refused and change nothing; a missing file is reported; the state holds no waveform-ROM
+      bytes and no program-ROM runs (252 windows of 32 ROM bytes scanned) - state files can be shared without sharing the ROM.
+   D. Rewind: one state per frame; rewinding 120 frames and replaying the same inputs gives the same 120 frames; the ring keeps only the newest N states.
+   E. The high-score digits our code draws equal the digits the ROM draws itself, at all 83 changes of a real game's high score (0 tile differences); "00" / "05" rules checked.
+   F. High score keeper: stored value put in RAM (4E88-4E8A) and on screen once, at the first attract screen (not during the power-on RAM test, when the state byte counts through
+      garbage); a normal game that beats it is saved at game over; a game in which a state was loaded or rewound: only the score reached BEFORE the first load/rewind is saved (after the user's report 2026-10-12), what is scored after does not count; a lower score never replaces the file; leaving mid-game
+      saves the score so far only if unassisted; the next game counts again after an assisted one; damaged file ignored.
+2. REAL WINDOW (virtual screen, Xvfb + xdotool key presses; screenshots S33_*.png, logs S33_window_run*.txt):
+   F1 pauses: two screenshots 2 s apart identical; F2 saves (quicksave.sav written); after 6 s of play the picture differs; F1 + F4 while paused: the picture is IDENTICAL to the
+   one at the save (S33_paused_state.png = S33_after_F4_load.png); holding Backspace rewound 123 frames in 2 s (normal speed backwards; log "rewind stopped 123 frames back").
+   High score: an unassisted game left at score 70 -> "High score: new record 70 saved" (S33_highscore_file.txt); restart -> "loaded 70" and the picture shows 70 under HIGH SCORE
+   (S33_high_score_loaded.png); the assisted game (F2/F4/rewind) ended with "this game used save/load or rewind, so 70 is not saved".
+3. NOTHING ELSE CHANGED: scripted runs do not use any of this (no pause/rewind/high score), hashes equal the earlier steps': 2400 ticks 60c4b12eb084ed7e, 3000 ticks d7d39438e9e8d70c;
+   tests/test_replay.sh PASS (7,273 frame hashes = Python prototype); test_controls 45 PASS; test_audio_stall 12 PASS; run_all PASS.
+4. NOT TESTED HERE: a real Windows window, the real AppData folder, real keyboard timing, the sound while rewinding (silent by design), a pad button for pause/save/load (keyboard only).
+   These are the user's test. Quick states are for the same ROM and the same program version only.
+
+5. USER REPORT FOLLOW-UP (S33_user_report.txt): the first version discarded a whole game's score after any load. Fixed; tests/test_state.sh 39 checks PASS; real-window rerun of the user's scenario: file 50 -> 110 (best before F4), final score after the load 70 not counted.
+6. SECOND USER REPORT (S33_user_report.txt): rule changed to 'after a state load the saved high score is the one the state had when saved' (states carry a plain-play tag). 42 checks PASS; real-window load case file 70 (= at save), save-only case 80 (= at close).

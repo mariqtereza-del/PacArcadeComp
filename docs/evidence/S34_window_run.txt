@@ -1,0 +1,23 @@
+Settings: loaded build/s34/rw/cfg2/settings.cfg
+Purist mode: ON (no overlay, filters, one-button start, save states, rewind or saved high score)
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: no settings file yet (build/s34/rw/cfg2/controls.cfg), using the standard controls
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+Note: the program was frozen for 86 ms before machine tick 829 (the sound queue is re-set after a freeze)
+Menu: opened (the game is paused)
+Menu: resumed
+Menu: opened (the game is paused)
+Purist mode: off
+Pacing: exact (60.606 ticks per second)
+Game: restarted (Purist mode off), DIP switches now CD
+Menu: opened (the game is paused)
+Menu: quit
+High score: new record 70 saved to build/s34/rw/cfg2/highscore.txt
+Machine at exit: main state 3, lives 5, dots eaten 7, score 70, credits 1.
+Ran 35.17 s: 2058 machine ticks, 2124 pictures drawn
+Measured tick rate: 58.524 per second (arcade: 60.606)
+Pacing: 2221 presents, 2058 machine ticks, 2048 pictures finished. Refreshes each picture stayed on screen: 1 x 1950 2 x 96 9 x 2
+Pacing: time between presents average 15.833 ms, longest 86.540 ms
+Machine hash after 2058 ticks: e86ac389ccb26fb7

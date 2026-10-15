@@ -1,0 +1,8 @@
+X08 Button pictures switch between keyboard and pad  (2026-10-14)
+What was built: key caps are drawn in code (letter/word caps, small arrow triangles) in the game's tile font; the key help panel, the menu footer and the "YOUR CONTROLS" list show key caps while the keyboard was used last and the pad's own button pictures (S34C) once a pad was touched; the mouse does not change the hint set. New Controls item HINTS = AUTO / KEYBOARD / PAD (saved in settings.cfg as "hints"); PAD without a pad connected falls back to key caps; Purist always shows key caps. The Bindings screen still shows both columns.
+Tests:
+- tests/test_menu.sh: 184 checks (hint set for every setting / device / pad present / Purist, key cap widths and drawing, LEFT vs RIGHT arrows, HINTS value text, setting round trip)
+- tests/test_lastdevice.sh: 52 checks (hint_device ignores the mouse; hints_use_pad for all 12 combinations)
+- tests/test_hints.sh (real window, pretend pads): keyboard = key caps only; Xbox 360 / Xbox One pads = green/red/blue/yellow pictures; PS4 / PS5 = cross/circle/square/triangle pictures; pad then keyboard = back to key caps; forced KEYBOARD keeps key caps with a pad; forced PAD shows pad pictures; Purist keeps key caps. Screenshots: docs/evidence/X08_keyboard.png, X08_ps4.png, X08_xbox.png
+- test_purist (7273 hashes identical to the Python prototype), test_replay, test_bindings, test_mouse (BACK row index 9, click log fixed), test_mouse2, test_padtypes, test_padbuttons, test_autopause, test_events, test_assist, test_scenarios, test_state, run_all: all PASS
+Result: PASS

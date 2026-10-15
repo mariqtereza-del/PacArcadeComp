@@ -1,0 +1,18 @@
+X47 HDR research evidence (2026-10-15)
+
+SDL2 headers checked: /tmp/sdl2win/SDL2-2.32.10/x86_64-w64-mingw32/include/SDL2 (Windows build) and /usr/include/SDL2 (Linux, 2.30.0)
+Command: grep -n -i "scrgb\|hdr\|colorspace" SDL_render.h SDL_video.h
+Result: no HDR / scRGB / colorspace symbols in SDL_render.h, SDL_video.h or SDL_pixels.h.
+(no lines above = no matches)
+
+Web sources read (see docs/notes/hdr.md):
+- https://wiki.libsdl.org/SDL3/SDL_SetRenderDrawColorspace (SCRGB for HDR rendering, since SDL 3.0.0)
+- https://wiki.libsdl.org/SDL3/SDL_GetDisplayProperties (HDR_ENABLED property, informational, since 3.2.0)
+- https://bb.oolite.space/viewtopic.php?p=303740 (Linux HDR needs SDL 3.2.6+ and compositor support; no Windows detail)
+- https://discourse.libsdl.org/t/does-sdl-support-hdr10-rendering/25843 (SDL2 question, no answer)
+Decision: drop for now; SDL3 migration would be a separate step if ever wanted.
+
+Hash checks (no code changed in this step): see below.
+PASS: Purist run: 7273 frame hashes identical to the Python prototype and the high score file untouched; normal run without a saved score identical; normal run with a saved score of 5000 differs from frame 297 (so the extras are real and Purist really removes them)
+PASS: 7273 frame hashes identical (C++ run 1 = run 2 = Python prototype); recorder round trip identical
+  replay played: 7273 frames, 7172 distinct frame states, main state changed 38 times, 3 games started, most dots on a level 240, highest P1 score 700, two-player game seen: yes

@@ -1,0 +1,30 @@
+T01c evidence: dots, energizers, ghost house counters, power pill start and fruit appearance as readable code (src/logic/dots_and_fruit.h) versus the ROM (2026-10-15)
+
+== What was written ==
+src/logic/dots_and_fruit.h (+ VideoRam in work_ram.h): eating on Pac-Man's tile (ROM 19CD: dot count 4E0E, the tile blanked in the maze, the 'add score' task queued, Pac-Man's pause 1 or 6 frames, the footstep sound bits), the ghost house dot counters (1B08), the power pill start (1A70) and the fruit rule (0EAD: 70 and 170 dots, the fruit for the level, the timeout event). The task queue (0042) and the timed event slots (rst 30h) are small functions of their own. The fruit table is written as 8 fruits and a level rule instead of 63 bytes.
+
+== How it was proved ==
+Compared after every call: ALL work RAM, the whole video RAM (the maze) and the colour RAM, except the bytes under the stack pointer used by the routine's own calls.
+Part A (live): at every entry of 19CD and 0EAD during the scripted play the readable version gets a copy of the memory; at the return both must be identical.
+Part B1: 19CD alone for every Pac-Man tile position that lies in the video RAM (54,272 of the 65,536 a,b pairs) x dot / energizer / blank tile.
+Part B2: 1,000,000 random situations each for EAT, FRUIT and COUNT (the whole memory random first; dot counts 69-71 and 169-171, any level 0-255, every flag, the task queue pointer next to the end of its page, counters about to wrap, the timed event table nearly full).
+
+== Result (3,000,000 frames, 1,000,000 random situations per piece) ==
+part A: 3000000 frames (13.8 hours of game time): EAT 1718591 calls (dot 95472, energizer 2303, nothing to eat 1620816; ghost house: common counter 7287, nobody counts 30962, Clyde 36618, Inky 22908, Pinky 0); FRUIT 2024467 calls, fruit shown 670 times (by points kind: cherry 670 strawberry 0 orange 0 apple 0 melon 0 galaxian 0 bell 0 key 0); differences 0
+part B1: every Pac-Man tile position that lies in the video RAM (54272 of 65,536) x dot, energizer, blank: 162816 calls of 19CD alone, differences so far 0
+part B2: 1000000 random situations each for EAT (1000000), FRUIT (1000000), COUNT (1000000): differences 0
+PASS test_logic_dots: 3743058 live calls and 3162816 isolated calls compared, 0 differences
+
+== The test can fail (deliberately broken versions) ==
+first fruit at 71 dots: 32 differences. Energizer pause 5: 54,500. Task queue wrap to 4CC1: 457. Siren byte set to 1 at the power pill: 54,500. Melon colour changed: 5. Ghost house counter changed: 969. Orange/apple level rule shifted: 8. Two further changes (the key from level 13 instead of 12; the clamp at level 21 instead of 20) were NOT caught: they change nothing (every level from 12 on gives the key, so those two are equivalent versions, not gaps in the test). Original restored (cmp clean).
+
+== Other checks ==
+tests/run_all.sh ALL TESTS PASSED (with the short versions of the three logic tests); tests/test_purist.sh PASS; tests/test_replay.sh PASS. The game code was not changed.
+
+== Honest limits ==
+1. Not copied: Pac-Man eating the fruit (ROM 19A1-19C4) and the screen drawing of the fruit; they stay with the ROM.
+2. In live play the scripted player only reached the first level, so only the cherry (and 670 fruit appearances) was seen live; all 21 level numbers and the clamp are proved by the isolated runs (every level 0-255 occurs in Part B2).
+3. In live play Pinky's counter was never the one counting (Pinky leaves at once); it is covered by the isolated COUNT runs.
+4. A full timed event table (16 slots taken) is not modelled (the ROM would then run on into data); it never happens in the game and the tests always leave one slot free.
+5. Tile positions outside the video RAM (11,264 a,b pairs, which do not occur in the maze) were not run.
+6. The readable code is not used by the game yet. The full 85-minute regression was not rerun (no game code changed).

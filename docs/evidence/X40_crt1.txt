@@ -1,0 +1,66 @@
+X40 evidence (2026-10-14): CRT shadow mask
+
+== unit test (tests/test_crt.cpp) ==
+level light: measured average 0.8954, formula 0.8954
+level strong: measured average 0.7255, formula 0.7255
+9 checks, 0 failed
+RESULT: PASS
+
+== real-window screenshots (tests/test_crt.sh; replay tick 900, three sizes, compared with the unmasked picture) ==
+RESULT: PASS
+scale 2, light:
+  size 448x576
+  whole picture brightness ratio 0.894 wanted about 0.895 ok
+  RESULT: PASS
+scale 2, strong:
+  size 448x576
+  whole picture brightness ratio 0.721 wanted about 0.725 ok
+  RESULT: PASS
+scale 3, light:
+  size 672x864
+  whole picture brightness ratio 0.896 wanted about 0.895 ok
+  RESULT: PASS
+scale 3, strong:
+  size 672x864
+  whole picture brightness ratio 0.725 wanted about 0.725 ok
+  RESULT: PASS
+scale 5, light:
+  size 896x1152
+  whole picture brightness ratio 0.894 wanted about 0.895 ok
+  RESULT: PASS
+scale 5, strong:
+  size 896x1152
+  whole picture brightness ratio 0.720 wanted about 0.725 ok
+  RESULT: PASS
+  ok: Purist picture identical to the unmasked picture even with --crt-mask strong (same)
+  ok: mask changes the picture when not Purist (different)
+  ok: hash log lines (mask off) (7273)
+  ok: replay hash log identical with the strong mask on (same)
+
+== per-channel detail, scale 3 strong ==
+size 672x864
+lit pixels: 65556
+channel R column class 0: ratio 1.000 wanted 1.000 ok
+channel R column class 1: ratio 0.589 wanted 0.588 ok
+channel R column class 2: ratio 0.589 wanted 0.588 ok
+channel G column class 0: ratio 0.589 wanted 0.588 ok
+channel G column class 1: ratio 1.000 wanted 1.000 ok
+channel G column class 2: ratio 0.589 wanted 0.588 ok
+channel B column class 0: ratio 0.588 wanted 0.588 ok
+channel B column class 1: ratio 0.588 wanted 0.588 ok
+channel B column class 2: ratio 1.000 wanted 1.000 ok
+whole picture brightness ratio 0.725 wanted about 0.725 ok
+black stays black: ok
+RESULT: PASS
+
+== speed (full screen, software display, 12 s each) ==
+  1920x1080 mask off: fullscreen=1 Pacing: time between presents average 15.886 ms, longest 108.884 ms
+  1920x1080 mask strong: fullscreen=1 Pacing: time between presents average 15.872 ms, longest 104.951 ms
+  2560x1440 mask off: fullscreen=1 Pacing: time between presents average 16.011 ms, longest 104.524 ms
+  2560x1440 mask strong: fullscreen=1 Pacing: time between presents average 15.926 ms, longest 119.111 ms
+
+== menu test: sh tests/test_menu.sh ==
+PASS: 906 checks, 0 failures
+
+Pictures: docs/evidence/X40_off_3x.png, X40_light_3x.png, X40_strong_3x.png, X40_strong_zoom.png
+Full regression (/tmp/runall.sh then tests/run_all.sh) 2026-10-14: ALL TESTS PASSED, no FAIL lines (includes tests/test_crt.sh, test_purist.sh, test_replay.sh).

@@ -1,0 +1,228 @@
+<title>Pac-Man PC Port Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+/* Layout: one reading column; sticky pellet progress bar; lanes of collapsible step cards.
+   Palette: ink, maze blue, pac yellow, ghost red; cool neutrals. Type: Pixelify Sans headings, Plex Sans body, Plex Mono for prompts. */
+:root{
+  --bg:#f4f5fb; --card:#ffffff; --fg:#12122a; --muted:#565878; --line:#d6d8ec;
+  --blue:#2121de; --blue-soft:#e6e7fb; --yellow:#ffd100; --yellow-ink:#2a2200;
+  --red:#c4161c; --green:#0b6b3a; --green-soft:#dff3e7; --code-bg:#12122a; --code-fg:#e8e9ff;
+  --font-display:"Pixelify Sans","Trebuchet MS",sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08080f; --card:#10102a; --fg:#ecedff; --muted:#9d9fc8; --line:#262650;
+  --blue:#6b6bff; --blue-soft:#1a1a45; --red:#ff6b70; --green:#5fd391; --green-soft:#0f2a1c; --code-bg:#05050c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08080f; --card:#10102a; --fg:#ecedff; --muted:#9d9fc8; --line:#262650;
+  --blue:#6b6bff; --blue-soft:#1a1a45; --red:#ff6b70; --green:#5fd391; --green-soft:#0f2a1c; --code-bg:#05050c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--font-body);padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:860px;margin-inline:auto}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:2.1rem} h2{font-size:1.4rem} h3{font-size:1.05rem}
+p{margin:0} a{color:var(--blue)}
+code{font-family:var(--font-mono);font-size:.86em;background:var(--blue-soft);padding:.1em .35em;border-radius:4px;overflow-wrap:anywhere}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+header.top{padding-block:40px 18px;display:flex;flex-direction:column;gap:12px}
+header.top p{color:var(--muted);max-width:64ch}
+.eyebrow{font:500 .75rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-block:1px solid var(--line);padding-block:10px;margin-inline:-16px;padding-inline:16px}
+.bar-in{max-width:860px;margin-inline:auto;display:flex;flex-direction:column;gap:8px}
+.track{position:relative;height:22px}
+.pellets{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding-inline:12px}
+.pellets i{width:5px;height:5px;border-radius:50%;background:var(--line)} .pellets i.eaten{background:transparent}
+.pac{position:absolute;top:0;left:0;width:22px;height:22px;border-radius:50%;background:conic-gradient(from 70deg,var(--yellow) 0 320deg,transparent 320deg)}
+.bar-meta{display:flex;justify-content:space-between;gap:12px;font:500 .8rem var(--font-mono);color:var(--muted);flex-wrap:wrap}
+nav.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+nav.chips a{flex:none;font:500 .74rem var(--font-mono);text-decoration:none;color:var(--fg);border:1px solid var(--line);background:var(--card);padding:3px 9px;border-radius:99px}
+nav.chips a.v{background:var(--green-soft);border-color:var(--green)}
+main{display:flex;flex-direction:column;gap:26px;padding-top:26px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel ul,.panel ol{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px}
+.note{color:var(--muted);font-size:.93rem}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.stat b{font:700 1.5rem var(--font-display)} .stat span{font-size:.85rem;color:var(--muted)}
+.chip{display:inline-block;font:600 .68rem var(--font-mono);letter-spacing:.05em;padding:2px 7px;border-radius:4px;white-space:nowrap;border:1px solid var(--line)}
+.chip.VERIFIED{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.chip.PARTIAL,.chip.UNVERIFIED{background:var(--yellow);color:var(--yellow-ink);border-color:var(--yellow)}
+.chip.BROKEN{background:var(--red);color:#fff;border-color:var(--red)}
+.chip.NS{background:transparent;color:var(--muted)}
+.lane{display:flex;flex-direction:column;gap:10px}
+.lane>header{display:flex;flex-direction:column;gap:2px;padding-top:6px}
+.lane>header .note{margin:0}
+.step{background:var(--card);border:1px solid var(--line);border-radius:10px;min-width:0}
+.step>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.step>summary::-webkit-details-marker{display:none}
+.sid{font:700 .8rem var(--font-mono);background:var(--blue);color:#fff;border-radius:6px;padding:3px 8px}
+.sname{font-weight:600;flex:1;min-width:12ch}
+.caret{width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+.step[open] .caret{transform:rotate(-135deg)}
+.sbody{padding:4px 16px 18px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.f{display:grid;grid-template-columns:130px minmax(0,1fr);gap:6px 12px;align-items:start}
+.f dt{font:500 .7rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.f dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.f ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:3px}
+.you{border-left:4px solid var(--yellow);background:var(--blue-soft);padding:10px 14px;border-radius:0 8px 8px 0}
+.you ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.you li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px}
+.you input{width:18px;height:18px;margin:4px 0 0;accent-color:var(--blue)}
+.you .lbl{font:600 .68rem var(--font-mono);letter-spacing:.06em;background:var(--yellow);color:var(--yellow-ink);padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:6px}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px}
+.checks input{width:18px;height:18px;margin:4px 0 0;accent-color:var(--blue)}
+.checks li.on label{color:var(--muted);text-decoration:line-through}
+.prompt{background:var(--code-bg);color:var(--code-fg);border-radius:8px;padding:12px 14px;position:relative}
+.prompt pre{margin:0;white-space:pre-wrap;word-break:break-word;font:400 .84rem/1.55 var(--font-mono);padding-right:58px}
+.prompt button{position:absolute;top:8px;right:8px;font:500 .72rem var(--font-mono);background:var(--yellow);color:var(--yellow-ink);border:0;border-radius:5px;padding:4px 9px;cursor:pointer}
+.table-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:.92rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 .72rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+footer{color:var(--muted);font-size:.88rem}
+@media (prefers-reduced-motion:reduce){.caret{transition:none}}
+@media (max-width:560px){h1{font-size:1.6rem}.f{grid-template-columns:minmax(0,1fr)}.f dt{padding-top:6px}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow" id="ver"></span>
+  <h1>Pac-Man PC Port Plan</h1>
+  <p>The authoritative roadmap from your arcade ROM to a finished Windows .exe. Rewritten in small, separately tested steps. Statuses here are set by Claude from test evidence, not by ticking.</p>
+</header>
+<div class="bar"><div class="bar-in">
+  <div class="track" aria-hidden="true"><div class="pellets" id="pellets"></div><div class="pac" id="pac"></div></div>
+  <div class="bar-meta"><span id="count"></span><span id="next"></span></div>
+  <nav class="chips" id="chips" aria-label="Lanes"></nav>
+</div></div>
+<main id="main"></main>
+</div>
+
+<script>
+const D = __DATA__;
+const $ = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+const KEY = "pacman-port-plan-v2";
+let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const chip = s => `<span class="chip ${s==="NOT STARTED"?"NS":s}">${s}</span>`;
+function copy(btn, text){
+  const ok = () => { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(()=>btn.textContent=o, 1300); };
+  const fb = () => { const r = document.createRange(); r.selectNodeContents(btn.parentElement.querySelector("pre")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected"; };
+  try { navigator.clipboard.writeText(text).then(ok, fb); } catch(e) { fb(); }
+}
+function prompt(text){ const d = $("div","prompt"); const p = $("pre"); p.textContent = text; const b = $("button",null,"Copy"); b.type="button"; b.onclick = () => copy(b, text); d.append(p,b); return d; }
+function checkList(id, items){
+  const ul = $("ul","checks");
+  items.forEach((t,i)=>{ const k = id+"-"+i; const li = $("li", st[k] ? "on" : "");
+    const cb = $("input"); cb.type="checkbox"; cb.id = k; cb.checked = !!st[k];
+    cb.onchange = () => { st[k] = cb.checked; li.classList.toggle("on", cb.checked); save(); };
+    const lb = $("label"); lb.htmlFor = k; lb.innerHTML = t; li.append(cb, lb); ul.append(li); });
+  return ul;
+}
+const main = document.getElementById("main");
+document.getElementById("ver").textContent = "Plan version " + D.version;
+
+/* counts */
+const cnt = {}; D.steps.forEach(s => cnt[s.status] = (cnt[s.status]||0)+1);
+const verified = cnt["VERIFIED"]||0, total = D.steps.filter(s => s.lane !== "OPTIONAL").length;
+const okDep = d => { const x = D.steps.find(y => y.id === d) || {}; return x.status === "VERIFIED" || x.status === "UNVERIFIED"; };
+const nextStep = D.steps.find(s => s.status === "NOT STARTED" && s.id[0] === "S" && s.deps.every(okDep));
+
+/* 1. what changed */
+let p = $("section","panel");
+p.innerHTML = `<h2>What changed in version 2</h2>
+<ul><li>The old plan had <b>13 phases</b>. This one has <b>${D.steps.filter(s=>s.id[0]==="S").length} steps</b> plus one optional track. Each step has one objective, one test and one checkpoint, so it fits inside a single working session.</li>
+<li>The prompt for every step is now <b>one short line</b>. The details live in the project file <code>docs/steps/Sxx.md</code>, which Claude reads first.</li>
+<li>Statuses are honest: <b>VERIFIED</b> (tested, with evidence), <b>PARTIAL</b>, <b>UNVERIFIED</b> (written, not yet cross-checked), <b>BROKEN</b>, <b>NOT STARTED</b>.</li>
+<li>An earlier session left a working <b>Python prototype</b> that boots your ROM and draws the attract mode on a real Z80. It is now locked in as the <b>reference</b> that every C++ step is compared against. The C++ port itself so far contains only the Phase 2 test program.</li></ul>`;
+main.append(p);
+
+/* 2. stats */
+p = $("section","panel");
+const g = $("div","grid2");
+[["VERIFIED","Verified with evidence"],["UNVERIFIED","Captured, awaiting cross-check"],["NOT STARTED","Not started"],["BROKEN","Known broken"]].forEach(([k,l])=>{
+  g.append($("div","stat",`<b>${cnt[k]||0}</b><span>${l}</span>`)); });
+p.append($("h2",null,"Where things stand"), g,
+ $("p","note",`Done and re-checkable: ROM identification, the Windows toolchain, and the Python prototype baseline. Next up: <b>${nextStep ? nextStep.id + " " + esc(nextStep.name) : "all core steps verified"}</b>.`));
+main.append(p);
+
+/* 3. rules */
+p = $("section","panel"); p.append($("h2",null,"Rules every step follows"));
+const ol = $("ol"); D.rules.forEach(r => ol.append($("li",null,esc(r)))); p.append(ol);
+p.append($("h3",null,"Every step file has these parts"), $("p","note",D.fields.join(" · ")));
+p.append($("h3",null,"Resume after any interruption"),
+ $("p","note","Attach the latest project zip (and your ROM), then paste this. A token limit never means starting over: every step ends with a backup zip, and the newest zip whose tests pass is the last known-good state."),
+ prompt(D.resume));
+main.append(p);
+
+/* 4. standard test routine */
+p = $("details","panel"); p.append($("summary",null,"<b>Standard test routine for you</b> (used by steps marked with a YOU box)"));
+p.insertAdjacentHTML("beforeend", `<ol>
+<li>Download the zip Claude sends by clicking its file card in the chat. Save it into <code>Documents\\PacmanPort\\backups</code>.</li>
+<li>Right-click the zip, choose <b>Extract All…</b>, then click <b>Extract</b>. Never run a program from inside the zip.</li>
+<li>Open the extracted folder and double-click the .exe. If a blue box says “Windows protected your PC”, click <b>More info</b>, then <b>Run anyway</b>.</li>
+<li>Do what the step's YOU box says. Press <b>Esc</b> to close; the program saves <code>port-test-report.txt</code> next to itself.</li>
+<li>Send back: yes or no answers to the YOU list, the report file (attach with the paperclip or + button), and a screenshot of anything odd (Windows key + Shift + S, drag over the problem, paste into the chat).</li>
+<li>If an antivirus complains, do not turn it off. Send the exact wording.</li></ol>
+<p class="note">You are never asked to diagnose anything. If something fails, Claude investigates.</p>`);
+main.append(p);
+
+/* 5. lanes and steps */
+const chips = document.getElementById("chips");
+D.lanes.forEach(([lane, desc]) => {
+  const items = D.steps.filter(s => s.lane === lane); if (!items.length) return;
+  const sec = $("section","lane"); sec.id = "lane-"+lane;
+  const hd = $("header"); hd.append($("h2",null,lane), $("p","note",esc(desc))); sec.append(hd);
+  items.forEach(s => {
+    const d = $("details","step"); d.id = s.id; if (s.id === (nextStep && nextStep.id)) d.open = true;
+    d.append($("summary",null,`<span class="sid">${s.id}</span><span class="sname">${esc(s.name)}</span>${chip(s.status)}<span class="caret"></span>`));
+    const b = $("div","sbody"); const f = $("dl","f");
+    const row = (k, v) => { f.append($("dt",null,k), $("dd",null,v)); };
+    const ul = a => a.length ? "<ul>"+a.map(x=>`<li>${esc(x)}</li>`).join("")+"</ul>" : "-";
+    row("Objective", esc(s.obj)); row("Why", esc(s.why)); row("Depends on", s.deps.length ? s.deps.join(", ") : "nothing");
+    row("Starting state", esc(s.start)); row("Read first", esc(s.read)); row("May touch", esc(s.touch));
+    row("Implement", ul(s.do)); row("Do not", ul(s.dont)); row("Verify", ul(s.verify)); row("Success", esc(s.ok));
+    row("If failure", esc(s.fail)); row("Document", esc(s.doc)); row("Evidence", esc(s.evidence||"-")); row("Checkpoint", esc(s.cp));
+    b.append(f);
+    if (s.user && s.user.length){ const y = $("div","you"); y.append($("span","lbl","YOU")); y.append(checkList(s.id+"u", s.user.map(esc))); b.append(y); }
+    if (s.status !== "VERIFIED"){ b.append($("h3",null,"Prompt to paste"), prompt(s.prompt)); }
+    d.append(b); sec.append(d);
+  });
+  main.append(sec);
+  const a = $("a",null,lane); a.href = "#lane-"+lane;
+  if (items.every(s => s.status === "VERIFIED")) a.className = "v";
+  chips.append(a);
+});
+
+/* 6. old to new */
+p = $("section","panel"); p.append($("h2",null,"Old plan to new plan"));
+const tw = $("div","table-scroll"); let t = "<table><thead><tr><th>Old phase</th><th>New steps</th></tr></thead><tbody>";
+D.old.forEach(([a,b]) => t += `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`); tw.innerHTML = t + "</tbody></table>"; p.append(tw); main.append(p);
+
+/* 7. behaviours */
+p = $("section","panel"); p.append($("h2",null,"Arcade behaviours checklist"),
+ $("p","note","For steps S28 to S30. Values are from The Pac-Man Dossier as I know it; step S12 re-checks each against the live pages before it becomes a test."),
+ checkList("q", D.quirks.map(esc))); main.append(p);
+
+/* 8. sources */
+p = $("section","panel"); p.append($("h2",null,"Sources"));
+const su = $("ul"); D.sources.forEach(([n,u,d]) => su.append($("li",null,`<a href="${u}" target="_blank" rel="noopener">${esc(n)}</a>. ${esc(d)}`))); p.append(su);
+p.append($("p","note","The ROM is never bundled. The program loads your own file and checks it. The game's code, art and sound remain their rights holders' property; not bundling the ROM is the common approach, but I am not a lawyer, so check before publishing anything, and use a different project name than the original game's.")); main.append(p);
+
+/* 9. bug report */
+p = $("section","panel"); p.append($("h2",null,"Bug report template"), prompt("Step or build: \nWhat I did: \nWhat happened: \nWhat I expected: \nHow often: always / sometimes / once\nWindows version (Windows key + R, type winver): "));
+main.append(p);
+
+/* progress */
+const pel = document.getElementById("pellets"), N = 36;
+for (let i=0;i<N;i++) pel.append($("i"));
+const frac = verified/total;
+document.getElementById("count").textContent = `${verified} of ${total} steps verified`;
+document.getElementById("next").textContent = nextStep ? `Next: ${nextStep.id} ${nextStep.name}` : "";
+function place(){ const w = document.querySelector(".track").clientWidth - 22; document.getElementById("pac").style.left = (frac*w)+"px";
+  [...pel.children].forEach((e,i)=>e.classList.toggle("eaten",(i+0.5)/N<=frac)); }
+addEventListener("resize", place); place();
+</script>

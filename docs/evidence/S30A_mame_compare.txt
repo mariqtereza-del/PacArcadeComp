@@ -1,0 +1,5 @@
+level table lines (256 level starts + after the wrap)                                           IDENTICAL (261 lines each)
+events (level changes, intermissions, level-256 dot count, best dots eaten, rack-test press and wrap) IDENTICAL (274 lines each)
+video RAM + colour RAM, 300 frames into level 256 (2,048 bytes): IDENTICAL; sha1 ours 8da3133c7205e297, MAME 8da3133c7205e297
+the picture of the level-256 screen, 300 frames in (224 x 288 pixels, tiles and sprites): IDENTICAL PIXEL FOR PIXEL; sha1 ours 38248ae0d0439c7a, MAME 38248ae0d0439c7a
+RESULT: PASS (the port and MAME agree on everything compared)

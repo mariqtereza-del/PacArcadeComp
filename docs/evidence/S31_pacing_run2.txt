@@ -1,0 +1,10 @@
+Renderer: software (vsync on), first window 448x576
+Display refresh rate: 180 Hz (simulated)
+Pacing: smooth: 3 refreshes per tick = 60.000 ticks per second (arcade 60.606, 1.00 % slow)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+Machine at exit: main state 3, lives 2, dots eaten 69, score 690, credits 0.
+Ran 39.99 s: 2400 machine ticks, 2400 pictures drawn
+Measured tick rate: 60.017 per second (arcade: 60.606)
+Pacing: 7198 presents, 2400 machine ticks, 2399 pictures finished. Refreshes each picture stayed on screen: 3 x 2399
+Pacing: time between presents average 5.556 ms, longest 22.701 ms
+Machine hash after 2400 ticks: 60c4b12eb084ed7e

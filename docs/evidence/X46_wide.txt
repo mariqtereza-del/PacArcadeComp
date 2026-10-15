@@ -1,0 +1,63 @@
+FAIL: a fine black/white pattern averages to mid grey (blur)
+6 checks, 1 failed
+RESULT: FAIL
+FAIL: unit test
+window 2560x1080:
+  Layout: window 2560x1080, picture 944,108 672x864
+  ok: layout line found (yes)
+  ok: picture place and size identical in Black (Layout: window 2560x1080, picture 944,108 672x864)
+  ok: picture place and size identical in Purist (Layout: window 2560x1080, picture 944,108 672x864)
+  ambient:   96712 side samples, brightest sum 399, lit 25756
+  ambient:   ok: blurred: no sharp edges between neighbouring pixels in the side area (biggest step 3)
+  ambient: RESULT: PASS
+  black:   96712 side samples, brightest sum 0, lit 0
+  black: RESULT: PASS
+  purist:   96712 side samples, brightest sum 0, lit 0
+  purist: RESULT: PASS
+  CPU seconds (user system) over 20 s: black 6.39 0.45, ambient 28.75 0.19
+  Measured tick rate: 60.512 per second (arcade: 60.606) (ambient); Measured tick rate: 60.515 per second (arcade: 60.606) (black)
+window 3840x1080:
+  Layout: window 3840x1080, picture 1584,108 672x864
+  ok: layout line found (yes)
+  ok: picture place and size identical in Black (Layout: window 3840x1080, picture 1584,108 672x864)
+  ok: picture place and size identical in Purist (Layout: window 3840x1080, picture 1584,108 672x864)
+  ambient:   162316 side samples, brightest sum 419, lit 42237
+  ambient:   ok: blurred: no sharp edges between neighbouring pixels in the side area (biggest step 3)
+  ambient: RESULT: PASS
+  black:   162316 side samples, brightest sum 0, lit 0
+  black: RESULT: PASS
+  purist:   162316 side samples, brightest sum 0, lit 0
+  purist: RESULT: PASS
+  CPU seconds (user system) over 20 s: black 7.99 0.33, ambient 31.04 0.20
+  Measured tick rate: 60.370 per second (arcade: 60.606) (ambient); Measured tick rate: 60.515 per second (arcade: 60.606) (black)
+window 1920x1080:
+  Layout: window 1920x1080, picture 624,108 672x864
+  ok: layout line found (yes)
+  ok: picture place and size identical in Black (Layout: window 1920x1080, picture 624,108 672x864)
+  ok: picture place and size identical in Purist (Layout: window 1920x1080, picture 624,108 672x864)
+  ambient:   63756 side samples, brightest sum 411, lit 17794
+  ambient:   ok: blurred: no sharp edges between neighbouring pixels in the side area (biggest step 3)
+  ambient: RESULT: PASS
+  black:   63756 side samples, brightest sum 0, lit 0
+  black: RESULT: PASS
+  purist:   63756 side samples, brightest sum 0, lit 0
+  purist: RESULT: PASS
+  CPU seconds (user system) over 20 s: black 6.27 0.43, ambient 23.91 0.27
+  Measured tick rate: 60.512 per second (arcade: 60.606) (ambient); Measured tick rate: 60.512 per second (arcade: 60.606) (black)
+  ok: menu: three steps = cabinet, ambient, black (cabinet ambient black )
+  ok: settings.cfg holds surround black after the cycle (1)
+  ok: a saved 'surround ambient' is read back (1)
+  ok: hash log lines (7273)
+  ok: replay hash log identical with Ambient on (same)
+RESULT: FAIL
+
+--- fast check (affected tests, run after the last code change) ---
+tests/test_ultrawide.sh: ok
+tests/test_surround.sh: ok
+tests/test_cabinet.sh: ok
+tests/test_menu.sh: ok
+tests/test_purist.sh: ok
+tests/test_replay.sh: ok
+tests/test_crt_look.sh: ok
+DONE
+Note: CPU seconds above are measured on a software-drawn test display (no graphics card); the machine tick rate stays at 60.4-60.5 per second in every mode, so the frame time is not affected. Full regression: deliberately not run at this step (agreed workflow change); last full pass was X45.

@@ -1,0 +1,36 @@
+S25 evidence: sound chip, offline (src/audio/wsg.{h,cpp}, tests/test_wsg.cpp)
+Date: 2026-10-09
+
+Build: g++ -std=c++17 -O2 -Wall -Wextra -DMINIZ_NO_STDIO -DMINIZ_NO_TIME tests/test_wsg.cpp src/audio/wsg.cpp src/board/inputs.cpp src/board/romset.cpp src/board/machine.cpp src/board/bus.cpp miniz*.o -o build/s25/test_wsg
+Run:   build/s25/test_wsg roms/pacman.zip build/s25/     (writes build/s25/start_jingle.wav and a440.wav)
+Also built with mingw and run under wine: same result and a byte-identical WAV. Also run once with AddressSanitizer/UBSan: clean.
+
+== Test output ==
+  waveform PROM: all values 0-15: yes
+  voice 0, waveform 0, volume 15: sample range -10239 .. 7679 (PROM peak values -8 .. 6 times 15 /384 * 32767)
+  register 12C6h on voice 0: formula 440.002 Hz, spectrum peak 440.00 Hz, 440 rising zero crossings in 1 s
+  voice 1 frequency value 0x258C0: formula 14080.08 Hz, spectrum peak 14080.07 Hz
+  second description vs Wsg: 160000 samples compared, 0 differ by more than 1 step
+  jingle: sound first heard at frame 421, music ends at frame 679 (258 frames, 4.26 s)
+  ROM note table at 3BB9 (16 entries, rising from 57 to D4; the values are not repeated here)
+  jingle notes (runs of constant pitch): 46, found in the ROM note table: 46; pitch measured in the audio for 19 long notes, 19 within 1%
+  voice 0 distinct pitches (Hz): 67.4 71.0 101.1 106.9 112.8 126.7 134.8
+  voice 1 distinct pitches (Hz): 539.1 568.4 638.7 679.7 720.7 761.7 808.6 855.5 902.3 1078.1 1142.6
+  voice 2 distinct pitches (Hz):
+27 checks, 0 failures
+PASS test_wsg
+
+== What the two VERIFY checks show ==
+1. Register 12C6h on voice 0 measures 440 Hz: formula 440.002 Hz; spectrum peak 440.00 Hz; 440 rising zero crossings in one second of rendered audio (limit 1%).
+2. Jingle: 46 constant-pitch notes, every one an entry of the ROM note table (16 bytes at 3BB9, shifted by 0-7 octave steps; voices 1 and 2 hold the value times 16); pitch measured in the rendered audio of the 19 notes that last 6+ frames is within 1% of value*96000/2^20 for all 19.
+   Limit of this check: the jingle window ends at the first audible pitch that is NOT in the table (where the siren sweep begins, frame 679), so 'every note is in the table' cannot fail inside the window; what can fail is the length (240-280 frames, got 258 = 4.26 s), the sweep that follows (steps of 0x200) and the measured pitch of each note.
+
+== U3 (mixing details) ==
+Settled by following MAME's formulas: sample = (PROM low nibble - 8) * volume, three voices added, / 384 (= 128 * 3), 16-bit = sum*32767/384. A second description (floating-point phase in whole cycles) agrees on 160,000 random samples (40 random register sets incl. random high nibbles that must be ignored). Both descriptions come from the same sources, so this checks the code, not the real chip; the real check is the listening test in S26.
+
+== Observations for S26 ==
+- The ROM note table is not tuned to A440: its lowest entry (0x57 << 6, voice 1/2 register scale) is 509.7 Hz, about a quarter tone from the nearest standard notes. This follows from the chip formula (A440 = 12C6h, Lomont) and the table; if the tune sounds off to a trained ear in S26, check the 96 kHz sound clock first.
+- The accumulator registers 5040-504F are not modelled (MAME ignores them too).
+- Sound registers are applied once per frame (the ROM writes them once per frame, in the interrupt handler).
+
+Pictures/sounds: docs/evidence/S25_jingle.png (waveform and spectrogram of the rendered start jingle). WAV files are sent to the user, not stored in the project.

@@ -1,0 +1,16 @@
+X06: auto-pause when the window loses focus (2026-10-14)
+  ok: title while in focus (Pac-Man)
+  ok: focus lost: the game pauses by itself (Pac-Man - PAUSED (PRESS ANY KEY))
+  ok: focus back: still paused (Pac-Man - PAUSED (PRESS ANY KEY))
+  ok: any key goes on (Pac-Man)
+  ok: option off: focus loss does not pause (Pac-Man)
+  ok: Purist: focus loss does not pause (Pac-Man)
+  ok: log: paused once, went on once (1/1)
+  ok: log: no focus pause with the option off (0)
+  (run: 11.02 s, 361 machine ticks)
+  ok: the paused window ran fewer ticks than it would have unpaused (yes)
+RESULT: PASS
+
+--- Other checks ---
+test_menu 160 (incl. the X06 setting round trip), test_mouse 182, test_mouse2, test_bindings 167, test_controls 45, test_assist, test_purist PASS and test_replay PASS (7273 hashes identical); run_all below.
+Screenshot docs/evidence/X06_paused.png: the PAUSED / PRESS ANY KEY box after focus was taken away.

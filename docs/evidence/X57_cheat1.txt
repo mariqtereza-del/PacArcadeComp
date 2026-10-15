@@ -1,0 +1,32 @@
+X57 cheats (blue + invincible)
+  ok: without the cheat the blue time ends by itself (frames)
+  ok: pellet eaten
+  ok: with the cheat the ghosts are still blue after 4000 frames
+  ok:   and it did change memory (so the caller marks the game assisted)
+  ok:   the flags of the ghosts that were not eaten are still on
+  ok: sanity: a chain is possible in the real ROM
+  ok: with the cheat, 900 frames after the pellet all four ghosts can still be eaten
+  ok:   the chain reached place 4 (1600 points)
+  ok: no pellet eaten: the cheat writes nothing
+  ok: the cheat code not called: two identical runs stay identical
+  ok: the cheat changes the blue counter
+  ok:   and nothing else in the first 200 frames (only the counter differs; the game's rest is the same)
+  ok: without the cheat a ghost on Pac-Man kills him
+  ok: the 23 ROM bytes are the ones the patch expects
+  ok: switching on puts the patch in
+  ok:   it is idempotent
+  ok: with the cheat: 1500 frames with ghosts on Pac-Man, no death
+  ok:   the lives are unchanged
+  ok:   the game is not frozen: Pac-Man moved while the joystick was held
+  ok:   and the maze is still running
+  ok: switching off puts the original bytes back
+  ok: with INVINCIBLE on, blue ghosts are still eaten: the whole chain
+  ok:   up to place 4
+  ok:   and nobody died
+  ok: with the patch in, the game is identical to the unpatched one until the ghost touches Pac-Man (first difference in the last 3 frames, where the unpatched game dies)
+  ok: cheat game on the real ROM: a chain happens
+  ok:   GHOST BUSTER is a TEST unlock
+  ok:   no real unlock
+  ok:   nothing to save
+29 checks, 0 failed
+RESULT: PASS

@@ -1,0 +1,16 @@
+S32 audio bug: "unplugging the controller raises the pitch of the sound effects" (user report 2026-10-12 11:42, docs/evidence/S32_user_report.txt)
+
+CAUSE (found by simulation; not yet confirmed on the user's PC): removing a pad can freeze the program for 100 ms or more on Windows. The sound card keeps playing, its queue runs empty
+(silence), then the machine catches up with up to 5 frames back to back and the queue is too full. The S26 level controller corrects an over-full queue by playing faster: up to +2.5 %
+(about half a semitone) for roughly 3 seconds, i.e. a raised pitch on every sound effect. (Sound effects are what is audible; the report said it happened while a pill had been eaten.)
+REPRODUCED with tests/test_audio_stall.cpp (real AudioRing, AreaResampler, ring_level_scale; exact 48 kHz card; freeze at t = 5 s): without any fix, a 100 ms freeze gives 2.50 % pitch error for 3.0 s over 1 %.
+(SDL's dummy audio driver cannot be used to see it end to end: its clock is about 2 % off by itself, S26 finding.)
+
+FIX: RingGuard (src/audio/audio_out.{h,cpp}) used in make_sound (src/app/main.cpp): after the card ran dry it adds a little silence so the queue restarts at its normal level; during a catch-up burst
+it drops the extra sound blocks (they are late anyway). The controller never sees a big error. Emulation untouched: only audio queueing changed.
+RESULT (tests/test_audio_stall.sh, 12 checks PASS, docs/evidence/S32_audio_stall_test.txt): freezes of 20 ms ... 3 s: pitch error at most 0.44 % (0.14 % for 100 ms-1 s), never more than 1 % for any time
+(before: 2.50 % for 3 s). No freeze: guard changes nothing (0.05 %, 0 underruns).
+Real program with an injected 300 ms freeze (--stall 1500:300; docs/evidence/S32_audio_run_with_freeze.txt): "Note: the program was frozen for 300 ms before machine tick 1500", guard re-set the queue 6 times, dropped 5 late blocks.
+New log lines for the next user report: "Note: the program was frozen for N ms ...", "Audio guard: ...", "Audio pitch: ... scale smallest/largest". New test aid: --stall TICK:MS.
+Hashes unchanged: scripted 2400 ticks 60c4b12eb084ed7e (also with a 300 ms freeze + smooth pacing); replay test PASS; run_all PASS; test_controls PASS.
+NOT PROVEN: that this freeze is exactly what happens on the user's PC with the DualShock 4 (no pad here). The report will show it: after unplugging, the log (controls/report) prints a 'frozen for N ms' note if it was a freeze. If the pitch still rises, the next suspects are a Windows audio device change when the pad's own sound device disappears (DS4 has a headphone jack).

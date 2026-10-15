@@ -1,0 +1,23 @@
+S21 sprite renderer evidence, 2026-10-08
+C++: src/video/sprites.cpp (render_sprites). Test: tests/test_sprites.cpp (build line in its header). Reference frames: prototype render(mem, gfx, sprites=True, variant='A') on the exact-frame, mirror-correct board (tools/analysis/oracle_dump.py MirrorBoard + run_frame_exact), made like S20's but with sprites=True and frames 700, 1500, 2000.
+The port has no variant switch: it uses the S07-confirmed MAME coordinates sx = 272 - byte(5061+2n), sy = byte(5060+2n) - 31 (the prototype's variant A), flip bit 0 = X, bit 1 = Y in the native picture, palette = byte & 0x1F.
+
+== native
+frame 700: prototype-compatible render: 0 of 64512 pixels differ; sprites change 0 pixels; MAME-rules render differs from it in 0 pixels
+frame 1500: prototype-compatible render: 0 of 64512 pixels differ; sprites change 23 pixels; MAME-rules render differs from it in 65 pixels
+frame 2000: prototype-compatible render: 0 of 64512 pixels differ; sprites change 707 pixels; MAME-rules render differs from it in 88 pixels
+PASS test_sprites: 28 checks, 0 failures
+
+== mingw build under wine 9.0
+frame 700: prototype-compatible render: 0 of 64512 pixels differ; sprites change 0 pixels; MAME-rules render differs from it in 0 pixels
+frame 1500: prototype-compatible render: 0 of 64512 pixels differ; sprites change 23 pixels; MAME-rules render differs from it in 65 pixels
+frame 2000: prototype-compatible render: 0 of 64512 pixels differ; sprites change 707 pixels; MAME-rules render differs from it in 88 pixels
+PASS test_sprites: 28 checks, 0 failures
+
+Picture: docs/evidence/S21_sprites.png = frame 1500 (attract, with the '1600' score sprite) on the left and frame 2000 (demo game) on the right, drawn with MAME rules. Viewed: in the demo frame Pac-Man sits in the right-hand corridor and the four blue (frightened) ghosts sit in corridors and in the ghost house; GAME OVER, dots, maze and HIGH SCORE are in place.
+
+Two renderings, one function (flag mame_rules):
+ - false = prototype-compatible: proves the drawing code (flip, palette, priority, positions) equals the prototype exactly on three frames.
+ - true = the real board's rules from MAME's draw_sprites: sprites 0-2 one pixel further in native y (xoffsethack), wrap-around copy at sx-256, clip to native x 16..271, and transparency = 'the look-up PROM gives colour 0' (not 'pixel value 0'). Palettes 14, 16, 25, 26, 27 and 31 have non-zero pixel values that map to colour 0, so the two rules differ for them; the prototype draws those pixels black. On the three frames the MAME rules change 0, 65 and 88 pixels.
+U2 (hardware_facts.md): the port follows MAME (offset on). Not compared with a real arcade picture here; the choice is a one-line flag if a reference shows otherwise.
+Observation: the x register byte is 272 - sx, so a sprite's own left edge is always at least native x 17; the left clip only acts on the wrap-around copy.

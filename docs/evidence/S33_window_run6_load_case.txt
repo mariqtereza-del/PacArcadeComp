@@ -1,0 +1,16 @@
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: no settings file yet (cfg5/controls.cfg), using the standard controls
+High score: 10 in cfg5/highscore.txt
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+High score: loaded 10
+State: saved (F4 loads it)
+State: loaded (the high score is now the one this state had; what you score from now on in this game will not count)
+High score: new record 70 saved to cfg5/highscore.txt
+Machine at exit: main state 3, lives 3, dots eaten 7, score 70, credits 0.
+Ran 34.21 s: 2072 machine ticks, 2068 pictures drawn
+Measured tick rate: 60.565 per second (arcade: 60.606)
+Pacing: 2161 presents, 2072 machine ticks, 2068 pictures finished. Refreshes each picture stayed on screen: 1 x 1976 2 x 92
+Pacing: time between presents average 15.831 ms, longest 35.018 ms
+Machine hash after 2072 ticks: c5fd9c6601618d38

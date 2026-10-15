@@ -1,0 +1,59 @@
+X41 evidence (2026-10-14): CRT glow
+
+== unit test on known images (tests/test_glow.cpp) ==
+level 1: peak 5, total 125, expected about 128
+level 2: peak 3, total 239, expected about 255
+22 checks, 0 failed
+RESULT: PASS
+
+== real-window screenshots, replay tick 900 (tests/glow_shot_check.py), final strengths ==
+scale 2:
+size 448x576
+  ok: light never darker than off
+  ok: strong never darker than off
+  ok: light adds light somewhere
+  ok: strong adds more than light
+  brightness vs off: light 1.305, strong 1.652
+  ok: far from bright parts (10268 pixels) strong glow stays black
+  ok: black pixels near bright parts get brighter (213561 pixels)
+RESULT: PASS
+scale 3:
+size 672x864
+  ok: light never darker than off
+  ok: strong never darker than off
+  ok: light adds light somewhere
+  ok: strong adds more than light
+  brightness vs off: light 1.299, strong 1.645
+  ok: far from bright parts (23103 pixels) strong glow stays black
+  ok: black pixels near bright parts get brighter (479436 pixels)
+RESULT: PASS
+scale 5:
+size 896x1152
+  ok: light never darker than off
+  ok: strong never darker than off
+  ok: light adds light somewhere
+  ok: strong adds more than light
+  brightness vs off: light 1.301, strong 1.646
+  ok: far from bright parts (41072 pixels) strong glow stays black
+  ok: black pixels near bright parts get brighter (851377 pixels)
+RESULT: PASS
+
+== Purist / replay hashes ==
+Purist picture with --glow strong identical to the plain picture: same
+hash log lines: 7273; glow strong log identical to glow off: same
+
+== time between frames, full screen, software display, 12 s each ==
+1920x1080 glow off: Pacing: time between presents average 15.915 ms, longest 109.315 ms
+1920x1080 glow light: Pacing: time between presents average 16.068 ms, longest 115.663 ms
+1920x1080 glow strong: Pacing: time between presents average 16.089 ms, longest 116.676 ms
+2560x1440 glow off: Pacing: time between presents average 15.894 ms, longest 107.834 ms
+2560x1440 glow light: Pacing: time between presents average 16.062 ms, longest 116.339 ms
+2560x1440 glow strong: Pacing: time between presents average 16.047 ms, longest 112.832 ms
+
+== computing cost of one glow picture (200 pictures averaged, -O2) ==
+glow level 1: 4.646 ms per picture (budget 16.5 ms)
+glow level 2: 4.417 ms per picture (budget 16.5 ms)
+
+Pictures: docs/evidence/X41_off_3x.png, X41_light_3x.png, X41_strong_3x.png, X41_compare.png
+
+Full regression (/tmp/runall.sh then tests/run_all.sh): ALL TESTS PASSED, no FAIL lines (includes tests/test_glow.sh, test_crt.sh, test_purist.sh, test_replay.sh).

@@ -1,0 +1,36 @@
+S26 evidence: live audio (src/audio/audio_out.{h,cpp}, src/app/main.cpp)
+Date: 2026-10-09
+
+Design: sound chip (96 kHz, 1,584 samples per frame, registers and the 5001 sound-enable latch applied once per frame) -> exact area-averaging resampler to the card's rate (48 kHz asked; SDL converts if the card refuses) -> lock-free ring buffer (32,768 samples) -> SDL audio callback (480-sample = 10 ms device buffer). A controller nudges the resampler step by at most +/-2.5% from a smoothed ring level (target 12 ms just before each new frame) so the long-term rate follows the card's real clock; underruns are counted in the callback, the delay is measured there.
+
+== VERIFY: 60-second headless run (SDL dummy video and audio drivers, scripted game: coin, start, random joystick; real time) ==
+Command: SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy build/app/pacman-port --rom roms/pacman.zip --scripted --measure 62 --audio-capture X.wav --report R.txt
+-- run 1 --
+Renderer: software (vsync on), first window 448x576
+Audio: opened, 48000 Hz mono, device buffer 480 samples (10.000000 ms)
+Machine at exit: main state 3, lives 0, dots eaten 90, score 900, credits 0.
+Ran 62.00 s: 3757 machine ticks, 3757 pictures drawn
+Measured tick rate: 60.597 per second (arcade: 60.606)
+Audio: 3757 frames of sound made, 6096 callbacks, 0 underruns (0 samples missing), 0 samples dropped (queue full)
+Audio delay: device buffer 10.0 ms + queue (average 33.2 ms, smallest 23.3, largest 45.5) = about 43.2 ms on average, at most 55.5 ms
+Saved the audio handed to the sound card: build/s25/live1.wav
+-- run 2 --
+Renderer: software (vsync on), first window 448x576
+Audio: opened, 48000 Hz mono, device buffer 480 samples (10.000000 ms)
+Machine at exit: main state 3, lives 0, dots eaten 90, score 900, credits 0.
+Ran 62.00 s: 3757 machine ticks, 3757 pictures drawn
+Measured tick rate: 60.597 per second (arcade: 60.606)
+Audio: 3757 frames of sound made, 6100 callbacks, 0 underruns (0 samples missing), 0 samples dropped (queue full)
+Audio delay: device buffer 10.0 ms + queue (average 32.8 ms, smallest 22.8, largest 46.6) = about 42.8 ms on average, at most 56.6 ms
+Saved the audio handed to the sound card: build/s25/live2.wav
+
+Result: 0 underruns in both runs; average delay about 43 ms, worst about 56 ms (limit 60 ms).
+
+== What else was checked ==
+- Resampler alone (scratch check, not stored): a 440 Hz tone 96k -> 48k keeps its pitch (439.75 Hz by crossing count, 0.06% resolution), peak level 11998 of 12000; a 30 kHz tone (above the new limit) is cut from 12000 to 6539; 1% scale changes give 1% pitch changes as designed.
+- Data path: the 4.2 s jingle captured from the sound-card callback has exactly the same peak amplitude as the offline render (19796) and the same notes.
+- Finding: SDL's test (dummy) audio driver runs its clock about 1.7% slow and, with a 512-sample buffer, 6.7% FAST (it sleeps whole milliseconds). With 512 the controller (then limited to 0.5%) could not follow and underran 15% of the time; the limit was raised to 2.5%, the level smoothed (0.8 s) and the buffer set to 480 samples (exactly 10 ms). In the final runs the notes are about 1.7% sharp because the controller follows that slow test clock: this is the design working, and a real card is within a few hundredths of a percent.
+- Regression: picture dumps at frames 700 and 1500 still equal the S22 dumps (0 differing pixels); --autoplay still passes, also the Windows exe under wine.
+
+== Not tested here ==
+A real sound card (this workspace has none), the Windows exe's audio, and every game sound except the start jingle by ear (waka, siren, blue ghosts, eyes, fruit, extra life, death): that is the user's listening test (docs/evidence/S26_user_report.txt).

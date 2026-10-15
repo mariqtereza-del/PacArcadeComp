@@ -1,0 +1,123 @@
+S29 behaviour tests B (ghosts, scoring, lives). The game code is not changed. Values are measured on the running ROM; every place where the test
+writes a RAM value to set up a situation is marked 'harness'.
+
+Survey T: scripted games (seed 1, 2, 3 ...), harness: once the maze runs, the three ghosts in the house are released (4DA1 = 2, 4DA2 = 3, 4DA3 = 3, the values the
+  ROM's own release routines store) and 60 frames into each life's scatter phase the mode counter is moved to 419 (time jump) so the chase phase follows, until one game shows every target rule, Pac-Man facing up for Pinky and Inky, and Clyde both near and far
+  no scripted game in 80 seeds showed everything; using the last one and reporting what it showed
+  seed 80: 2545 frames, 244 target calls, 44 score events
+
+Survey H: scripted games until one shows the ghost-house rules on the first life and after a death. Harness (first life only): once Pinky is out the counter 4E10 is set
+  to 28 (and 4E11 to 58 once Inky is out), so the next two dots, counted by the ROM, reach the limits 30 and 60 without waiting for a perfect run
+  seed 1: 3841 frames, 9 releases from the ghost house
+
+T. Ghost targets (calls of the survey T game and of the survey H game together)
+  scatter corners (ROM): Blinky 221D, Pinky 391D, Inky 2040, Clyde 3B40 as (D,E) = (59 - column, row + 32): Blinky column 25 row -3, Pinky column 2 row -3, Inky column 27 row 32, Clyde column 0 row 32
+  Pac-Man's tile rows seen: 48 to 62 (row + 32)
+  [PASS] all four corners lie outside the maze rows: Blinky and Pinky above, Inky and Clyde below (Dossier: dead space above/below the maze)
+  [PASS] Blinky and Inky aim at the right half, Pinky and Clyde at the left half
+  Blinky scatter calls 132 (target = corner in 132), chase calls 110 (target as the rule in 110)
+  Pinky  scatter calls 65 (target = corner in 65), chase calls 106 (target as the rule in 106)
+  Inky   scatter calls 29 (target = corner in 29), chase calls 61 (target as the rule in 61)
+  Clyde  scatter calls 27 (target = corner in 27), chase calls 17 (target as the rule in 17)
+  scatter/chase path chosen wrongly (phase even and state 3 means corner; Blinky also needs Elroy off): 0 calls
+  [PASS] every ghost uses its corner exactly in the scatter phases (and Blinky only while Elroy is off)
+  [PASS] Blinky's scatter target is always its corner (132 calls)
+  [PASS] Pinky's scatter target is always its corner (65 calls)
+  [PASS] Inky's scatter target is always its corner (29 calls)
+  [PASS] Clyde's scatter target is always its corner (27 calls)
+  [PASS] Blinky chases Pac-Man's own tile on every call
+  Blinky calls in a scatter phase with Elroy on (Dossier: Elroy ignores scatter): 0, all aimed at Pac-Man: 0
+  Pinky chase calls by Pac-Man's direction (calls / correct): right 18/18 down 24/24 left 31/31 up 33/33
+  Inky chase calls by Pac-Man's direction (calls / correct): right 14/14 down 3/3 left 22/22 up 22/22
+  [PASS] Pinky aims 4 tiles ahead of Pac-Man (facing up: 4 up AND 4 left, the Dossier's overflow bug)
+  [PASS] Pinky's facing-up case was seen at least 3 times and matches the bug
+  [PASS] Inky aims at twice the vector from Blinky to the point 2 ahead (facing up: 2 up AND 2 left)
+  [PASS] Inky's facing-up case was seen at least 3 times and matches the bug
+  Clyde chase calls: 8 or more tiles away 11 (target Pac-Man in 11), nearer than 8 tiles 6 (target his corner in 6), exactly 8 tiles (squared 64): 0
+  [PASS] Clyde chases Pac-Man from 8 or more tiles away and goes to his corner when closer (Dossier)
+
+H. Ghost-house release
+  release events in the survey game (ghost, frame, level, died-this-level flag, how it was released, counter vs limit, global counter, dots eaten):
+    Pinky frame   679 level 1 died 0  personal counter counter  0 limit  0  global  0  dots   0
+    Inky  frame   696 level 1 died 0  personal counter counter 30 limit 30  global  0  dots   2
+    Clyde frame   714 level 1 died 0  personal counter counter 60 limit 60  global  0  dots   4
+    Pinky frame  1475 level 1 died 1  global counter   counter  0 limit  0  global  7  dots  27
+    Inky  frame  1811 level 1 died 1  global counter   counter 30 limit 30  global 17  dots  37
+    Clyde frame  2144 level 1 died 0  personal counter counter 60 limit 60  global  0  dots  52
+    Pinky frame  3119 level 1 died 1  inactivity timer counter  0 limit  0  global  5  dots  65  timer 240 of limit 240
+    Inky  frame  3359 level 1 died 1  inactivity timer counter 30 limit 30  global  5  dots  65  timer 240 of limit 240
+    Clyde frame  3599 level 1 died 1  inactivity timer counter 60 limit 60  global  5  dots  65  timer 240 of limit 240
+  ROM personal limits on level 1 (4DB8, 4DB9, 4DBA): 0 30 60 (Dossier: 0, 30, 60)
+  [PASS] level-1 personal dot limits are 0, 30 and 60
+  inactivity limit 4D95 on level 1: 240 frames = 4.00 s (Dossier: 4 s)
+  [PASS] inactivity timer limit is 240 frames = 4 s
+  first life, level 1, released by the personal counter: Pinky 1 (counter = limit in 1), Inky 1 (in 1), Clyde 2 (in 2)
+  [PASS] Pinky leaves as soon as the level starts (limit 0)
+  [PASS] Inky leaves when 30 dots have been eaten since Pinky left (counter = limit = 30)
+  [PASS] Clyde leaves when 60 further dots have been eaten (counter = limit = 60)
+  after a death, released by the global counter: 2 times, counter at release equal to 7 (Pinky) / 17 (Inky) in 2
+  [PASS] after a death Pinky leaves at global count 7 and Inky at 17 (Dossier)
+  released by the inactivity timer: 3 times, timer equalled its limit in 3 (Dossier: forced out after 4 s without eating a dot)
+  [PASS] every inactivity release happens exactly when the timer reaches its limit
+  other releases (later levels or other rules): 0
+  ghost-house dot counting (1B08, once per dot): 65 dots, counters moved by exactly one while a ghost waited (or the global counter ran) and not at all otherwise: 65
+  [PASS] every dot adds exactly 1 to the counter of the first waiting ghost (or to the global counter after a death)
+
+S. Scoring
+  survey game: dots eaten 65 (10 points each in 65), energizers 0 (50 points each in 0)
+  [PASS] a dot scores 10
+  ghosts in a row (harness: an energizer tile is written under Pac-Man once so the ROM's own eating code runs; each ghost's tile and position are set to Pac-Man's)
+  energizer eaten by the ROM's own code (harness wrote the tile): score +50 (tile code 14)
+  [PASS] an energizer scores 50
+  seed 2: energizer eaten (score event 50), then ghosts eaten in order Blinky, Pinky, Inky, Clyde scored 200, 400, 800, 1600; kill counter 4DD0 after each: 1 2 3 4
+  [PASS] ghosts score 200, 400, 800, 1600 in a row (Dossier)
+  the next energizer: first ghost eaten (ghost 1) scored 200 (Dossier: the sequence restarts at 200)
+  [PASS] a new energizer restarts the ghost score at 200
+  [PASS] ghost-eating run completed
+  fruit: level 1 cherry on screen at 8094; Pac-Man put on its position (harness); score went 120 -> 220 (+100); fruit position afterwards 0000
+  [PASS] the level-1 cherry scores 100 and disappears (Dossier / ROM table 2B17, S12)
+  [PASS] fruit-eating run completed
+
+E. Cruise Elroy (Blinky's speed-up), level 1
+  ROM thresholds (4DBB, 4DBC): 20 and 10 dots left; speeds from the S12 table: 80 % and 85 % (Dossier: 20 and 10 dots left, 80 % and 85 %)
+  [PASS] Elroy 1 at 20 dots left, Elroy 2 at 10 dots left
+  harness: Clyde set 'out' (4DA3 = 3) and the dots-eaten counter held at each value; flags 4DB6 (Elroy 1) / 4DB7 (Elroy 2):
+    eaten 222 (22 left): Elroy 1 = 0, Elroy 2 = 0
+    eaten 223 (21 left): Elroy 1 = 0, Elroy 2 = 0
+    eaten 224 (20 left): Elroy 1 = 1, Elroy 2 = 0
+    eaten 233 (11 left): Elroy 1 = 1, Elroy 2 = 0
+    eaten 234 (10 left): Elroy 1 = 1, Elroy 2 = 1
+    eaten 235 (9 left): Elroy 1 = 1, Elroy 2 = 1
+  [PASS] Elroy 1 switches on at 20 dots left and Elroy 2 at 10 dots left, not before
+  harness: Clyde in the house (4DA3 = 0), 8 dots left: Elroy flags 0 / 0; then Clyde out: 1 / 1
+  [PASS] Elroy stays off while Clyde is in the house and starts as soon as he is out (Dossier: suspended after a death until Clyde leaves)
+  Elroy 1 on, mode timer in a scatter phase (harness): Blinky made 36 target calls, 36 used the chase rule (return address 2765), 36 aimed at Pac-Man's tile (Dossier: Elroy ignores scatter)
+  [PASS] Blinky with Elroy on keeps chasing Pac-Man during scatter phases
+  Blinky, Elroy 1 (dots held at 226 eaten = 18 left): speed pattern fires 0.9995 steps per frame = 80.0 % (Dossier 80 % = 1.0000), measured over 2107 ticks; pixels per frame in the same frames 0.9647 (includes tunnel slow-down and corners)
+  [PASS] Blinky's speed with Elroy 1 is 80 %
+  Blinky, Elroy 2 (held at 236 = 8 left): speed pattern fires 1.0634 steps per frame = 85.1 % (Dossier 85 % = 1.0625), measured over 1734 ticks; pixels per frame in the same frames 1.0596 (includes tunnel slow-down and corners)
+  [PASS] Blinky's speed with Elroy 2 is 85 %
+  Blinky, no Elroy (held at 100): speed pattern fires 0.9372 steps per frame = 75.0 % (Dossier 75 % = 0.9375), measured over 3884 ticks; pixels per frame in the same frames 0.9372 (includes tunnel slow-down and corners)
+  [PASS] Blinky's speed with no Elroy is 75 %
+
+X. Extra life
+  DIP bonus 10,000 (default): ROM limit 4E71 = 10; lives 3 -> 4 (displayed 2 -> 3) after crossing the limit; extra-life routine (2B33) entered 1 times after the first crossing (it returns at once once the once-only flag is set); after a second crossing: lives 4, entered 3 times in all
+  [PASS] extra life at 10,000 (default), once only
+  DIP bonus 15,000: ROM limit 4E71 = 15; lives 3 -> 4 (displayed 2 -> 3) after crossing the limit; extra-life routine (2B33) entered 1 times after the first crossing (it returns at once once the once-only flag is set); after a second crossing: lives 4, entered 3 times in all
+  [PASS] extra life at 15,000, once only
+  DIP bonus 20,000: ROM limit 4E71 = 20; lives 3 -> 4 (displayed 2 -> 3) after crossing the limit; extra-life routine (2B33) entered 1 times after the first crossing (it returns at once once the once-only flag is set); after a second crossing: lives 4, entered 3 times in all
+  [PASS] extra life at 20,000, once only
+  DIP bonus none: ROM limit 4E71 = FF; lives 3 -> 3 (displayed 2 -> 2) after crossing the limit; extra-life routine (2B33) entered 0 times after the first crossing (it returns at once once the once-only flag is set); after a second crossing: lives 3, entered 0 times in all
+  [PASS] no extra life with bonus none
+
+L. Lives
+  DIP lives 1: game starts with 4E14 = 1 (icons shown 0); deaths counted 1, extra lives won 0, game over (state 1) at frame 2095
+  [PASS] with 1 lives: start value 1, one life lost per death (1 deaths + 0 extra), game over after the last
+  DIP lives 2: game starts with 4E14 = 2 (icons shown 1); deaths counted 2, extra lives won 0, game over (state 1) at frame 2749
+  [PASS] with 2 lives: start value 2, one life lost per death (2 deaths + 0 extra), game over after the last
+  DIP lives 3: game starts with 4E14 = 3 (icons shown 2); deaths counted 3, extra lives won 0, game over (state 1) at frame 4471
+  [PASS] with 3 lives: start value 3, one life lost per death (3 deaths + 0 extra), game over after the last
+  DIP lives 5: game starts with 4E14 = 5 (icons shown 4); deaths counted 5, extra lives won 0, game over (state 1) at frame 6397
+  [PASS] with 5 lives: start value 5, one life lost per death (5 deaths + 0 extra), game over after the last
+
+43 checks, 0 failed. PASS

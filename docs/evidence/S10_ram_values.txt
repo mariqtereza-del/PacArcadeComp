@@ -1,0 +1,359 @@
+S10 RAM VARIABLE EVIDENCE (prototype run; every row = value in RAM at a moment vs what the screen/sprites/behaviour show)
+
+4C12 sprite_staging_blinky (2 bytes)
+   [OK] early                              f650   ram=(86,A4) pos (64,80) | Blinky: byte0 = pos.1 + 6 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+   [OK] middle                             f1600  ram=(B4,8C) pos (7C,AE) | Blinky: byte0 = pos.1 + 6 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+   [OK] late                               f2550  ram=(86,A4) pos (64,80) | Blinky: byte0 = pos.1 + 6 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+4C14 sprite_staging_pinky (2 bytes)
+   [OK] early                              f650   ram=(86,8C) pos (7C,80) | Pinky: byte0 = pos.1 + 6 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+   [OK] middle                             f1600  ram=(99,A4) pos (64,93) | Pinky: byte0 = pos.1 + 6 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+   [OK] late                               f2550  ram=(86,8C) pos (7C,80) | Pinky: byte0 = pos.1 + 6 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+4C16 sprite_staging_inky (2 bytes)
+   [OK] early                              f650   ram=(97,8C) pos (7C,90) | Inky: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+   [OK] middle                             f1600  ram=(87,9D) pos (6B,80) | Inky: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+   [OK] late                               f2550  ram=(97,8C) pos (7C,90) | Inky: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+4C18 sprite_staging_clyde (2 bytes)
+   [OK] early                              f650   ram=(77,8C) pos (7C,70) | Clyde: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+   [OK] middle                             f1600  ram=(77,8D) pos (7B,70) | Clyde: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+   [OK] late                               f2550  ram=(77,8C) pos (7C,70) | Clyde: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1996 of 2000 frames
+4C1A sprite_staging_pacman (2 bytes)
+   [OK] early                              f650   ram=(87,44) pos (C4,80) | Pac-Man: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1995 of 2000 frames
+   [OK] middle                             f1600  ram=(63,2C) pos (DC,5C) | Pac-Man: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1995 of 2000 frames
+   [OK] late                               f2550  ram=(87,44) pos (C4,80) | Pac-Man: byte0 = pos.1 + 7 and byte1 = 8 - pos.0 holds on 1995 of 2000 frames
+4C80 task_queue_write_ptr (2 bytes)
+   [OK] early                              f650   ram=write ptr 0x4CCA, read ptr 0x4CCA | high bytes always 0x4C, low byte in C0..FF, queue empty (ptrs equal) on 3781 of 3800 frames
+   [OK] middle                             f2000  ram=write ptr 0x4CE4, read ptr 0x4CE4 | high bytes always 0x4C, low byte in C0..FF, queue empty (ptrs equal) on 3781 of 3800 frames
+   [OK] late                               f4000  ram=write ptr 0x4CC6, read ptr 0x4CC6 | high bytes always 0x4C, low byte in C0..FF, queue empty (ptrs equal) on 3781 of 3800 frames
+4C82 task_queue_read_ptr (2 bytes)
+   [OK] early                              f650   ram=0x4CCA | follows the write pointer; equal when queue empty
+   [OK] middle                             f2000  ram=0x4CE4 | follows the write pointer; equal when queue empty
+   [OK] late                               f4000  ram=0x4CC6 | follows the write pointer; equal when queue empty
+4C84 frame_counter_up (1 byte)
+   [OK] early                              f650   ram=0x60 (4C85=0xA0) | +1 every frame: True; 4C84+4C85 = 0 (mod 256) on every frame: True
+   [OK] middle                             f2000  ram=0xA6 (4C85=0x5A) | +1 every frame: True; 4C84+4C85 = 0 (mod 256) on every frame: True
+   [OK] late                               f4000  ram=0x76 (4C85=0x8A) | +1 every frame: True; 4C84+4C85 = 0 (mod 256) on every frame: True
+4C85 frame_counter_down (1 byte)
+   [OK] early                              f650   ram=0xA0 | falls by 1 every frame; always = -4C84
+   [OK] middle                             f2000  ram=0x5A | falls by 1 every frame; always = -4C84
+   [OK] late                               f4000  ram=0x8A | falls by 1 every frame; always = -4C84
+4C86 timer_sixtieths (1 byte)
+   [OK] early                              f650   ram=0x84 | steps +1 / +0x0B / wrap: {1: 3167, 11: 570, 107: 63}; 63 wraps in 3800 frames (1 per 60)
+   [OK] middle                             f2000  ram=0x34 | steps +1 / +0x0B / wrap: {1: 3167, 11: 570, 107: 63}; 63 wraps in 3800 frames (1 per 60)
+   [OK] late                               f4000  ram=0x70 | steps +1 / +0x0B / wrap: {1: 3167, 11: 570, 107: 63}; 63 wraps in 3800 frames (1 per 60)
+4C87 timer_seconds (1 byte)
+   [OK] early                              f650   ram=0x05 | changes 63 times in 3800 frames (= seconds, BCD); +1 steps 57, +7 (09->10) 5
+   [OK] middle                             f2000  ram=0x28 | changes 63 times in 3800 frames (= seconds, BCD); +1 steps 57, +7 (09->10) 5
+   [OK] late                               f4000  ram=0x01 | changes 63 times in 3800 frames (= seconds, BCD); +1 steps 57, +7 (09->10) 5
+4C88 timer_minutes (1 byte)
+   [OK] early                              f650   ram=0 | rises 0->1 at frame 3898 when seconds wrap 0x59->0x00 (frame 3898)
+   [OK] middle                             f2000  ram=0 | rises 0->1 at frame 3898 when seconds wrap 0x59->0x00 (frame 3898)
+   [OK] late                               f4399  ram=1 | rises 0->1 at frame 3898 when seconds wrap 0x59->0x00 (frame 3898)
+4C8B rng_a (1 byte)
+   [OK] early                              f650   ram=0xA0 | changes on 3799 of 3799 frames (pseudo-random sequence)
+   [OK] middle                             f2000  ram=0xA2 | changes on 3799 of 3799 frames (pseudo-random sequence)
+   [OK] late                               f4000  ram=0x52 | changes on 3799 of 3799 frames (pseudo-random sequence)
+4C8C rng_b (1 byte)
+   [OK] early                              f650   ram=0x20 | changes on 3799 of 3799 frames (pseudo-random sequence)
+   [OK] middle                             f2000  ram=0x1A | changes on 3799 of 3799 frames (pseudo-random sequence)
+   [OK] late                               f4000  ram=0x8A | changes on 3799 of 3799 frames (pseudo-random sequence)
+4D00 blinky_position (2 bytes)
+   [OK] eat                                f796   ram=(5F,BC) | Blinky (slot 1) pixels x 46..59 y 105..118, predicted x 43..60 y 102..119
+   [OK] power                              f999   ram=(1A,44) | Blinky (slot 1) pixels x 166..179 y 35..48, predicted x 163..180 y 33..50
+   [OK] blue                               f1000  ram=(19,44) | Blinky (slot 5) pixels x 166..179 y 35..48, predicted x 163..180 y 32..49
+   [OK] level2                             f1577  ram=(6E,A4) | Blinky (slot 1) pixels x 70..83 y 118..131, predicted x 67..84 y 117..134
+   [OK] died                               f2566  ram=(64,80) | Blinky (slot 1) pixels x 106..119 y 109..122, predicted x 103..120 y 107..124
+4D02 pinky_position (2 bytes)
+   [OK] eat                                f796   ram=(7C,AC) | Pinky (slot 2) pixels x 63..76 y 133..146, predicted x 59..76 y 131..148
+   [OK] power                              f999   ram=(31,E4) | Pinky (slot 2) pixels x 6..19 y 58..71, predicted x 3..20 y 56..73
+   [OK] blue                               f1000  ram=(32,E4) | Pinky (slot 2) pixels x 6..19 y 58..71, predicted x 3..20 y 57..74
+   [OK] level2                             f1577  ram=(67,80) | Pinky (slot 2) pixels x 106..119 y 112..124, predicted x 103..120 y 110..127
+   [OK] died                               f2566  ram=(7C,80) | Pinky (slot 2) pixels x 106..119 y 133..146, predicted x 103..120 y 131..148
+4D04 inky_position (2 bytes)
+   [OK] eat                                f796   ram=(80,90) | Inky (slot 3) pixels x 89..102 y 137..150, predicted x 86..103 y 135..152
+   [OK] power                              f999   ram=(7A,90) | Inky (slot 3) pixels x 89..102 y 132..145, predicted x 86..103 y 129..146
+   [OK] blue                               f1000  ram=(7A,90) | Inky (slot 3) pixels x 89..102 y 131..144, predicted x 86..103 y 129..146
+   [OK] level2                             f1577  ram=(77,80) | Inky (slot 3) pixels x 105..118 y 128..141, predicted x 102..119 y 126..143
+   [OK] died                               f2566  ram=(7C,90) | Inky (slot 3) pixels x 89..102 y 133..146, predicted x 86..103 y 131..148
+4D06 clyde_position (2 bytes)
+   [OK] eat                                f796   ram=(80,70) | Clyde (slot 4) pixels x 121..134 y 137..150, predicted x 118..135 y 135..152
+   [OK] power                              f999   ram=(7A,70) | Clyde (slot 4) pixels x 121..134 y 132..145, predicted x 118..135 y 129..146
+   [OK] blue                               f1000  ram=(7A,70) | Clyde (slot 4) pixels x 121..134 y 131..144, predicted x 118..135 y 129..146
+   [OK] level2                             f1577  ram=(79,70) | Clyde (slot 4) pixels x 121..134 y 130..143, predicted x 118..135 y 128..145
+   [OK] died                               f2566  ram=(7C,70) | Clyde (slot 4) pixels x 121..134 y 133..146, predicted x 118..135 y 131..148
+4D08 pacman_position (2 bytes)
+   [OK] eat                                f796   ram=(BF,BC) | Pac-Man (slot 5) pixels x 45..57 y 203..214, predicted x 42..59 y 198..215
+   [OK] power                              f999   ram=(C0,E4) | Pac-Man (slot 5) pixels x 5..17 y 200..211, predicted x 2..19 y 199..216
+   [OK] blue                               f1000  ram=(C0,E4) | Pac-Man (slot 1) pixels x 5..17 y 201..213, predicted x 2..19 y 199..216
+   [OK] level2                             f1577  ram=(C8,5C) | Pac-Man (slot 5) pixels x 141..153 y 208..219, predicted x 138..155 y 207..224
+   [OK] died                               f2566  ram=(C4,80) | Pac-Man (slot 5) pixels x 106..118 y 205..217, predicted x 102..119 y 203..220
+4D2C blinky_orientation (1 byte)
+   [OK] value 0                            f0     ram=Blinky=0 | moved right on 279 of 332 moving frames
+   [OK] value 1                            f0     ram=Blinky=1 | moved down on 306 of 361 moving frames
+   [OK] value 2                            f0     ram=Blinky=2 | moved left on 215 of 267 moving frames
+   [OK] value 3                            f0     ram=Blinky=3 | moved up on 209 of 255 moving frames
+4D2D pinky_orientation (1 byte)
+   [OK] value 0                            f0     ram=Pinky=0 | moved right on 140 of 171 moving frames
+   [OK] value 1                            f0     ram=Pinky=1 | moved down on 322 of 385 moving frames
+   [OK] value 2                            f0     ram=Pinky=2 | moved left on 208 of 263 moving frames
+   [OK] value 3                            f0     ram=Pinky=3 | moved up on 303 of 333 moving frames
+4D2E inky_orientation (1 byte)
+   [OK] value 0                            f0     ram=Inky=0 | moved right on 213 of 250 moving frames
+   [OK] value 1                            f0     ram=Inky=1 | moved down on 240 of 287 moving frames
+   [OK] value 2                            f0     ram=Inky=2 | moved left on 188 of 212 moving frames
+   [OK] value 3                            f0     ram=Inky=3 | moved up on 216 of 248 moving frames
+4D30 pacman_orientation (1 byte)
+   [OK] value 0                            f0     ram=Pac-Man=0 | moved right on 277 of 277 moving frames
+   [OK] value 1                            f0     ram=Pac-Man=1 | moved down on 128 of 128 moving frames
+   [OK] value 2                            f0     ram=Pac-Man=2 | moved left on 362 of 362 moving frames
+   [OK] value 3                            f0     ram=Pac-Man=3 | moved up on 83 of 83 moving frames
+4D39 pacman_tile_row (1 byte)
+   [OK] early                              f650   ram=56 (pos 0xC4) | = (0x4D08 >> 3) + 32 on 1987 of 2000 frames
+   [OK] middle                             f1600  ram=59 (pos 0xDC) | = (0x4D08 >> 3) + 32 on 1987 of 2000 frames
+   [OK] late                               f2550  ram=56 (pos 0xC4) | = (0x4D08 >> 3) + 32 on 1987 of 2000 frames
+4D3A pacman_tile_col (1 byte)
+   [OK] early                              f650   ram=46 (pos 0x80) | = (0x4D09 >> 3) + 30 on 1987 of 2000 frames
+   [OK] middle                             f1600  ram=41 (pos 0x5C) | = (0x4D09 >> 3) + 30 on 1987 of 2000 frames
+   [OK] late                               f2550  ram=46 (pos 0x80) | = (0x4D09 >> 3) + 30 on 1987 of 2000 frames
+4DA5 pacman_death_anim_state (1 byte)
+   [OK] death 1                            f2227  ram=goes non-zero at frame 2227 (value 1) | 4E14 drops 3 -> 2 at frame 2447
+   [OK] death 2                            f3071  ram=goes non-zero at frame 3071 (value 1) | 4E14 drops 2 -> 1 at frame 3291
+   [OK] death 3                            f4098  ram=goes non-zero at frame 4098 (value 2) | 4E14 drops 1 -> 0 at frame 4318
+4DA6 pacman_powered_up (1 byte)
+   [OK] eat                                f796   ram=0 | ghosts blue on screen: no
+   [OK] blue                               f1000  ram=1 | ghosts blue on screen: yes
+   [OK] blue2                              f1030  ram=1 | ghosts blue on screen: yes
+   [OK] level2                             f1577  ram=0 | ghosts blue on screen: no
+4DA7 blinky_edible (1 byte)
+   [OK] eat                                f796   ram=0 | ghost 0 (hardware sprite slot 1): 8 dark-blue pixels on screen (slot colour reg 0x01)
+   [OK] blue                               f1000  ram=1 | ghost 0 (hardware sprite slot 5): 138 dark-blue pixels on screen (slot colour reg 0x11)
+   [OK] blue2                              f1030  ram=1 | ghost 0 (hardware sprite slot 5): 138 dark-blue pixels on screen (slot colour reg 0x11)
+   [OK] level2                             f1577  ram=0 | ghost 0 (hardware sprite slot 1): 8 dark-blue pixels on screen (slot colour reg 0x01)
+4DA8 pinky_edible (1 byte)
+   [OK] eat                                f796   ram=0 | ghost 1 (hardware sprite slot 2): 8 dark-blue pixels on screen (slot colour reg 0x03)
+   [OK] blue                               f1000  ram=1 | ghost 1 (hardware sprite slot 2): 138 dark-blue pixels on screen (slot colour reg 0x11)
+   [OK] blue2                              f1030  ram=1 | ghost 1 (hardware sprite slot 2): 138 dark-blue pixels on screen (slot colour reg 0x11)
+   [OK] level2                             f1577  ram=0 | ghost 1 (hardware sprite slot 2): 8 dark-blue pixels on screen (slot colour reg 0x03)
+4DA9 inky_edible (1 byte)
+   [OK] eat                                f796   ram=0 | ghost 2 (hardware sprite slot 3): 8 dark-blue pixels on screen (slot colour reg 0x05)
+   [OK] blue                               f1000  ram=1 | ghost 2 (hardware sprite slot 3): 138 dark-blue pixels on screen (slot colour reg 0x11)
+   [OK] blue2                              f1030  ram=1 | ghost 2 (hardware sprite slot 3): 138 dark-blue pixels on screen (slot colour reg 0x11)
+   [OK] level2                             f1577  ram=0 | ghost 2 (hardware sprite slot 3): 8 dark-blue pixels on screen (slot colour reg 0x05)
+4DAA clyde_edible (1 byte)
+   [OK] eat                                f796   ram=0 | ghost 3 (hardware sprite slot 4): 8 dark-blue pixels on screen (slot colour reg 0x07)
+   [OK] blue                               f1000  ram=1 | ghost 3 (hardware sprite slot 4): 138 dark-blue pixels on screen (slot colour reg 0x11)
+   [OK] blue2                              f1030  ram=1 | ghost 3 (hardware sprite slot 4): 138 dark-blue pixels on screen (slot colour reg 0x11)
+   [OK] level2                             f1577  ram=0 | ghost 3 (hardware sprite slot 4): 8 dark-blue pixels on screen (slot colour reg 0x07)
+4DCE blink_timer_1up (1 byte)
+   [OK] credit                             f408   ram=0x6C (bit4=0) | "1UP" label visible
+   [OK] ready                              f424   ram=0x7C (bit4=1) | "1UP" label hidden
+   [OK] eat                                f796   ram=0xEE (bit4=0) | "1UP" label visible
+   [OK] power                              f999   ram=0xB9 (bit4=1) | "1UP" label hidden
+   [OK] level2                             f1577  ram=0x9F (bit4=1) | "1UP" label hidden
+   [OK] died                               f2566  ram=0x72 (bit4=1) | "1UP" label hidden
+   [OK] over                               f4320  ram=0x00 (bit4=0) | "1UP" label visible
+4E00 main_state (1 byte)
+   [OK] attract                            f380   ram=1 | attract screen
+   [OK] credit                             f408   ram=2 | PUSH START screen
+   [OK] ready                              f424   ram=2 | READY! screen (credit taken, game starting)
+   [OK] eat                                f796   ram=3 | maze with dots on screen
+   [OK] died                               f2566  ram=3 | maze with dots on screen
+   [OK] over                               f4320  ram=3 | maze with dots on screen
+4E02 intro_state (1 byte)
+   [OK] credit                             f408   ram=0 | screen PUSH START page
+   [OK] ready                              f424   ram=1 | screen READY
+   [OK] eat                                f796   ram=0 | screen maze
+4E04 level_state (1 byte)
+   [OK] ready                              f424   ram=0 | READY! shown, game not yet running
+   [OK] eat                                f796   ram=3 | maze running
+   [OK] over                               f4320  ram=7 | "GAME OVER" on screen
+4E09 current_player (1 byte)
+   [OK] ready2                             f474   ram=0 | READY! shown for player 1 (nobody has scored)
+   [OK] p1play                             f792   ram=0 | P1 score 80 is the one that has scored, P2 score 0
+   [OK] p2turn                             f1204  ram=1 | P1 finished with score 160; P2 turn begins (P2 score 0)
+   [OK] p2eat                              f1213  ram=1 | P2 now scoring (10) while P1 stays at 160
+4E0E dots_eaten_this_level (1 byte)
+   [OK] eat                                f796   ram=10 | screen: 244 - 230 dots - 4 energizers = 10
+   [OK] power                              f999   ram=22 | screen: 244 - 219 dots - 3 energizers = 22
+   [OK] level2                             f1577  ram=5 | screen: 244 - 235 dots - 4 energizers = 5
+   [OK] died                               f2566  ram=26 | screen: 244 - 214 dots - 4 energizers = 26
+   [OK] over                               f4320  ram=69 | screen: 244 - 171 dots - 4 energizers = 69
+4E12 died_this_level (1 byte)
+   [OK] ready                              f424   ram=0 | no death yet
+   [OK] eat                                f796   ram=0 | lives lost on this level so far: 0
+   [OK] died                               f2566  ram=1 | lives lost on this level so far: 1
+4E13 level (1 byte)
+   [OK] ready                              f424   ram=0 | screen level icons 1 (= level+1)
+   [OK] eat                                f796   ram=0 | screen level icons 1 (= level+1)
+   [OK] died                               f2566  ram=1 | screen level icons 2 (= level+1)
+   [OK] over                               f4320  ram=1 | screen level icons 2 (= level+1)
+4E14 lives_remaining (1 byte)
+   [OK] ready                              f424   ram=3 | screen life icons 3 (= lives, or lives-1 once play started)
+   [OK] eat                                f796   ram=3 | screen life icons 2 (= lives, or lives-1 once play started)
+   [OK] died                               f2566  ram=2 | screen life icons 1 (= lives, or lives-1 once play started)
+   [OK] over                               f4320  ram=0 | screen life icons 0 (= lives, or lives-1 once play started)
+4E15 lives_displayed (1 byte)
+   [OK] ready                              f424   ram=3 | screen life icons 3
+   [OK] eat                                f796   ram=2 | screen life icons 2
+   [OK] died                               f2566  ram=1 | screen life icons 1
+   [OK] over                               f4320  ram=-1 | screen life icons 0
+4E16 pill_array_p1 (30 bytes)
+   [OK] eat                                f796   ram=30 bytes, 240 bits set | screen dots left 230; array is a saved copy: still the full level-start copy (240)
+   [OK] power                              f999   ram=30 bytes, 240 bits set | screen dots left 219; array is a saved copy: still the full level-start copy (240)
+   [OK] level2                             f1577  ram=30 bytes, 240 bits set | screen dots left 235; array is a saved copy: still the full level-start copy (240)
+   [OK] died                               f2566  ram=30 bytes, 214 bits set | screen dots left 214; array is a saved copy: equals dots left (saved when the life was lost)
+   [OK] over                               f4320  ram=30 bytes, 171 bits set | screen dots left 171; array is a saved copy: equals dots left (saved when the life was lost)
+4E34 energizer_array_p1 (4 bytes)
+   [OK] eat                                f796   ram=4 bytes, 8 bits set | screen energizers left 4 (live); saved copy holds 2 bits per energizer left at last death, 8 before any death
+   [OK] power                              f999   ram=4 bytes, 8 bits set | screen energizers left 3 (live); saved copy holds 2 bits per energizer left at last death, 8 before any death
+   [OK] level2                             f1577  ram=4 bytes, 8 bits set | screen energizers left 4 (live); saved copy holds 2 bits per energizer left at last death, 8 before any death
+   [OK] died                               f2566  ram=4 bytes, 8 bits set | screen energizers left 4 (live); saved copy holds 2 bits per energizer left at last death, 8 before any death
+   [OK] over                               f4320  ram=4 bytes, 8 bits set | screen energizers left 4 (live); saved copy holds 2 bits per energizer left at last death, 8 before any death
+4E6B coins_per_credit (1 byte)
+   [OK] DIP default C9                     f380   ram=1 | DIP bits1-0=1 expects 1 (coins per credit)
+   [OK] DIP 2 coins/credit CB              f380   ram=2 | DIP bits1-0=3 expects 2 (coins per credit)
+   [OK] DIP 1 coin/2 credits CA            f380   ram=1 | DIP bits1-0=2 expects 1 (coins per credit)
+   [OK] DIP free play C8                   f380   ram=0 | DIP bits1-0=0 expects 0 (coins per credit)
+   [OK] DIP lives 1 C1                     f380   ram=1 | DIP bits1-0=1 expects 1 (coins per credit)
+   [OK] DIP lives 2 C5                     f380   ram=1 | DIP bits1-0=1 expects 1 (coins per credit)
+   [OK] DIP lives 5 CD                     f380   ram=1 | DIP bits1-0=1 expects 1 (coins per credit)
+   [OK] DIP bonus 15000 free D8            f380   ram=0 | DIP bits1-0=0 expects 0 (coins per credit)
+   [OK] DIP bonus 20000 free E8            f380   ram=0 | DIP bits1-0=0 expects 0 (coins per credit)
+   [OK] DIP bonus none free F8             f380   ram=0 | DIP bits1-0=0 expects 0 (coins per credit)
+   [OK] DIP bonus 10000 free C8            f380   ram=0 | DIP bits1-0=0 expects 0 (coins per credit)
+   [OK] DIP hard 89                        f380   ram=1 | DIP bits1-0=1 expects 1 (coins per credit)
+   [OK] DIP alt ghost names 49             f380   ram=1 | DIP bits1-0=1 expects 1 (coins per credit)
+   [OK] DIP cocktail IN1 bit7=0            f380   ram=1 | DIP bits1-0=1 expects 1 (coins per credit)
+4E6C partial_credit_coins (1 byte)
+   [OK] DIP default C9 after coin 1        f412   ram=0 | coins since last credit (partial credit); credits shown 1
+   [OK] DIP default C9 after coin 2        f452   ram=0 | coins since last credit (partial credit); credits shown 2
+   [OK] DIP 2 coins/credit CB after coin 1 f412   ram=1 | coins since last credit (partial credit); credits shown 0
+   [OK] DIP 2 coins/credit CB after coin 2 f452   ram=0 | coins since last credit (partial credit); credits shown 1
+   [OK] DIP 1 coin/2 credits CA after coin 1 f412   ram=0 | coins since last credit (partial credit); credits shown 2
+   [OK] DIP 1 coin/2 credits CA after coin 2 f452   ram=0 | coins since last credit (partial credit); credits shown 4
+   [OK] DIP cocktail IN1 bit7=0 after coin 1 f412   ram=0 | coins since last credit (partial credit); credits shown 1
+   [OK] DIP cocktail IN1 bit7=0 after coin 2 f452   ram=0 | coins since last credit (partial credit); credits shown 2
+4E6D credits_per_coin (1 byte)
+   [OK] DIP default C9                     f380   ram=1 | DIP bits1-0=1 expects 1 (credits per coin)
+   [OK] DIP 2 coins/credit CB              f380   ram=1 | DIP bits1-0=3 expects 1 (credits per coin)
+   [OK] DIP 1 coin/2 credits CA            f380   ram=2 | DIP bits1-0=2 expects 2 (credits per coin)
+   [OK] DIP free play C8                   f380   ram=0 | DIP bits1-0=0 expects 0 (credits per coin)
+   [OK] DIP lives 1 C1                     f380   ram=1 | DIP bits1-0=1 expects 1 (credits per coin)
+   [OK] DIP lives 2 C5                     f380   ram=1 | DIP bits1-0=1 expects 1 (credits per coin)
+   [OK] DIP lives 5 CD                     f380   ram=1 | DIP bits1-0=1 expects 1 (credits per coin)
+   [OK] DIP bonus 15000 free D8            f380   ram=0 | DIP bits1-0=0 expects 0 (credits per coin)
+   [OK] DIP bonus 20000 free E8            f380   ram=0 | DIP bits1-0=0 expects 0 (credits per coin)
+   [OK] DIP bonus none free F8             f380   ram=0 | DIP bits1-0=0 expects 0 (credits per coin)
+   [OK] DIP bonus 10000 free C8            f380   ram=0 | DIP bits1-0=0 expects 0 (credits per coin)
+   [OK] DIP hard 89                        f380   ram=1 | DIP bits1-0=1 expects 1 (credits per coin)
+   [OK] DIP alt ghost names 49             f380   ram=1 | DIP bits1-0=1 expects 1 (credits per coin)
+   [OK] DIP cocktail IN1 bit7=0            f380   ram=1 | DIP bits1-0=1 expects 1 (credits per coin)
+4E6E credits (1 byte)
+   [OK] attract                            f380   ram=0 | screen credit digit 0
+   [OK] credit                             f408   ram=1 | screen credit digit 1
+   [OK] credit2 (2-coin run)               f448   ram=2 | screen credit digit 2
+   [OK] DIP default C9 after coin 1        f412   ram=1 | screen credit digit 1, partial coin counter 4E6C=0
+   [OK] DIP default C9 after coin 2        f452   ram=2 | screen credit digit 2, partial coin counter 4E6C=0
+   [OK] DIP 2 coins/credit CB after coin 1 f412   ram=0 | screen credit digit 0, partial coin counter 4E6C=1
+   [OK] DIP 2 coins/credit CB after coin 2 f452   ram=1 | screen credit digit 1, partial coin counter 4E6C=0
+   [OK] DIP 1 coin/2 credits CA after coin 1 f412   ram=2 | screen credit digit 2, partial coin counter 4E6C=0
+   [OK] DIP 1 coin/2 credits CA after coin 2 f452   ram=4 | screen credit digit 4, partial coin counter 4E6C=0
+   [OK] DIP cocktail IN1 bit7=0 after coin 1 f412   ram=1 | screen credit digit 1, partial coin counter 4E6C=0
+   [OK] DIP cocktail IN1 bit7=0 after coin 2 f452   ram=2 | screen credit digit 2, partial coin counter 4E6C=0
+4E6F lives_per_game (1 byte)
+   [OK] DIP default C9                     f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP 2 coins/credit CB              f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP 1 coin/2 credits CA            f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP free play C8                   f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP lives 1 C1                     f484   ram=1 | DIP bits3-2 expect 1 lives; READY screen shows 1 life icons
+   [OK] DIP lives 2 C5                     f484   ram=2 | DIP bits3-2 expect 2 lives; READY screen shows 2 life icons
+   [OK] DIP lives 5 CD                     f484   ram=5 | DIP bits3-2 expect 5 lives; READY screen shows 5 life icons
+   [OK] DIP bonus 15000 free D8            f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP bonus 20000 free E8            f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP bonus none free F8             f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP bonus 10000 free C8            f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP hard 89                        f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP alt ghost names 49             f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+   [OK] DIP cocktail IN1 bit7=0            f484   ram=3 | DIP bits3-2 expect 3 lives; READY screen shows 3 life icons
+4E70 two_player_game (1 byte)
+   [OK] ready2                             f474   ram=1 | game started with the START 2 button (two credits used)
+   [OK] p1play                             f792   ram=1 | game started with the START 2 button (two credits used)
+   [OK] p2turn                             f1204  ram=1 | game started with the START 2 button (two credits used)
+   [OK] p2eat                              f1213  ram=1 | game started with the START 2 button (two credits used)
+4E71 bonus_life_score (1 byte)
+   [OK] DIP default C9                     f380   ram=0x10 | DIP bits5-4 expect 0x10
+   [OK] DIP 2 coins/credit CB              f380   ram=0x10 | DIP bits5-4 expect 0x10
+   [OK] DIP 1 coin/2 credits CA            f380   ram=0x10 | DIP bits5-4 expect 0x10
+   [OK] DIP free play C8                   f380   ram=0x10 | free-play screen text contains BONUS PAC-MAN FOR 10000 PTS
+   [OK] DIP lives 1 C1                     f380   ram=0x10 | DIP bits5-4 expect 0x10
+   [OK] DIP lives 2 C5                     f380   ram=0x10 | DIP bits5-4 expect 0x10
+   [OK] DIP lives 5 CD                     f380   ram=0x10 | DIP bits5-4 expect 0x10
+   [OK] DIP bonus 15000 free D8            f380   ram=0x15 | free-play screen text contains BONUS PAC-MAN FOR 15000 PTS
+   [OK] DIP bonus 20000 free E8            f380   ram=0x20 | free-play screen text contains BONUS PAC-MAN FOR 20000 PTS
+   [OK] DIP bonus none free F8             f380   ram=0xFF | free-play screen text has no bonus line
+   [OK] DIP bonus 10000 free C8            f380   ram=0x10 | free-play screen text contains BONUS PAC-MAN FOR 10000 PTS
+   [OK] DIP hard 89                        f380   ram=0x10 | DIP bits5-4 expect 0x10
+   [OK] DIP alt ghost names 49             f380   ram=0x10 | DIP bits5-4 expect 0x10
+   [OK] DIP cocktail IN1 bit7=0            f380   ram=0x10 | DIP bits5-4 expect 0x10
+4E72 cocktail_mode (1 byte)
+   [OK] DIP default C9                     f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP 2 coins/credit CB              f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP 1 coin/2 credits CA            f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP free play C8                   f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP lives 1 C1                     f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP lives 2 C5                     f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP lives 5 CD                     f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP bonus 15000 free D8            f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP bonus 20000 free E8            f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP bonus none free F8             f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP bonus 10000 free C8            f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP hard 89                        f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP alt ghost names 49             f380   ram=0 | IN1 bit7 = 1 (upright)
+   [OK] DIP cocktail IN1 bit7=0            f380   ram=1 | IN1 bit7 = 0 (cocktail)
+4E73 difficulty_pointer_lo (1 byte)
+   [OK] DIP default C9                     f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP 2 coins/credit CB              f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP 1 coin/2 credits CA            f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP free play C8                   f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP lives 1 C1                     f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP lives 2 C5                     f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP lives 5 CD                     f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP bonus 15000 free D8            f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP bonus 20000 free E8            f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP bonus none free F8             f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP bonus 10000 free C8            f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP hard 89                        f380   ram=0x7D | DIP bit6=0 -> hard expects 0x7D
+   [OK] DIP alt ghost names 49             f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+   [OK] DIP cocktail IN1 bit7=0            f380   ram=0x68 | DIP bit6=1 -> normal expects 0x68
+4E75 ghost_names_mode (1 byte)
+   [OK] DIP default C9                     f520   ram=0 | DIP bit7=1; attract screen names: SHADOW/BLINKY
+   [OK] DIP 2 coins/credit CB              f520   ram=0 | DIP bit7=1; attract screen names: SHADOW/BLINKY
+   [OK] DIP 1 coin/2 credits CA            f520   ram=0 | DIP bit7=1; attract screen names: SHADOW/BLINKY
+   [OK] DIP free play C8                   f520   ram=0 | DIP bit7=1; attract screen names: none
+   [OK] DIP lives 1 C1                     f520   ram=0 | DIP bit7=1; attract screen names: SHADOW/BLINKY
+   [OK] DIP lives 2 C5                     f520   ram=0 | DIP bit7=1; attract screen names: SHADOW/BLINKY
+   [OK] DIP lives 5 CD                     f520   ram=0 | DIP bit7=1; attract screen names: SHADOW/BLINKY
+   [OK] DIP bonus 15000 free D8            f520   ram=0 | DIP bit7=1; attract screen names: none
+   [OK] DIP bonus 20000 free E8            f520   ram=0 | DIP bit7=1; attract screen names: none
+   [OK] DIP bonus none free F8             f520   ram=0 | DIP bit7=1; attract screen names: none
+   [OK] DIP bonus 10000 free C8            f520   ram=0 | DIP bit7=1; attract screen names: none
+   [OK] DIP hard 89                        f520   ram=0 | DIP bit7=1; attract screen names: SHADOW/BLINKY
+   [OK] DIP alt ghost names 49             f520   ram=1 | DIP bit7=0; attract screen names: AAAAAAAA..
+   [OK] DIP cocktail IN1 bit7=0            f520   ram=0 | DIP bit7=1; attract screen names: SHADOW/BLINKY
+4E80 score_p1 (3 bytes)
+   [OK] ready                              f424   ram=bytes 00 00 00 -> 0 | screen P1 score 0
+   [OK] eat                                f796   ram=bytes 00 01 00 -> 100 | screen P1 score 100
+   [OK] power                              f999   ram=bytes 60 02 00 -> 260 | screen P1 score 260
+   [OK] died                               f2566  ram=bytes 20 06 00 -> 620 | screen P1 score 620
+   [OK] over                               f4320  ram=bytes 50 10 00 -> 1050 | screen P1 score 1050
+4E84 score_p2 (3 bytes)
+   [OK] p1play                             f792   ram=bytes 00 00 00 -> 0 | screen P2 score 0
+   [OK] p2turn                             f1204  ram=bytes 00 00 00 -> 0 | screen P2 score 0
+   [OK] p2eat                              f1213  ram=bytes 10 00 00 -> 10 | screen P2 score 10
+4E88 high_score (3 bytes)
+   [OK] ready                              f424   ram=bytes 00 00 00 -> 0 | screen high score None
+   [OK] eat                                f796   ram=bytes 00 01 00 -> 100 | screen high score 100
+   [OK] power                              f999   ram=bytes 60 02 00 -> 260 | screen high score 260
+   [OK] died                               f2566  ram=bytes 20 06 00 -> 620 | screen high score 620
+   [OK] over                               f4320  ram=bytes 50 10 00 -> 1050 | screen high score 1050
+
+VARIABLES WITH EVIDENCE: 56   FAILED ROWS: 0

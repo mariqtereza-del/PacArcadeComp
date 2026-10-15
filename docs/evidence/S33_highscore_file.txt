@@ -1,0 +1,2 @@
+# Pac-Man port: the saved high score (written when a game ends, only for games played without save/load or rewind).
+high_score = 70

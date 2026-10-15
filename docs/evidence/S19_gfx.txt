@@ -1,0 +1,23 @@
+S19 graphics decode evidence, 2026-10-08
+C++: src/video/gfx.{h,cpp}. Test: tests/test_gfx.cpp (build line and the dump-making command are in its header). Dump from the prototype's decoders (render.py tile_pixels, sprite_pixels, palette) is written to build/s19/gfx_dump.bin, NOT to tests/data: it contains the ROM graphics, and the standing rule is that ROM content is never bundled (build/ is excluded from checkpoint zips).
+
+== native
+tiles: 0 differing pixels (of 16384, first bad tile -1); sprites: 0 (of 16384, first bad sprite -1); palettes: 0 bytes (of 768, first bad palette -1)
+Lomont strip order: 0 differing pixels over 64 sprites (59 sprites have pixels)
+  control: strip order 0,1,2,3,4,5,6,7 gives 6189 differing pixels
+  control: strip order 1,5,2,6,3,7,0,4 gives 5710 differing pixels
+tiles rebuilt from two strips: 0 differing pixels
+colour PROM: 13 distinct colours of 32
+PASS test_gfx: 12 checks, 0 failures
+
+== mingw build under wine 9.0
+tiles: 0 differing pixels (of 16384, first bad tile -1); sprites: 0 (of 16384, first bad sprite -1); palettes: 0 bytes (of 768, first bad palette -1)
+Lomont strip order: 0 differing pixels over 64 sprites (59 sprites have pixels)
+  control: strip order 0,1,2,3,4,5,6,7 gives 6189 differing pixels
+  control: strip order 1,5,2,6,3,7,0,4 gives 5710 differing pixels
+tiles rebuilt from two strips: 0 differing pixels
+colour PROM: 13 distinct colours of 32
+PASS test_gfx: 12 checks, 0 failures
+
+Lomont strip-order check (p8, order 5,1,6,2,7,3,4,0): read as (bottom strip, top strip) for each 4-pixel column from the left, with strips decoded by an independent routine written from the strip description (8 bytes = 8 rows x 4 pixels, high nibble = high bit). It reproduces all 64 sprites exactly; two other orders give about 6,000 wrong pixels each. In MAME's offset form the same arrangement is x offsets {64,128,192,0} and y offsets 0 / 256 bits, i.e. top strips 1,2,3,0 and bottom strips 5,6,7,4.
+Decoded: 256 tiles (16,384 pixels), 64 sprites (16,384 pixels), 32 PROM colours (13 distinct), 64 palettes x 4 colours.

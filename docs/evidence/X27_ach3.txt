@@ -1,0 +1,51 @@
+  ok: three ghosts on one pellet: nothing
+  ok: the fourth ghost: GHOST BUSTER only
+  ok:   GHOST BUSTER is not FIRST PELLET (no events of those)
+  ok: second chain in the same round: DOUBLE CHAIN
+  ok: third: TRIPLE CHAIN
+  ok: fourth: CHAIN REACTION
+  ok: no GHOST FEAST without fruit
+  ok: one fruit: not yet
+  ok: the second fruit completes GHOST FEAST
+  ok: fruit first, 3 chains: no GHOST FEAST
+  ok: the fourth chain completes GHOST FEAST
+  ok: one chain in round 1 and one in round 2: no DOUBLE CHAIN
+  ok: a second chain in round 2: DOUBLE CHAIN
+  ok: three chains in round 3: TRIPLE, not REACTION
+  ok: a new game starts the count again
+  ok: a helped game: only the chain before the help
+  ok: player 2: nothing
+  ok: 5 lives: nothing
+  ok: test mode: no real unlock
+  ok: test mode: GHOST BUSTER and DOUBLE CHAIN are test unlocks
+  ok:   nothing to write to the file
+  ok:   the popup list reports each once
+  ok: a real unlock after a test unlock still counts
+  ok:   and it is no longer a test unlock
+  ok: helped without the cheat page: nothing
+  ok: name fits and text is in the game font: GHOST BUSTER
+  ok: name fits and text is in the game font: DOUBLE CHAIN
+  ok: name fits and text is in the game font: TRIPLE CHAIN
+  ok: name fits and text is in the game font: CHAIN REACTION
+  ok: name fits and text is in the game font: GHOST FEAST
+  ok: all keys and names are different
+Part 2: real machine
+  ok: four real runs: each gives a real chain (places 1 2 3 4) and unlocks only POWER UP and GHOST BUSTER there
+  ok: one real run: both fruits of a round are eaten
+  ok:   two real fruit events
+  ok: one real run: a round is cleared and the next begins
+  ok:   real ROUND CLEARED and LEVEL events obtained
+  ok: real chain 1: GHOST BUSTER only
+  ok: real chain 2: DOUBLE CHAIN
+  ok: real chain 3: TRIPLE CHAIN
+  ok: real chain 4: CHAIN REACTION
+  ok: real first fruit: GHOST FEAST not yet
+  ok: real second fruit: GHOST FEAST
+  ok: everything unlocked exactly once: five chain achievements, FRUIT SALAD and CHERRY PICKER
+  ok: real chain, then the game's own round change, then a real chain: no DOUBLE CHAIN
+  ok:   a second chain in the new round: DOUBLE CHAIN
+  ok: helped game, real events: only the first real chain counted
+  ok: helped game, real ROM: the chain happens
+  ok:   nothing unlocks
+48 checks, 0 failed
+RESULT: PASS

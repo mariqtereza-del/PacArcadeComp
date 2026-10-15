@@ -1,0 +1,19 @@
+Ran 4500 frames of the prototype (attract mode and demo).
+E1 I/O read addresses touched by the ROM (address: count): 5000:7069, 5040:4205, 5080:4
+E2 reads/writes in 4800-4BFF: reads=193 writes=0
+E3 I/O write addresses and the values written (value:count): 5000 -> 00:4204,01:4204; 5001 -> 00:3,01:2; 5002 -> 00:3,01:1; 5003 -> 00:5,01:1; 5004 -> 00:264,01:1; 5005 -> 00:264,01:1; 5006 -> 00:3,01:4200; 5007 -> 00:15,40:3; 50C0 -> 00:693,01:47,02:1,0F:6,10:7,12:6,20:2,23:6,34:6,3F:13,40:12,45:6,4C:2,52:1,56:6,60:1,67:6,78:6,89:6,9A:6,AB:6,BC:6,CD:6,D2:1,DE:6,DF:1,EF:6,F7:1,FC:1,FF:4194
+E3b other I/O write ranges seen: 5040, 5041, 5042, 5043, 5044, 5045, 5046, 5047, 5048, 5049, 504A, 504B, 504C, 504D, 504E, 504F, 5050, 5051, 5052, 5053, 5054, 5055, 5056, 5057, 5058, 5059, 505A, 505B, 505C, 505D, 505E, 505F, 5060, 5061, 5062, 5063, 5064, 5065, 5066, 5067, 5068, 5069, 506A, 506B, 506C, 506D, 506E, 506F, 5070, 5071, 5072, 5073, 5074, 5075, 5076, 5077, 5078, 5079, 507A, 507B, 507C, 507D, 507E, 507F
+E4 first writes to 5000 (frame, value): [(0, 0), (0, 1), (253, 1), (253, 0), (296, 0), (298, 1), (299, 0), (299, 1), (300, 0), (300, 1), (301, 0), (301, 1)]
+E5 colour RAM (4400-47FF) values seen: max=F0, distinct=42, any above 0x1F: True, any above 0x0F: True
+E6 sprite palette bytes (4FF1,4FF3,...) values seen: max=F0 set=['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '0A', '0B', '0C', '0D', '0E', '0F', '10', '11', '12', '14', '18', '19', '20', '30', '40', '50', '60', '70', '80', '90', 'A0', 'B0', 'C0', 'D0', 'E0', 'F0']
+E7 ROM interrupt vector table: word at 3FFA = 3000, word at 3FFC = 008D, I register = 3F
+E8 OUT port 0 vector byte at end: FC; interrupt enable flag at end: 1
+E9 sprite regs at frame 4500: s0:code/flip=00 pal=00 r60=00 r61=00 s1:code/flip=90 pal=01 r60=06 r61=08 s2:code/flip=98 pal=03 r60=06 r61=08 s3:code/flip=90 pal=05 r60=07 r61=08 s4:code/flip=80 pal=07 r60=07 r61=08 s5:code/flip=E8 pal=09 r60=DF r61=5C s6:code/flip=00 pal=14 r60=07 r61=08 s7:code/flip=00 pal=00 r60=00 r61=00
+E10 reads in 4800-4BFF (address,pc: count): []  total distinct=0
+E11 visible tile cells with colour-RAM bit5 set, summed over 4500 frames: 18218 (frames affected: 41)
+E12 active sprites with palette bit5 set: 0
+E13 82s126.4a upper half equals lower half: None
+E10b reads in 4800-4BFF with read-mark on: total=193, distinct addresses=4, calling PCs={'205E': 4}, values returned={'00': 193}
+E11b frames with colour bit5 on visible cells: first=[212] last=[252] count=41; values: {'F0': 2278, '20': 2278, 'A0': 2278, '30': 2278, 'B0': 2277, '70': 2277, '60': 2277, 'E0': 2275}
+E13 82s126.4a: size=256 upper half == lower half: False ; bytes 0x00-0x1F: 00000000000f0b0100000000000f0b0300000000000f0b0500000000000f0b07
+E14 return 0xBF instead of 0x00 for 4800-4BFF reads: identical picture and RAM at frames 700/1500/4500: True

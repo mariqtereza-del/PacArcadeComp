@@ -1,0 +1,22 @@
+Renderer: opengl (vsync on), first window 448x576
+Display refresh rate: unknown
+Controls: no settings file yet (controls.cfg), using the standard controls
+Pacing: exact (60.606 ticks per second)
+Display: whole-number scaling, scanlines off, window frame on, overlay off
+Controls: Press the key for UP (Esc cancels)
+Controls: UP = I
+Controls: DOWN = K
+Controls: LEFT = J
+Controls: RIGHT = L
+Controls: COIN = Space
+Controls: START 1 PLAYER = Return
+Controls: START 2 PLAYERS = Left Shift
+Controls: saved to controls.cfg
+Controls: Press the key for UP (Esc cancels)
+Controls: Remap cancelled, nothing changed
+Machine at exit: main state 3, lives 3, dots eaten 7, score 70, credits 0.
+Ran 24.33 s: 1473 machine ticks, 1464 pictures drawn
+Measured tick rate: 60.545 per second (arcade: 60.606)
+Pacing: 1531 presents, 1473 machine ticks, 1464 pictures finished. Refreshes each picture stayed on screen: 1 x 1398 2 x 66
+Pacing: time between presents average 15.891 ms, longest 42.104 ms
+Machine hash after 1473 ticks: 90fef425ff189829

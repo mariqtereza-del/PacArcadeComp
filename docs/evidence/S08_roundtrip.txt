@@ -1,0 +1,29 @@
+S08 round-trip report, 2026-10-15
+ROM: build/rom/prog.bin sha1 a70bb25d643a594f5bd0114f54d40fab0901ef3b
+Re-assembled docs/disasm/pacman.asm with z80asm and compared with prog.bin (cmp): IDENTICAL, 16384 bytes
+Coverage of the 16384 bytes:
+  code (traced instructions):            11632 bytes, 5439 instructions
+  inline data after RST 28h/30h:           219 bytes
+  RST 20h jump tables:                     494 bytes in 21 tables (247 entries)
+  data / never reached as code:           4039 bytes in 12 runs
+  unclassified:                              0 bytes (every byte is either traced code, inline data, a jump table, or data listed in the runs below)
+Checks: every ROM byte the prototype fetched while playing 7786 distinct bytes (docs/evidence/S08_runtime_pcs.txt) lies inside traced code: missing = 0; overlapping instructions = 0
+Data runs (never reached as code), each described only by what refers to it (meaning is decided in later steps):
+  0068-008C (  37 bytes) 21 distinct byte values; addresses loaded by code at 12BE->0078
+  0219-0220 (   8 bytes) 4 distinct byte values; addresses loaded by code at 01E3->0219
+  0796-0813 ( 126 bytes) 9 distinct byte values; addresses loaded by code at 0716->0796, 2355->0808
+  0843-0878 (  54 bytes) 25 distinct byte values; addresses loaded by code at 0749->0843, 0757->084F, 076D->0861, 0783->0873
+  0EFD-0FFF ( 259 bytes) 21 distinct byte values; addresses loaded by code at 0EDB->0EFD
+  1F9A-1FFF ( 102 bytes) 3 distinct byte values; no instruction loads an address inside it
+  2728-272F (   8 bytes) 7 distinct byte values; addresses loaded by code at 2700->2728, 2716->272C
+  2B17-2B32 (  28 bytes) 13 distinct byte values; addresses loaded by code at 2A60->2B17
+  2FBA-2FFF (  70 bytes) 3 distinct byte values; no instruction loads an address inside it
+  3154-3173 (  32 bytes) 12 distinct byte values; addresses loaded by code at 3042->3154, 310C->316C, 3113->316E, 311A->3170 ...
+  32F9-3AF3 (2043 bytes) 184 distinct byte values; addresses loaded by code at 320F->32F9, 297B->32FF, 1AF8->3301, 0DC8->3303 ...
+  3B08-3FFF (1272 bytes) 137 distinct byte values; addresses loaded by code at 2BF9->3B08, 2D0C->3B30, 2D1D->3B40, 2D2E->3B80 ...
+Seeds used for tracing: reset 0000, RST vectors 08 10 18 20 28 30 38, interrupt code 008D and 3000 (word at 3FFA), word at 3FFC (008D), return addresses pushed with LD HL,nn / PUSH HL (025B, 151C, 238D, 2D6C), and dead code 2C44 (never executed, never referenced; a clean 20-instruction BCD routine ending in RET).
+RST helpers: 20h = jump table after the call, no return (21 tables); 28h = 2 inline data bytes (75 sites); 30h = 3 inline data bytes (23 sites).
+RST 20h tables (start: entries): 0247:10; 03CC:4; 03D8:2; 0417:36; 05E9:5; 06C2:38; 0A45:21; 1098:3; 10A2:3; 10AC:4; 10B8:4; 1239:3; 1295:17; 1514:4; 210C:7; 21A6:14; 229B:6; 23A8:32; 23EF:2; 2D85:16; 2F02:16
+Scan of the data runs for code-like sequences (8+ instructions in a row, ending in RET/JP/JR, no 00/FF bytes): 8 found, none reached by any jump, call, table or executed by the prototype; they are left as data:
+  3435-34CA (57), 34CB-34DD (15), 34E0-3515 (35), 3529-3562 (28), 35CD-362C (60), 37C8-37FD (45), 3A3F-3A96 (60), 3BB9-3BC7 (15)
+Known limits: tables never executed by the prototype (0417, 10B8, 21A6, 229B, 23A8) get their length from the end-of-table rule only; data runs may hide code that is only reached through unusual computed jumps: the scan above lists every code-like sequence so S09 to S11 can check them. What each data table means is NOT decided here (steps S10 and S12).

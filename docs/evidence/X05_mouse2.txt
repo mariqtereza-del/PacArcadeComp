@@ -1,0 +1,29 @@
+X05: mouse wheel, Bindings screen, key panel pin (2026-10-14)
+PASS: 182 checks, 0 failures
+  ok: right click on a page goes back (no menu close yet) (Pac-Man - MENU)
+  ok: right click on the main page closes the menu (Pac-Man)
+  ok: hover over row 5 (DISPLAY) selected it (at least once) (yes)
+  ok: hover follows the pointer (row 4) (1)
+  ok: click opens CONTROLS (page 2) (1)
+  ok: click on BACK returns to the main page (its cursor is back on CONTROLS, row 4) (1)
+  ok: pointer shown while the menu was open (1)
+  ok: pointer hidden again when it closed (and at the start) (2)
+RESULT: PASS
+
+  ok: wheel down x3 then up x1 on the menu ends on item 2 (2)
+  ok: wheel moved the menu 4 times (4)
+  ok: BINDINGS opened by clicking (Pac-Man - BINDINGS)
+  ok: wheel on the Bindings screen (3 steps) (3)
+  ok: click on COIN KEY 1 waits for a key (1)
+  ok: the pressed key 7 was bound to COIN (log) (1)
+  ok: the controls file has coin = 7 (1)
+  ok: click on START 1 KEY 2 waits (1)
+  ok: right click cancels the wait (1)
+  ok: right click again goes back (menu) (Pac-Man - MENU)
+  ok: click on the key panel header pinned it (1)
+  ok: click again unpinned it (1)
+RESULT: PASS
+
+--- Other checks ---
+test_menu 149, test_bindings 167, test_controls 45, test_purist PASS and test_replay PASS (7273 hashes identical), run_all below.
+Screenshot docs/evidence/X05_bindings_click.png: a click on COIN KEY 1 in the Bindings screen, waiting for a key.

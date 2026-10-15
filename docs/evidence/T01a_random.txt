@@ -1,0 +1,30 @@
+T01a evidence: random numbers as readable code (src/logic/random_number.h) versus the ROM routine 2A23 (2026-10-15)
+
+== What was written ==
+src/logic/random_number.h  (seed = (seed * 5 + 1) & 0x1FFF; the answer is the program ROM byte at the new seed), src/logic/README.md, tests/logic_probe.h (side-by-side probe), tests/test_logic_random.cpp/.sh
+
+== How it was proved ==
+1. The real machine runs one instruction at a time (tests/logic_probe.h: same frame rule as Machine::run_frame). At every entry to 2A23 the readable version gets the same seed; at the RET (2A34) the ROM's answer (register A), HL and the seed bytes in RAM 4DC9/4DCA must equal the readable answer.
+2. A scripted player plays games for millions of frames (coin, start, random joystick, five lives); the seed in RAM is compared every frame; the only changes made by other code must be resets to 0000 (the start-of-game clear).
+3. Part B: all 65,536 possible starting seeds are run through the ROM routine alone and compared (a game only reaches 245 seeds because each game starts from 0000).
+4. The probe's own frame loop is compared with Machine::run_frame on a second machine: RAM identical after every frame for the first 300,000 frames.
+
+== Result: 3,000,000 frames ==
+frames run 3000000 (13.8 hours of game time); frames with the maze running 1389633; maze starts 251; energizers eaten 1708
+ROM calls of 2A23 100839; distinct seeds 245 of 8192; distinct answers 91 of 256; times other code changed the seed 1114 (1114 resets to 0000 by the start-of-game clear, 0 anything else)
+probe loop versus Machine::run_frame: identical RAM every frame over the first 300000 frames
+part B: all 65,536 starting seeds run through the ROM routine alone: 0 differences
+PASS test_logic_random: 100839 calls compared, 0 differences
+
+== Result: the default run in tests/run_all.sh and the 400,000-frame run ==
+400,000 frames: 13,145 calls compared, 0 differences, 141 resets to 0000, part B 0 differences (run on 2026-10-15).
+100,000 frames inside tests/run_all.sh: 2,977 calls, 0 differences; ALL TESTS PASSED.
+
+== The test can fail (deliberately broken readable versions) ==
+increment 1 changed to 3: part B 65,536 differences, FAIL. Mask 1FFF changed to 3FFF: part B 32,768 differences, FAIL. Original restored (diff clean).
+
+== Fast check ==
+tests/test_purist.sh PASS, tests/test_replay.sh PASS (the game code was not changed in this step: only src/logic/ and new tests were added).
+
+== Honest limits ==
+The readable code is NOT used by the game yet; the game still runs the ROM. The ROM routine is called from one place only (frightened ghost direction), so the long run sees 245 distinct seeds; the other seeds are covered by part B. The full 85-minute regression was not rerun (no game code changed).

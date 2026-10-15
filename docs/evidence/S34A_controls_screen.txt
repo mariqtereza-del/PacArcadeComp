@@ -1,0 +1,42 @@
+S34A evidence: the Bindings screen (2026-10-12)
+
+What was built
+  src/app/controls.{h,cpp}  class BindEditor: a 7 x 3 table (commands x key 1 / key 2 / pad button), one slot changed at a time, swap on conflict, clearing, reserved keys refused, d-pad refused as a pad binding.
+  src/app/menu.{h,cpp}      Controls > Bindings page, draw_bindings() (the whole 352-pixel width), display names in the game's font, key-help panel showing the real bindings ("YOUR CONTROLS").
+  src/app/main.cpp          wiring (PLAN CHANGE as in S31 to S34): Menu item BINDINGS, F9 and F10 open the same screen (F10 starts on the pad column; with no pad connected it opens on the keys), the pad can work the screen
+                            (d-pad moves, A selects, X clears, B back; while waiting any button is the answer), every change is saved at once to controls.cfg (same file format as before).
+                            The old one-by-one dialogue (Remap) is not used any more; its code and its S32 test stay.
+  Prompts and answers are shown inside the picture (the window title bar is no longer used for them).
+
+VERIFY (S34A.md)
+  Unit test tests/test_bindings.sh: 44 checks: only the chosen slot changes; a key already used is swapped (message names it); no key is ever on two commands; same-command slots swap; Esc/F keys refused;
+    Esc while waiting cancels only the change; Backspace clears; fixed movement pad slots; keyboard keys refused for pad slots, d-pad refused; pad buttons swap; to_text/parse round trip of an edited table.
+  tests/test_menu.sh: 98 checks (the earlier 83 plus names, help lines from real bindings, the bindings screen draws, Controls page starts with BINDINGS).
+  Real-window run on a virtual screen (S34A_*.png): Esc > Controls > Bindings shows every command with keys and pad button; Enter on COIN, key C: COIN = C; START 1 given C: swapped (COIN gets 1, message "C WAS ON COIN - SWAPPED");
+    Backspace cleared START 1 key 1; Esc steps back out; controls.cfg afterwards: coin = 1, Keypad 5 / start1 = none, Keypad 1 (the screen shows what the file holds). F9 opens the screen straight from the game and Esc returns to the running game.
+  Scripted hashes unchanged: 60c4b12eb084ed7e (2400 ticks), d7d39438e9e8d70c (3000 ticks). Replay: tests/test_purist.sh (Purist run = Python prototype, 7273 hashes) and tests/test_replay.sh pass.
+  Not tested here: the pad branches of the screen with a real pad (no pad on the test machine); their logic is covered by the unit test. The user's PS4 pad test covers it.
+
+Full test output
+== scripted hashes (must equal 60c4b12eb084ed7e, d7d39438e9e8d70c)
+Machine hash after 2400 ticks: 60c4b12eb084ed7e
+Machine hash after 3000 ticks: d7d39438e9e8d70c
+== tests/test_bindings.sh
+PASS: 44 checks, 0 failures
+== tests/test_menu.sh
+PASS: 98 checks, 0 failures
+== tests/test_controls.sh
+PASS test_controls: 45 checks, 0 failures
+== tests/test_purist.sh
+PASS: Purist run: 7273 frame hashes identical to the Python prototype and the high score file untouched; normal run without a saved score identical; normal run with a saved score of 5000 differs from frame 297 (so the extras are real and Purist really removes them)
+== tests/test_replay.sh
+PASS: 7273 frame hashes identical (C++ run 1 = run 2 = Python prototype); recorder round trip identical
+  replay played: 7273 frames, 7172 distinct frame states, main state changed 38 times, 3 games started, most dots on a level 240, highest P1 score 700, two-player game seen: yes
+== tests/test_state.sh
+PASS test_state: 42 checks, 0 failures
+== tests/test_audio_stall.sh
+PASS test_audio_stall: 12 checks, 0 failures
+== tests/run_all.sh
+check_docs OK: 29 cited paths exist, all 9 sections present
+ALL TESTS PASSED
+DONE

@@ -1,0 +1,12 @@
+# Pac-Man port settings (the menu writes this file; you may also edit it with Notepad)
+purist off
+overlay off
+scanlines off
+fill off
+smooth off
+window_frame on
+help_panel off
+lives 5
+bonus 15000
+difficulty hard
+ghost_names normal

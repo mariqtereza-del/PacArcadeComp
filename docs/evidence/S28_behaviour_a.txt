@@ -1,0 +1,64 @@
+S28 behaviour tests A (timing, speed, fruit). The game code is not changed; every value below is measured on the running ROM.
+
+0. The instrumented frame loop is the same machine as Machine::run_frame
+  memory hash after 1,500 frames: instrumented 4dde12f573432f686d925474d2d9f9a5c735674f, Machine::run_frame 4dde12f573432f686d925474d2d9f9a5c735674f
+  [PASS] identical memory, and the game is running (4E00 = 3)
+
+Survey: scripted games until one shows the first phase change in real time, many dot pauses and an energizer
+  seed 1: ran 3161 frames, 60 dot/energizer pauses seen, 2 phase change(s) in real time
+
+A. Scatter/chase schedule, level 1
+  phase table at 4D86 (cumulative frames): 420 1620 2040 3240 3540 4740 5040
+  Dossier at 60 frames per second: 7, 27, 34, 54, 59, 79, 84 s = 420 1620 2040 3240 3540 4740 5040 frames
+  [PASS] table = scatter 7 / chase 20 / scatter 7 / chase 20 / scatter 5 / chase 20 / scatter 5 / chase for ever
+  first phase change in real play (no time jump): at frame 1098, timer increments counted since the counter was 0: 420, counter at the change: 420
+  [PASS] phase 0 -> 1 after exactly 420 timer increments (7 s)
+  maze-running frames: 2242, mode timer called once in 2240; power-pill frames: 359 (counter increments in them: 0); other frames: 1883 (exactly one increment in 1881)
+  [PASS] the mode timer (0E36) runs once per frame while the maze runs
+  [PASS] the counter does not advance while a power pill is active (4DA6)
+  [PASS] otherwise the counter advances by exactly 1 per frame
+  power pills seen: 3, longest active time 359 frames (Dossier level 1: 6 s = 360 frames; shorter ones were cut by eating ghosts or a death)
+  every boundary: the counter 4DC2/4DC3 and the phase 4DC1 are set once to 3 frames before the boundary (time jump), then the ROM runs by itself
+    phase 0 -> 1: counter 420 (table 420), 3 frames after the jump, 25 increments
+    phase 1 -> 2: counter 1620 (table 1620), 3 frames after the jump, 3 increments
+    phase 2 -> 3: counter 2040 (table 2040), 3 frames after the jump, 3 increments
+    phase 3 -> 4: counter 3240 (table 3240), 3 frames after the jump, 3 increments
+    phase 4 -> 5: counter 3540 (table 3540), 3 frames after the jump, 3 increments
+    phase 5 -> 6: counter 4740 (table 4740), 3 frames after the jump, 3 increments
+    phase 6 -> 7: counter 5040 (table 5040), 3 frames after the jump, 3 increments
+    phase 7 (chase for ever): counter stays 5040, 0 increments in 120 more frames
+  (seed 1)
+  [PASS] all seven boundaries fire at the Dossier frame counts; phase 7 never ends
+
+B. Dot pause
+  Pac-Man speed tick (1806): exactly 2 calls in 1800 of 1802 maze-running frames (not counting 440 frames of Pac-Man's death animation, where it runs 0 times)
+  [PASS] the speed tick runs exactly twice per frame
+  dots: delay value stored 1, calls held 59 times out of 59 = 2 calls = 1 frame (Dossier: 1 frame)
+  energizers: delay value stored 6, calls held 1 times out of 1 = 7 calls = 3.5 frames (Dossier: 3 frames)
+  Pac-Man's position changed during a pause: 0 times
+  [PASS] a dot holds Pac-Man for 2 speed-tick calls = 1 frame = Dossier
+  [PASS] an energizer holds Pac-Man for 7 speed-tick calls (3.5 frames); the Dossier says 3 frames: RECORDED DISAGREEMENT (the ROM is the reference)
+  [PASS] Pac-Man does not move during a pause
+
+C. Fruit
+  seed 1: dots-eaten counter set from 3 to 68 (time jump), then the game ate two dots by itself
+  first fruit: spawn code ran at 4E0E = 70 (level 1), flag 4E0C = 1, position 4DD2 = 8094, sprite code 00, colour 14 (cherry)
+  fruit left the screen 592 frames after it appeared (9.87 s) - it timed out
+  second fruit (dots-eaten counter set from 90 to 168, time jump): spawn code ran at 4E0E = 170, flag 4E0D = 1, position 8094, sprite 00 colour 14
+  spawn code ran 2 times in the whole game (exactly at 70 and 170 dots, never at 68-69, 71-169)
+  [PASS] fruit spawns at 70 and 170 dots (Dossier)
+  [PASS] fruit position is 8094, below the ghost house (Dossier: fixed spot under the house)
+  [PASS] level 1 fruit is the cherry (sprite 00, colour 14), ROM table 0EFD
+  [PASS] the two fruit flags 4E0C and 4E0D are set once each
+  Dossier says the fruit stays 9-10 s with the exact time random: measured 9.87 s, recorded (closes the open item 'fruit on-screen time').
+  [PASS] fruit run completed
+
+D. Speeds, level 1 (100 % = 1.25 pixels per frame)
+  Pac-Man, no power pill: 1379 steps in 2760 free speed-tick calls = 0.9993 steps per frame = 79.9 % (Dossier 80 % = 1.0000)
+  Pac-Man, power pill active: 400 steps in 711 calls = 1.1252 per frame = 90.0 % (Dossier 90 % = 1.1250)
+  Blinky outside the tunnel, no power pill: 0.9378 pixels per frame over 1318 frames = 75.0 % (Dossier 75 % = 0.9375)
+  [PASS] Pac-Man runs at 80 % (within 3 %)
+  [PASS] Pac-Man with a power pill runs at 90 % (within 3.5 %)
+  [PASS] Blinky runs at 75 % (within 4 %)
+
+19 checks, 0 failed. PASS

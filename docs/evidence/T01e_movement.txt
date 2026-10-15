@@ -1,0 +1,34 @@
+T01e evidence: movement of Pac-Man and the four ghosts as readable code (src/logic/movement.h) versus the ROM (2026-10-15)
+
+== What was written ==
+src/logic/movement.h: Pac-Man's movement (ROM 1806: speed pattern, joystick, turning, walls, the move and the pull to the middle of the tile, tunnel rows, eating the fruit at 19A1, the dot part 19CD reuses the T01c code, and his walk in the attract demo / between levels 1A19) and the movement of Blinky, Pinky, Inky and Clyde (ROM 1B36, 1C4B, 1D22, 1DF9, which are four copies of one routine; here ONE function with a table of addresses; Blinky additionally has the Cruise Elroy speed-ups, ROM 20D7). Helpers: add a step (2000), pixel to tile (2018), tunnel test (205A), outside-the-maze-rows test with the tunnel wrap (1ED0), the turn-round routines (1EFE/1F25/1F4C/1F73), the 32-bit speed pattern shift. The queued tasks (08-0F, 17, the score tasks) are only queued, as the ROM does (T01c's task queue and timed event functions). Also changed: VideoRam (work_ram.h) can now see the colour RAM (a tile address can run into it) and returns BF for 4800-4BFF like the machine; the T01c and T01d tests were rerun and still pass.
+
+== How it was proved ==
+Compared after every call: ALL work RAM (4C00-4FEF), the whole video RAM, the colour RAM (except the bytes under the stack pointer used by the routine's own calls). The joystick bytes the ROM reads (5000 and 5040) are given to the readable version.
+Part A (live): a scripted player for 3,000,000 frames; at every entry of 1806, 1B36, 1C4B, 1D22, 1DF9 the readable version gets a copy of the memory; at the return both must be identical.
+Part B1: Pac-Man alone for every combination of: mode (maze rows / tunnel rows x normal play / attract demo / level change) x direction (4) x step (4 + standing) x pixel position inside the tile (8 x 8) x joystick (16) x walls on the tile and its four neighbours (32): 3,932,160 calls.
+Part B2: each ghost alone for every combination of: step (5) x pixel position inside the tile (64) x turn-round flag x blue x tunnel colour x door colour x 4E02 = 22 or not (32) x tile class (the tunnel ends 1D and 3E, below 21, from 3B on, inside) (5) x 4 random fillings: 819,200 calls.
+Part B3: 1,000,000 random runs of each of the five routines (random speed patterns, flags, tiles, steps, directions, joystick, fruit, colour bytes; the task queue pointer kept inside its page).
+
+== Result (full run: 3,000,000 frames, 1,000,000 random runs per routine) ==
+part A: 3000000 frames (13.8 hours of game time): calls Pac-Man 3791200 (moved 1751927, direction changed 38018, stood still 562730, demo/level-change walk 2886719, in tunnel rows 71391, ate a dot 98090, ate the fruit 0), Blinky 3791200 (moved 1498116, at a tile middle 465613, Cruise Elroy 1 started 0, 2 started 0), Pinky 3791200 (moved 1345853, middle 462049), Inky 3791200 (moved 983926, middle 455830), Clyde 3791200 (moved 696666, middle 497288); blue 5195527, in tunnel 207485, turn-round flags used 9655; differences 0
+part B1: Pac-Man alone, every combination of mode (maze rows / tunnel rows x normal / demo / level change) x direction x step x pixel position in the tile x joystick x walls: 3932160 calls, differences so far 0
+part B2: each ghost alone, every combination of step x pixel position in the tile x turn-round x blue x tunnel colour x door colour x tile class x 4E02 setting: 819200 calls, differences so far 0
+part B3: 1000000 random runs of each routine (Pac-Man 1000000, Blinky 1000000, Pinky 1000000, Inky 1000000, Clyde 1000000): differences 0
+PASS test_logic_movement: 18956000 live calls and 9751360 isolated calls compared, 0 differences
+
+== The test can fail (deliberately broken versions, 20,000 frames + full B1/B2 + 3,000 random) ==
+Caught (differences): Pac-Man speed patterns swapped 3,956,584. Tile-middle axis swapped 45,116. Direction not taken when blocked with no stick 13,470. Pull to the middle 38,012. Fruit position off by one 73. Fruit sprite +14 instead of +15: 70. Tunnel rows from 3C instead of 3B: 109,408. Second joystick rule (and -> or) 74. Level-change walk from 11 instead of 10: 74,920. Pixel to tile +1F: caught. Tunnel colour 1C: caught. Ghost tunnel/blue priority swapped 172,470. Cruise Elroy limit F5 instead of F4: 712. Turn round xor 1: 51,732. Blue turn task 0D instead of 0C: 12,039. Outside rows from 3C instead of 3B: 155. Door colour 1B: 5,725. Pinky active test: 4,111. Speed pattern feedback dropped 4,798,355. 
+NOT caught: 4E02 compared with 23 instead of 22 in the turn-round code. This is an equivalent version, not a gap: the two writes that setting guards (the ghost's current step and direction) are written again with the same values a few instructions later in the same movement, so the setting changes nothing in the movement.
+Original restored (cmp clean).
+
+== Other checks ==
+tests/run_all.sh, tests/test_purist.sh and tests/test_replay.sh: see the line at the end of this file. The game code was not changed.
+
+== Honest limits ==
+1. The readable code is not used by the game yet; the full 85-minute regression was not rerun (no game code changed).
+2. In the live play the scripted player spends most calls in the attract demo / level-change walk (about 76% of Pac-Man's calls) and only part in real joystick play; real joystick steering, walls and tunnel rows are covered by the exhaustive Part B1 and B3. Live play did not reach Cruise Elroy or fruit eating (0 cases); both are proved by the isolated runs (and the broken versions of them are caught).
+3. Directions in memory are taken to be 0-3 (the ROM looks them up in a table; values above 3 do not occur) and the task queue pointer is kept inside its page (the ROM would write anywhere else). A full timed-event table (16 slots) is not modelled, as in T01c.
+4. Tile addresses that lead above 4C00 (work RAM) are not modelled; they cannot occur (the largest is 493F).
+5. NOT part of T01e: the ghost direction tasks (ROM tasks 08-0F, which call the T01d chooser), collisions, the ghost house release, the mode timers (T01f).
+tests/run_all.sh ALL TESTS PASSED (short versions of the five logic tests); tests/test_purist.sh PASS; tests/test_replay.sh PASS. Game code unchanged.

@@ -1,0 +1,21 @@
+S31 Display options and 180 Hz pacing - evidence (2026-10-12)
+
+1. FRAME HASHES (FNV-1a over video RAM, colour RAM, work RAM, sprite RAM after N ticks; the same ROM, scripted run)
+   2400 ticks, 7 runs: default 180/144/60 Hz exact, 180/144/60 Hz smooth, and one run pressing F3,F5,F6,F7,F8,F3,F6,F11,F11 at fixed ticks:
+   ALL SEVEN = 60c4b12eb084ed7e
+   3000 ticks: default, --scanlines, --fit, --borderless, --overlay, smooth@180: ALL = d7d39438e9e8d70c
+   Real-window run (virtual screen, F3/F5/F3 pressed): hash e766e1fc1604d988 after 1098 ticks (time-driven, not comparable to the above; no mismatch tool needed).
+   => No display option, pacing mode or the overlay changes the emulation.
+
+2. MEASURED PACING (simulated monitor, 2400 machine ticks; "refreshes each picture stayed on screen")
+   180 Hz exact : 1x2  2x154  3x2160  4x82  5x2   (60.598 ticks/s; uneven: 2.97 refreshes per tick)
+   180 Hz smooth: 3x2399                           (60.017 ticks/s; every picture exactly 3 refreshes; 1.00 % slower than 60.606, audio controller compensates)
+   144 Hz exact : mostly 2 and 3 refreshes         (2.38 per tick, cannot be even)
+   144 Hz smooth: not possible (no whole number within 3 %); the program says so and stays exact
+    60 Hz exact : 1x2286 2x45   (60.578 ticks/s)
+    60 Hz smooth: 1x2399        (60.000 ticks/s, 1.00 % slow)
+   Raw output: build/s31/run1..run7.txt (copied below by the zip only if present).
+
+3. REAL WINDOW (Xvfb virtual screen, 1280x800, scale 2): window 448x576 before F3; F3 -> 704x576 with the debug panel at the right (LEVEL 1, MODE SCATTER, PHASE 0, T 252, ghost tiles and targets); F5 scanlines on/off; F3 again -> back to 448x576.
+   Screenshots: S31_overlay_off.png, S31_overlay_on.png, S31_overlay_on_scanlines.png
+4. NOT TESTED: a real 180 Hz monitor, real fullscreen (F11), mouse resizing and borderless on Windows. The virtual screen has no refresh rate ("unknown"). These are the user's test.

@@ -1,0 +1,93 @@
+X42 evidence (2026-10-14): CRT curve and vignette
+
+== unit test (tests/test_curve.cpp) ==
+level 0: k 0.00, edge-middle 1.0000, corner 1.0000, vignette corner 255
+level 1: k 0.05, edge-middle 0.9545, corner 0.9091, vignette corner 193
+level 2: k 0.12, edge-middle 0.9032, corner 0.8065, vignette corner 131
+52 checks, 0 failed
+RESULT: PASS
+
+== real-window screenshots, replay tick 900, three sizes, compared with the curve formula (tests/curve_shot_check.py) ==
+scale 2:
+size 448x576
+  ok: light: 400 of 400 sampled wall pixels found where the curve formula puts them
+  centre block mean difference 6.91
+  ok: light: the centre block is nearly untouched (< 12 of 255 on average)
+  left edge strip brightness vs off: 0.84
+  ok: light: the picture is darker towards the edge
+  left wall at the middle row: off x=0, light x=8, formula says about 9
+  ok: light: the left edge bows by the formula (within 6 pixels)
+  ok: strong: 400 of 400 sampled wall pixels found where the curve formula puts them
+  centre block mean difference 7.00
+  ok: strong: the centre block is nearly untouched (< 12 of 255 on average)
+  left edge strip brightness vs off: 0.72
+  ok: strong: the picture is darker towards the edge
+  left wall at the middle row: off x=0, strong x=17, formula says about 17
+  ok: strong: the left edge bows by the formula (within 6 pixels)
+  ok: strong is darker overall than light, and light than off (vignette)
+RESULT: PASS
+scale 3:
+size 672x864
+  ok: light: 400 of 400 sampled wall pixels found where the curve formula puts them
+  centre block mean difference 0.75
+  ok: light: the centre block is nearly untouched (< 12 of 255 on average)
+  left edge strip brightness vs off: 0.88
+  ok: light: the picture is darker towards the edge
+  left wall at the middle row: off x=153, light x=155, formula says about 155
+  ok: light: the left edge bows by the formula (within 6 pixels)
+  ok: strong: 400 of 400 sampled wall pixels found where the curve formula puts them
+  centre block mean difference 0.76
+  ok: strong: the centre block is nearly untouched (< 12 of 255 on average)
+  left edge strip brightness vs off: 0.80
+  ok: strong: the picture is darker towards the edge
+  left wall at the middle row: off x=153, strong x=157, formula says about 158
+  ok: strong: the left edge bows by the formula (within 6 pixels)
+  ok: strong is darker overall than light, and light than off (vignette)
+RESULT: PASS
+scale 5:
+size 896x1152
+  ok: light: 400 of 400 sampled wall pixels found where the curve formula puts them
+  centre block mean difference 0.00
+  ok: light: the centre block is nearly untouched (< 12 of 255 on average)
+  left edge strip brightness vs off: 0.78
+  ok: light: the picture is darker towards the edge
+  left wall at the middle row: off x=336, light x=335, formula says about 337
+  ok: light: the left edge bows by the formula (within 6 pixels)
+  ok: strong: 400 of 400 sampled wall pixels found where the curve formula puts them
+  centre block mean difference 0.00
+  ok: strong: the centre block is nearly untouched (< 12 of 255 on average)
+  left edge strip brightness vs off: 0.71
+  ok: strong: the picture is darker towards the edge
+  left wall at the middle row: off x=336, strong x=336, formula says about 337
+  ok: strong: the left edge bows by the formula (within 6 pixels)
+  ok: strong is darker overall than light, and light than off (vignette)
+RESULT: PASS
+
+== Purist / replay hashes ==
+Purist picture with --curve strong identical to the plain picture: same
+hash log lines: 7273; curve strong log identical to curve off: same
+
+== time between frames, full screen, software display, 12 s each ==
+1920x1080 curve off: Pacing: time between presents average 15.873 ms, longest 108.871 ms
+1920x1080 curve light: Pacing: time between presents average 16.038 ms, longest 108.497 ms
+1920x1080 curve strong: Pacing: time between presents average 15.950 ms, longest 107.755 ms
+2560x1440 curve off: Pacing: time between presents average 15.917 ms, longest 108.473 ms
+2560x1440 curve light: Pacing: time between presents average 15.949 ms, longest 131.922 ms
+2560x1440 curve strong: Pacing: time between presents average 15.971 ms, longest 123.999 ms
+
+== menu flat / curve back, and the bent maze wall (tests/test_curve_menu.sh) ==
+  ok: log: the curve went flat when the menu opened (1)
+  ok: log: the curve was on before and came back after the menu closed (2)
+  menu open with the curve on: yellow frame on 440 rows, left side moves by 0 pixels
+  ok: menu open: the yellow menu frame is a straight line although the curve is on
+  maze left wall spread: curve off 0 px (115 rows), curve strong 43 px (111 rows)
+  ok: game: with the curve off the wall is straight (spread <= 2)
+  ok: game: with the curve strong the wall bows (spread >= 8)
+RESULT: PASS
+
+== menu test ==
+PASS: 928 checks, 0 failures
+
+Pictures: docs/evidence/X42_off_3x.png, X42_light_3x.png, X42_strong_3x.png, X42_compare.png
+
+Full regression (/tmp/runall.sh then tests/run_all.sh): ALL TESTS PASSED. One timing-based window check (tests/test_achievements.sh, 'the pop-up was seen on the picture') failed once during the long run and passed when rerun alone right after (RESULT: PASS); it polls the screen in real time and the machine was busy. It does not touch the curve (off by default).

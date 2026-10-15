@@ -1,0 +1,16 @@
+S14 build evidence, 2026-10-08
+Core: Ivan Kosarev z80 1.2.0 single header src/core/z80.h (MIT, LICENSE-z80), identical to GitHub master 4c56dc514b37 and to the header the Python prototype's package was built from.
+sha256 z80.h: 9b813b27b39d6f609e672dcde8808d57142932d44c22590608d41cd777eb4734
+
+== native: sh tools/build_native.sh (g++ 13, -Wall -Wextra, no warnings)
+steps=14 A=2A B=00 F=28 HL=1234 PC=000B mem[1234]=07
+PASS z80 core test
+
+== mingw: x86_64-w64-mingw32-g++ 13-win32 -> build/z80_test_win.exe
+build/z80_test_win.exe: PE32+ executable (console) x86-64, for MS Windows
+run under wine 9.0:
+steps=14 A=2A B=00 F=28 HL=1234 PC=000B mem[1234]=07
+PASS z80 core test
+
+== reference (Python prototype core, same program): A=2A B=00 F=28 HL=1234 PC=000C(after halt executes; C++ stops before it, 000B) mem[1234]=07
+Expected values were worked out by hand before the first run: 7 + 5x7 = 42 = 0x2A, last add 0x23+7 gives no carry, flags = bits 5 and 3 of the result = 0x28, 14 instructions.

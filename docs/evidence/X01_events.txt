@@ -1,0 +1,41 @@
+X01 events: unit test on made-up frames
+  71 checks so far, 0 failed
+S27 replay: 7273 frames, events: dots 121 energizers 2 ghosts 0 deaths 5 coins(starts) 2 fruit appeared 0 eaten 0 rounds cleared 0 game over 1 extra life 0
+S27 replay + fruit poke: 7273 frames, events: dots 132 energizers 2 ghosts 0 deaths 5 coins(starts) 2 fruit appeared 1 eaten 1 rounds cleared 0 game over 1 extra life 0
+  705 P1 FRUIT APPEARED CHERRY
+  1064 P1 FRUIT EATEN CHERRY
+S27 replay + round-clear poke: 7273 frames, events: dots 117 energizers 1 ghosts 0 deaths 5 coins(starts) 2 fruit appeared 0 eaten 0 rounds cleared 1 game over 1 extra life 0
+  705 P1 ROUND CLEARED
+  938 P1 LEVEL 2
+S27 replay + score poke (extra life): 7273 frames, events: dots 68 energizers 1 ghosts 0 deaths 4 coins(starts) 1 fruit appeared 0 eaten 0 rounds cleared 0 game over 1 extra life 1
+  714 P1 EXTRA LIFE 4
+87 checks, 0 failed
+RESULT: PASS
+  ok: program log: dots (DOT lines) (119)
+  ok: program log: energizers (2)
+  ok: program log: deaths (5)
+  ok: program log: game starts (2)
+  ok: program log: game overs (1)
+  ok: hashes with --events = without (same)
+  ok: Purist hashes with --events = without (same)
+  ok: Purist writes no events (none)
+  ok: frames hashed (7273)
+559 P1 GAME START 3
+687 P1 DOT
+696 P1 DOT
+705 P1 DOT
+714 P1 DOT
+723 P1 DOT
+732 P1 DOT
+741 P1 DOT
+776 P1 DOT
+785 P1 DOT
+803 P1 DOT
+812 P1 DOT
+Events summary: GAME START 2, GAME OVER 1, DEATH 5, DOT 119, ENERGIZER 2, GHOST EATEN 0, FRUIT APPEARED 0, FRUIT EATEN 0, ROUND CLEARED 0, EXTRA LIFE 0, LEVEL 0, PLAYER 1, LIVES 4
+RESULT: PASS
+
+--- Other checks run for X01 (2026-10-13) ---
+run_all.sh: ALL TESTS PASSED (ram_map check included after the new addresses were recorded).
+test_purist PASS (7273 hashes = Python prototype), test_replay PASS, test_haptics 54, test_menu 149, test_bindings 167, test_state 42: all pass.
+Not covered by a real replay (S27 has none): ghost eaten and extra life in a real game (extra life covered by the score-poke scenario; ghost place by made-up frames).

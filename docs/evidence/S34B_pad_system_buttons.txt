@@ -1,0 +1,63 @@
+S34B evidence: pad buttons for the menu, pause, save, load and rewind (2026-10-13)
+
+What was built
+  src/app/controls.{h,cpp}  five new pad commands: MENU (default: right stick click, R3), PAUSE, QUICK SAVE, QUICK LOAD, REWIND (all unset by default); controls.cfg gets lines pad_menu, pad_pause, pad_save, pad_load, pad_rewind
+                            (older files with three pad lines still load and get the defaults); BindEditor now has 12 rows (7 game commands + 5 system commands; the keyboard key of a system command is fixed: Esc, F1, F2, F4, Backspace);
+                            pad_command_for() maps a pad button to its system command. The S32 dialogue (Remap) still asks only for coin/start1/start2, so its S32 test is unchanged.
+  src/app/menu.{h,cpp}      the Bindings screen shows the 12 rows; the menu shows the pad button next to RESUME (= the MENU button), SAVE STATE, LOAD STATE; the key-help panel lists the pad button after each of ESC, F1, F2, F4, BKSP.
+  src/app/main.cpp          wiring (PLAN CHANGE as in S31 to S34A): with the game running a pad button bound to MENU opens the menu, PAUSE toggles pause, SAVE / LOAD act as F2 / F4 (the same do_cmd), REWIND held rewinds (button down/up events);
+                            with the menu open the same MENU button closes it and the pad works the menu (d-pad, A, B), so Save state and Load state are reachable by pad with no extra binding; Purist mode refuses save, load and rewind on the pad
+                            as on the keyboard. Test aid --pad-buttons MS:BUTTON,... pushes real SDL pad-button events into the program (BUTTON = SDL name, a leading - releases it).
+
+VERIFY (S34B.md)
+  tests/test_bindings.sh: 93 checks (the 44 of S34A plus defaults, 12 rows, fixed keys, pad assignment, swap, never one button on two commands, d-pad refused, controls.cfg round trip, old file loads, bad name ignored).
+  tests/test_menu.sh: 104 checks (pad hints in menu and help panel, the 12-row screen draws, Purist shows LOCKED on the Save and Load lines).
+  tests/test_padbuttons.sh: the REAL program is fed simulated pad events (so the event handling in main.cpp runs, but no physical pad is involved). Output below. Normal run: R3 opens the menu; d-pad down + A = Save state; R3 closes it;
+    LB saves; R3, down, down, A = Load state; X pauses and resumes; RB loads; Y held rewinds; quicksave.sav is written. Purist run: the same presses open and close the menu and show "switched off in Purist mode" for rewind, save and load; no quicksave.sav.
+  Screenshots: S34B_menu_by_pad_with_pad_buttons.png (menu opened by the R3 event, with R3/LB/RB shown), S34B_bindings_12_rows.png (waiting for a button on REWIND; the fixed BACKSPACE key refused with a message).
+  Scripted hashes unchanged: 60c4b12eb084ed7e (2400 ticks), d7d39438e9e8d70c (3000 ticks); tests/test_purist.sh (Purist run = Python prototype, 7273 hashes) and tests/test_replay.sh pass; test_controls (45), test_state (42), test_audio_stall (12), run_all pass.
+  Not tested here: a physical pad (DualShock 4, DualSense, DS4Windows/Xbox-type). SDL delivers the same button events for them as the injected ones; the user's test covers it.
+
+tests/test_padbuttons.sh output
+  ok: normal: menu opened by the pad button (twice by R3 plus once more) (3)
+  ok: normal: saves (menu item + LB) (2)
+  ok: normal: loads (menu item + RB) (2)
+  ok: normal: pause and resume by X (11)
+  ok: normal: rewind by held Y (1)
+  ok: normal: quicksave.sav written (yes)
+  ok: purist: menu opened by the pad button (twice; the refused load leaves it open, so X and RB are ignored until R3 closes it) (2)
+  ok: purist: menu closed by the pad button (2)
+  ok: purist: nothing saved or loaded (00)
+  ok: purist: refusals shown (Y rewind, menu A on SAVE STATE, LB, menu A on LOAD STATE) (4)
+  ok: purist: no quicksave.sav (no)
+PASS: pad buttons drive the menu, pause, save, load and rewind; Purist locks save, load and rewind
+
+Full regression output
+== scripted hashes (must equal 60c4b12eb084ed7e, d7d39438e9e8d70c)
+Machine hash after 2400 ticks: 60c4b12eb084ed7e
+Machine hash after 3000 ticks: d7d39438e9e8d70c
+== tests/test_bindings.sh
+PASS: 93 checks, 0 failures
+== tests/test_menu.sh
+PASS: 104 checks, 0 failures
+== tests/test_controls.sh
+PASS test_controls: 45 checks, 0 failures
+== tests/test_purist.sh
+PASS: Purist run: 7273 frame hashes identical to the Python prototype and the high score file untouched; normal run without a saved score identical; normal run with a saved score of 5000 differs from frame 297 (so the extras are real and Purist really removes them)
+== tests/test_replay.sh
+PASS: 7273 frame hashes identical (C++ run 1 = run 2 = Python prototype); recorder round trip identical
+  replay played: 7273 frames, 7172 distinct frame states, main state changed 38 times, 3 games started, most dots on a level 240, highest P1 score 700, two-player game seen: yes
+== tests/test_state.sh
+PASS test_state: 42 checks, 0 failures
+== tests/test_audio_stall.sh
+PASS test_audio_stall: 12 checks, 0 failures
+== tests/run_all.sh
+check_docs OK: 29 cited paths exist, all 9 sections present
+ALL TESTS PASSED
+DONE
+
+
+== FIX after the user's report (2026-10-13): triggers and every other button bindable ==
+Cause: SDL reports L2/R2 (LT/RT) as axes, so the binding screen never saw them. Now an axis pushed past 50% counts as a button press (pseudo-buttons lefttrigger/righttrigger, hysteresis 16384 down / 8192 up). Also bindable: A B X Y, BACK/SELECT/Share, START/Options, L3, R3, LB/L1, RB/R1, Share/Mic (Xbox Share, DualSense Mic), PS button, Touchpad, paddles 1-4. D-pad stays fixed (always moves Pac-Man).
+Tests: test_bindings 167 checks (all 17 non-d-pad buttons + 2 triggers bindable, saved to and loaded from controls.cfg, hysteresis), test_menu 126, test_padbuttons driven runs with an SDL virtual pad: L2 as Coin -> credits 1; R2 save; Share/Mic rewind; paddle load; touchpad pause/resume (injected as button 20). run_all passes, scripted hashes unchanged (2400 ticks 60c4b12eb084ed7e, 3000 ticks d7d39438e9e8d70c).
+Not tested with a physical pad: the real trigger travel of a DualShock 4 (the virtual pad sends the same SDL axis events).

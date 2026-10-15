@@ -1,0 +1,15 @@
+X04: mouse in the menus (2026-10-14)
+PASS: 119 checks, 0 failures
+  ok: right click on a page goes back (no menu close yet) (Pac-Man - MENU)
+  ok: right click on the main page closes the menu (Pac-Man)
+  ok: hover over row 5 (DISPLAY) selected it (at least once) (yes)
+  ok: hover follows the pointer (row 4) (1)
+  ok: click opens CONTROLS (page 2) (1)
+  ok: click on BACK returns to the main page (its cursor is back on CONTROLS, row 4) (1)
+  ok: pointer shown while the menu was open (1)
+  ok: pointer hidden again when it closed (and at the start) (2)
+RESULT: PASS
+
+--- Other checks ---
+test_menu PASS (149), test_bindings PASS (167), test_purist PASS and test_replay PASS (7273 hashes identical), test_assist PASS, test_padtypes PASS.
+Screenshot docs/evidence/X04_hover.png: the pointer was moved over CONTROLS and the highlight followed it.

@@ -1,0 +1,4 @@
+  a saved state is 3301 bytes (game at frame 1800, main state 3, score 460)
+  ROM leak scan: 252 windows of 32 ROM bytes checked
+  F3b debug: score at assist 0, state 3, file 20
+PASS test_state: 42 checks, 0 failures

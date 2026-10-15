@@ -1,0 +1,18 @@
+S18 RAM parity evidence, 2026-10-08
+C++: src/board/machine.{h,cpp} (z80 core + Bus + frame loop). Oracle: tools/analysis/oracle_dump.py -> tests/data/oracle_ram_hashes.txt (SHA-1 of RAM 4000-4FFF after frames 1-1500, two sections).
+Rebuild/verify: python3 tools/analysis/oracle_dump.py 1500 --write ; g++ -std=c++17 -O2 -Wall -Wextra -DMACHINE_DUMP_MAIN src/board/machine.cpp src/board/bus.cpp -o machine_dump ; ./machine_dump build/rom/prog.bin 1500 --compare tests/data/oracle_ram_hashes.txt [--quirks]
+
+== [exact] 50,688-cycle frames, native
+PASS: 1500 frame hashes identical (exact 50,688-cycle frames)
+== [prototype_frames] (frames cut by the z80 wrapper's 100,000-tick counter, halted PC+1), native
+PASS: 1500 frame hashes identical (prototype frame pattern (--quirks))
+== [exact], mingw build under wine 9.0
+PASS: 1500 frame hashes identical (exact 50,688-cycle frames)
+
+The 1,500 [exact] hashes contain 1,399 distinct values (RAM changes in almost every frame), so the match is not trivial. The two sections differ from each other in all but 76 frames, so each comparison also proves the frame-length rule under test.
+
+FINDINGS (details in PROJECT_STATUS.md):
+1. Cycle rule of the prototype (read from the z80 package source _z80module.cpp): a frame ends when the instruction that reaches 50,688 ticks completes, the excess is not carried over. The C++ loop does the same (frame cycles = whole instructions, so a frame is 50,688 cycles plus the few cycles by which the last instruction overshoots). The interrupt acknowledge costs no cycles in both.
+2. The unmodified harness.Board has no address mirrors; the ROM draws the 'HIGH SCORE' text through C3xx (frame 297, pc 2C8C), which the flat prototype memory loses; the real board and the C++ bus store it at 43xx. First RAM difference between the plain harness and the mirror-correct board: frame 297 (exact frames). oracle_dump.py therefore uses MirrorBoard (harness.Board + mirrors, nothing else). harness.py itself was not touched.
+3. The z80 Python wrapper ends a frame early every time its own tick counter crosses a multiple of 100,000 (about every second frame, harness.py does not guard against it), so the prototype's frames are irregular: cut to about 49,300 cycles roughly every other frame. The exact section removes this; the prototype_frames section reproduces it.
+4. Frames 1-296 (the whole power-on self-test) were identical in all comparisons from the first run on.

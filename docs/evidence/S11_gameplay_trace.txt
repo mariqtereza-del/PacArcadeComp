@@ -1,0 +1,75 @@
+S11 gameplay trace (prototype). Frame numbering as in S09 evidence. Scenario A: scripted 1P game seed 7 (4400 frames); B: seed 1 (2600 frames, reaches 70 dots); C: attract mode only (3600 frames).
+
+1. ENTRY POINTS: first frame executed / times executed (A | B | C)
+  1017 gameplay_frame_update              676/6336       | 676/3356       | 988/4974      
+  171D ghost_pacman_collision_scan        676/5015       | 676/2474       | 988/4306      
+  1789 collision_outcome                  676/5015       | 676/2474       | 988/4306      
+  1806 pacman_speed_tick                  676/5012       | 676/2472       | 988/4300      
+  1B36 ghost_blinky_move                  676/5012       | 676/2472       | 988/4300      
+  1C4B ghost_pinky_move                   676/5012       | 676/2472       | 988/4300      
+  1D22 ghost_inky_move                    676/5012       | 676/2472       | 988/4300      
+  1DF9 ghost_clyde_move                   676/5012       | 676/2472       | 988/4300      
+  1EFE ghost_blinky_reverse_if_flagged    681/311        | 681/145        | 988/790       
+  2000 add_vector_to_position             677/15774      | 677/7227       | 989/13848     
+  2018 pixel_to_tile                      677/7014       | 677/3264       | 989/8989      
+  2966 pick_direction_toward_target       706/559        | 706/266        | 1007/847      
+  291E pick_random_direction              1004/57        | -/0            | 1170/177      
+  2730 task08_blinky_target               706/276        | 706/138        | 1029/130      
+  276C task09_pinky_target                754/211        | 754/107        | 1044/124      
+  27A9 task0A_inky_target                 1641/72        | 1275/21        | 1058/98       
+  27F1 task0B_clyde_target                -/0            | -/0            | 1072/87       
+  283B task0C_blinky_nonchase             1009/23        | -/0            | 1170/106      
+  288F task0E_inky_nonchase               1179/10        | -/0            | 1170/92       
+  28E3 task17_pacman_demo_direction       -/0            | -/0            | 1007/258      
+  0E36 ghost_mode_timer                   676/3168       | 676/1678       | 1631/1969     
+  0E6C siren_sound_select                 676/3168       | 676/1678       | 1631/1969     
+  0EAD fruit_spawn_check                  676/3168       | 676/1678       | 1631/1969     
+  0ED5 fruit_spawn_body                   -/0            | 2144/1         | 2406/1        
+  19E0 eat_dot_at_pacman_tile             684/101        | 684/73         | 1162/135      
+  1A70 start_power_pill                   999/1          | -/0            | 1162/3        
+  2A5A add_score                          684/101        | 684/73         | 1162/141      
+  2069 release_check_pinky                676/5012       | 676/2472       | 1631/3708     
+  2086 pinky_leaves_house                 676/4          | 676/2          | 1631/2        
+  208C release_check_inky                 676/5012       | 676/2472       | 1631/3708     
+  20A9 inky_leaves_house                  1092/4         | 1160/2         | 1901/2        
+  20AF release_check_clyde                676/5012       | 676/2472       | 1631/3708     
+  20D1 clyde_leaves_house                 2302/1         | 2412/1         | 2575/1        
+  1B08 house_counter_increment            684/101        | 684/73         | 1162/135      
+
+2. gameplay_frame_update (1017) executions per frame while playing, scenario A: {2: 3168}
+
+3. ghost_mode_timer (0E36), scenario A. Changes of the phase index 4DC1 (frame, old->new, counter 4DC2/3 the frame before):
+     frame 1954: 0 -> 1, counter was 419
+     frame 2452: 1 -> 0, counter was 913   (a life was lost within 2 frames: phase restarts)
+     frame 2986: 0 -> 1, counter was 419
+     frame 3296: 1 -> 0, counter was 725   (a life was lost within 2 frames: phase restarts)
+     frame 3832: 0 -> 1, counter was 419
+   Table of 8 words at 4D86 (copied for the level; values are frames at 60 per second): [420, 1620, 2040, 3240, 3540, 65534, 65535, 61610]  = seconds [7.0, 27.0, 34.0, 54.0, 59.0]
+   Phase 0 -> 1 happens when the counter reaches table word 0 (420 = 7 s); counter is held while 4DA6 (power pill) is 1 (code at 0E36-0E3A).
+
+4. eat_dot_at_pacman_tile (19E0): executed 101 times; frames where 4E0E rose by exactly 1: 101. Only pc 19E7 writes 4E0E (write trace of the whole run).
+
+5. start_power_pill (1A70) first executed at frame 999; 4DA6 first becomes 1 (after frame 600) at frame 999
+
+6. add_score (2A5A): executed 101 times in A (all dot/energizer/ghost/fruit points). Score bytes (BCD) changed 101 times after frame 600; first changes (frame, old, new as hex BCD): [(684, '0', '10'), (693, '10', '20'), (702, '20', '30'), (711, '30', '40'), (720, '40', '50')]
+
+7. ghost-house release (2069/208C/20AF call 2086/20A9/20D1), scenario A:
+     Pinky 4DA1 set at frame 676: personal counters 4E0F/10/11 = (0, 0, 0), limits 4DB8/9/A = (0, 30, 60)
+     Inky 4DA2 set at frame 1092: personal counters 4E0F/10/11 = (0, 30, 0), limits 4DB8/9/A = (0, 30, 60)
+     Clyde 4DA3 set at frame 2302: personal counters 4E0F/10/11 = (0, 0, 26), limits 4DB8/9/A = (0, 0, 50)
+
+8. fruit_spawn_check (0EAD) / body (0ED5), scenario B: body first executed at frame 2144 (once); at frame 2144 4E0E = 70, fruit position word 4DD2/3 low byte = 0x94, fruit sprite code 4C0C = 0x00, colour 4C0D = 0x14
+
+9. siren_sound_select (0E6C): executed 3168 times in A; writes to 4EAC come from pcs 0E76 and 0EAC (write trace)
+
+10. pick_direction_toward_target (2966): calls by return address (who called): 0x2751:194, 0x2765:82, 0x2787:128, 0x27a2:83, 0x27c4:42, 0x27ea:30
+    over 559 calls in A the new direction was never the reverse of the old one: True
+    Blinky chase calls (return address 2765, 82 calls): target DE equals Pac-Man tile word 4D39/4D3A every time: True
+    Blinky scatter calls (return 2751, 194 calls): target DE values ['0x221d']
+    first 6 samples (frame, caller, ghost tile word, target, old dir, new dir, new vector): f706 0x2751 322C 221D 2->1 0001; f715 0x2751 322D 221D 1->1 0001; f723 0x2751 322E 221D 1->1 0001; f732 0x2751 322F 221D 1->2 0100; f741 0x2751 332F 221D 2->2 0100; f749 0x2751 342F 221D 2->2 0100
+
+11. attract demo (scenario C): task17_pacman_demo_direction (28E3) executed 258 times, gameplay_frame_update 4974 times, first at frame 988
+
+12. ghost_pacman_collision_scan (171D) executions in A: 5015 (twice per frame with 1017). Ghost-kill counter 4DD0 changes after frame 600: []. Pac-Man deaths (4E14 drops) at frames [2447, 3291, 4318].
+
+13. Tables read from the ROM image (by the routines above): points table 2B17 (BCD words) = ['10', '50', '200', '400', '800', '1600', '100', '300', '500', '700']; fruit table 0EFD (code, colour, points index; first levels) = [('00', '14', '06'), ('01', '0F', '07'), ('02', '15', '08'), ('02', '15', '08')]; ghost mode table 4D86 is copied from ROM per level (see section 3).

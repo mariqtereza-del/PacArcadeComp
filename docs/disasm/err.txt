@@ -1,0 +1,2 @@
+Warning: Code might not be 8080 compatible!
+Warning: Self modifying code detected!

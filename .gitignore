@@ -1,0 +1,30 @@
+# Never commit the game ROM or anything made from it
+roms/
+*.zip
+*.rom
+*.bin
+pacman.asm
+pacman_raw.asm
+prog_raw.asm
+
+# Build output and release files (the exe and zip go on the GitHub Releases page, not in the repository)
+build/
+dist/
+*.exe
+*.o
+*.obj
+
+# Files the program writes while you play (settings, controls, records, save states, high score)
+settings.cfg
+controls.cfg
+records.cfg
+achievements.cfg
+*.sav
+*.state
+problem_report.txt
+
+# Python and editor leftovers
+__pycache__/
+*.pyc
+.vscode/
+.idea/

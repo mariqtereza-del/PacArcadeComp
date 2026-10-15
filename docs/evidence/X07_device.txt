@@ -1,0 +1,12 @@
+X07: which device was used last (2026-10-14)
+35 checks, 0 failed
+RESULT: PASS
+  log: MOUSE,KEYBOARD,MOUSE,KEYBOARD,
+  ok: keyboard / mouse sequence (jitter ignored) (MOUSE KEYBOARD MOUSE KEYBOARD )
+  log: PAD (PS4),
+  ok: pad stick pushed: PAD (PS4), once (rest and drift ignored) (1)
+  ok: Purist: no device lines (0)
+RESULT: PASS
+
+--- Other checks ---
+test_purist PASS and test_replay PASS (7273 hashes identical), test_padbuttons PASS, test_padtypes PASS, test_mouse PASS (182), test_events PASS, test_autopause PASS; run_all below.

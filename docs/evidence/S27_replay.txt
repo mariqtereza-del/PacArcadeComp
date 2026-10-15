@@ -1,0 +1,33 @@
+S27 evidence: replay recorder and determinism (src/app/replay.{h,cpp}, tools/analysis/oracle_replay.py, tests/test_replay.sh)
+Date: 2026-10-09
+
+Run:  sh tests/test_replay.sh      (needs the ROM in roms/ and g++; about 5 s)
+
+== Test output ==
+PASS: 7273 frame hashes identical (C++ run 1 = run 2 = Python prototype); recorder round trip identical
+  replay played: 7273 frames, 7172 distinct frame states, main state changed 38 times, 3 games started, most dots on a level 240, highest P1 score 700, two-player game seen: yes
+
+== What was compared ==
+One scripted two-minute play (7,273 frames at 60.606 Hz = 120 s), written by tools/analysis/oracle_replay.py --make into a replay file (format: src/app/replay.h): player 1 game (coin at frame 400, START 1 at 420, random joystick from 430), then a second game with two coins (4500, 4510) and START 2 (4530) and random joystick from 4600. The same file is read by both sides.
+Per frame, a SHA-1 over memory 4000-4FFF (video RAM, colour RAM, 4800-4BFF as zeros, work RAM, sprite RAM) plus the 48 bytes written to 5040-506F (sound registers, sprite coordinates).
+1. C++ run 1 = C++ run 2: all 7,273 hashes identical (determinism).
+2. C++ = Python prototype (harness.py + the S18 mirror correction, exact 50,688-cycle frames): all 7,273 hashes identical.
+3. Recorder: the inputs fed through Recorder while replaying were saved and equal the original file byte for byte.
+4. The Windows build (mingw, run under wine) gives a log identical to the native one.
+5. The run is a real game: 7,172 distinct frame states, the main state changed 38 times, a two-player game was seen. (The counters in the summary line include the attract-mode demo game, so 'games started' and 'dots' are not only the player's.)
+
+Reference excerpt (native log, frames 1-3 and 7270-7273):
+1 c8f73208581f32d7795094126c2c527fe9b9fc5a
+2 c8f73208581f32d7795094126c2c527fe9b9fc5a
+3 c8f73208581f32d7795094126c2c527fe9b9fc5a
+7270 e0dae0fb7d5f8dbd345b27e2cea5f51e8189151a
+7271 93a8f3f34de618f479a56060f21fe5e2de26db5a
+7272 6061765bcdc1468a736c2ee3430c56037c3ea093
+7273 4edff38a6020a116f3ed5b83465350c6773bcd3f
+log sha1 e082692bbb78..., replay file sha1 ffe0a4448aa6... (first 16 hex digits)
+
+== Limits ==
+- This compares machine state (memory and I/O registers), not pictures or sound samples; those were compared separately in S20-S21 and S25.
+- Both sides use the same frame model (exact frames, mirrored memory, interrupt at the end of the slice); open question U1 (interrupt at line 224 versus end of slice) is therefore not tested by this.
+- The prototype was run with the S18 mirror correction (MirrorBoard), as in S18; the original harness.Board without mirrors would differ at frame 297.
+- Only the replay tool exists so far: the window app does not record or play replays yet (S27 could not touch src/app/main.cpp). tests/test_replay.sh is not in tests/run_all.sh (not in this step's file list).
