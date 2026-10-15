@@ -1,6 +1,6 @@
 # Maze Chase (working title)
 
-**An arcade-accurate Windows player for a classic 1980 maze game, with modern extras you can switch off.**
+**An arcade-accurate Windows player for the original Pac-Man, with modern extras you can switch off.**
 
 Maze Chase contains a software copy of the arcade machine's computer (a Z80 processor, the memory map, the video and sound chips). It runs the game's **original program** instead of a re-creation, so the game behaves like the arcade board: same ghost behaviour, same speeds, same bugs (including the famous level 256). Around that machine sits a modern front end: menus, save states, rewind, game-pad support, screen effects and more.
 
