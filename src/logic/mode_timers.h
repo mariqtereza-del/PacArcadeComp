@@ -87,7 +87,8 @@ constexpr uint8_t kInactivityRowOfLevel[21] = {0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 
 constexpr uint8_t kHouseLimits[4][3] = {{20, 30, 70}, {0, 30, 60}, {0, 0, 50}, {0, 0, 0}};
 constexpr uint8_t kElroy1DotsLeft[9] = {20, 30, 40, 50, 60, 80, 100, 120, 140}; // Blinky's first speed-up: when this many dots are left
 constexpr uint8_t kElroy2DotsLeft[9] = {10, 15, 20, 25, 30, 40, 50, 60, 70};    // and the second one
-constexpr uint16_t kFrightenedTime[9] = {960, 840, 720, 600, 480, 360, 240, 120, 1};
+// row 0..7: 960 frames, then 120 fewer for each row; row 8: 1 frame (computed, so the program holds no copy of the ROM's table)
+constexpr uint16_t frightened_time_of_row(unsigned row) { return row < 8 ? (uint16_t)(960 - 120 * row) : (uint16_t)1; }
 constexpr uint16_t kInactivityTime[3] = {240, 240, 180};
 constexpr unsigned kLevelCount = 21;
 constexpr unsigned kSpeedPatternAddress[7] = {0x4D46, 0x4D4A, 0x4D4E, 0x4D52, 0x4D56, 0x4D5A, 0x4D5E}; // high word at this address, low word 2 on
@@ -111,7 +112,7 @@ inline void start_level_timers(WorkRam ram, unsigned level_row) {
     for (unsigned i = 0; i < 3; ++i) ram[kHouseLimitsAddress + i] = kHouseLimits[kHouseLimitsRowOfLevel[level_row]][i];
     ram[kElroyDotsLeftAddress] = kElroy1DotsLeft[kElroyRowOfLevel[level_row]];
     ram[kElroyDotsLeftAddress + 1] = kElroy2DotsLeft[kElroyRowOfLevel[level_row]];
-    set_word(ram, kFrightenedTimeAddress, kFrightenedTime[kFrightenedRowOfLevel[level_row]]);
+    set_word(ram, kFrightenedTimeAddress, frightened_time_of_row(kFrightenedRowOfLevel[level_row]));
     set_word(ram, kInactivityTimeAddress, kInactivityTime[kInactivityRowOfLevel[level_row]]);
 }
 

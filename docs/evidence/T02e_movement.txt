@@ -1,0 +1,23 @@
+T02e evidence: movement of Pac-Man and the four ghosts in use (2026-10-16)
+Readable code: src/logic/movement.h (pacman_move got one extra option, "eat", so the game can leave the dot part to the already switched-on 19CD rule); adapters in src/rules/rules.h (namespace movement); the model of the ROM's leftovers is src/rules/z80sim.h.
+ROM routines replaced when "--rules readable" is on: 1806 (Pac-Man's movement; it hands over to the 19CD rule for dots and energizers), 1B36 (Blinky), 1C4B (Pinky), 1D22 (Inky), 1DF9 (Clyde), with all their helpers (2000, 2018, 2052, 205A, 0065/202D, 1ED0, 1EFE-1F73, 20D7, the task queue pushes).
+Purist and the normal game are unchanged: they always use the original ROM routines.
+How it works: the readable rules change the game state. The model in z80sim.h walks through the same instructions as the ROM routine (same branches) to get the exact time, the registers and flags the routine leaves, and the stale values it leaves on the stack (the frame hashes include them). It never decides what happens in the game. When the model meets something it does not cover (a tile address outside the screen RAMs, Pac-Man eating the fruit, the end of the frame inside the routine) the hook lets the ROM run its own instruction.
+Frame timing: the cycle count of EVERY frame is compared (original vs readable): identical, so the frame still finishes in time with the cycles charged.
+Test: sh tests/test_rules_movement.sh 3000000 1000000 (full output below). Garbage was put in A, F, BC, DE, HL, IX, IY before every isolated call.
+
+replay: 7273 frame hashes with the readable rules = original rules = Python prototype
+part 1: 1000000 isolated whole calls of each routine with garbage in all registers: Pac-Man 1806 differences 0; Blinky 1B36 0; Pinky 1C4B 0; Inky 1D22 0; Clyde 1DF9 0
+  (the hook gave way to the ROM in 70595 / 47877 / 39625 / 39309 / 39603 of those calls)
+part 2: 3000000 frames; the original machine entered Pac-Man 3811298, Blinky 3811298, Pinky 3811298, Inky 3811298, Clyde 3811298 times; the hooks ran 3811298 / 3811298 / 3811298 / 3811298 / 3811298 times (the hooks gave way to the ROM 102952 times)
+  readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+part 3: wrong version "Pac-Man one cycle too slow": caught (5000 of 5000 cases differ)
+part 3: wrong version "Blinky position byte changed": caught (5000 of 5000 cases differ)
+part 3: wrong version "Pinky one cycle too slow": caught (5000 of 5000 cases differ)
+part 3: wrong version "Inky tile byte changed": caught (4893 of 5000 cases differ)
+part 3: wrong version "Clyde leaves a wrong A": caught (5000 of 5000 cases differ)
+PASS test_rules_movement: 1000000 isolated calls per routine, 3000000 frames, 0 differences required
+
+Notes: in the 3,000,000 frames the hooks gave way to the ROM 102,952 times of 19,056,490 calls (0.5%): almost always because the call would cross the end of the frame; the frame was identical anyway. Pac-Man eating the fruit (about twice per level) is left to the ROM on purpose.
+Fast check also run: tests/test_purist.sh PASS, tests/test_replay.sh PASS (7273 frame hashes identical), test_rules_random/scoring/dots/ghosts PASS (30,000 frames), tests/test_logic_movement.sh PASS, tools/check_docs.py OK. The full tests/run_all.sh (85 minutes) was not run; the new test is entered in it.

@@ -19,17 +19,17 @@ RESULT: PASS
 RESULT: PASS
 
 == test_package.sh (includes the real Windows exe run under Wine) ==
-package: dist/MazeChase-1.0.0-rc1-win64.zip
-  listing: MazeChase/ MazeChase/MazeChase.exe MazeChase/README.txt MazeChase/THIRD-PARTY-LICENSES.txt 
-  ok: listing is exactly the folder, program, README, licences (MazeChase/ MazeChase/MazeChase.exe MazeChase/README.txt MazeChase/THIRD-PARTY-LICENSES.txt )
+package: dist/PacArcadeComp-1.0.0-rc1-win64.zip
+  listing: PacArcadeComp/ PacArcadeComp/PacArcadeComp.exe PacArcadeComp/README.txt PacArcadeComp/THIRD-PARTY-LICENSES.txt 
+  ok: listing is exactly the folder, program, README, licences (PacArcadeComp/ PacArcadeComp/PacArcadeComp.exe PacArcadeComp/README.txt PacArcadeComp/THIRD-PARTY-LICENSES.txt )
   ok: no zip, ROM or rom-like file inside (0)
   searching 686 ROM pieces of 32 bytes in 4 blobs
   ok: no ROM bytes found anywhere in the package
-  ok: exe: version information present (Maze Chase) (1)
+  ok: exe: version information present (PacArcadeComp) (1)
   ok: exe: resource section (icon and version) present (yes)
   ok: exe: window title uses our name (yes)
   ok: exe: the original game's name is not in the window titles (0)
-  ok: README names MazeChase.exe and pacman.zip (3+)
+  ok: README names PacArcadeComp.exe and pacman.zip (3+)
   ok: licences file lists SDL and miniz (2)
   ok: wine, no ROM: friendly message in the report (1)
   ok: wine, ROM next to the exe: it runs and reports its pictures (1)
@@ -51,15 +51,15 @@ tests/test_integration.sh: ok
 tests/test_cabinet.sh: ok
 DONE
 
-Package: dist/MazeChase-1.0.0-rc1-win64.zip = MazeChase/MazeChase.exe, README.txt, THIRD-PARTY-LICENSES.txt. Name decision: 'Maze Chase' (the marquee wording of X45); the settings folder is still %APPDATA%\PacmanPort (kept so that existing settings are not lost; to be decided in S37).
-Archive:  dist/MazeChase-1.0.0-rc1-win64.zip
+Package: dist/PacArcadeComp-1.0.0-rc1-win64.zip = PacArcadeComp/PacArcadeComp.exe, README.txt, THIRD-PARTY-LICENSES.txt. Name decision: 'PacArcadeComp' (the marquee wording of X45); the settings folder is still %APPDATA%\PacmanPort (kept so that existing settings are not lost; to be decided in S37).
+Archive:  dist/PacArcadeComp-1.0.0-rc1-win64.zip
   Length      Date    Time    Name
 ---------  ---------- -----   ----
-        0  2026-10-15 04:20   MazeChase/
-  3267584  2026-10-15 04:20   MazeChase/MazeChase.exe
-     2576  2026-10-15 04:20   MazeChase/README.txt
-     3551  2026-10-15 04:20   MazeChase/THIRD-PARTY-LICENSES.txt
+        0  2026-10-15 04:20   PacArcadeComp/
+  3267584  2026-10-15 04:20   PacArcadeComp/PacArcadeComp.exe
+     2576  2026-10-15 04:20   PacArcadeComp/README.txt
+     3551  2026-10-15 04:20   PacArcadeComp/THIRD-PARTY-LICENSES.txt
 ---------                     -------
   3273711                     4 files
-61b02d2edc87955996a78cd6a1007c862138fe87  dist/MazeChase-1.0.0-rc1-win64.zip
-e2f2940567b1b0006faa199b9011e788181d612f  dist/MazeChase/MazeChase.exe
+61b02d2edc87955996a78cd6a1007c862138fe87  dist/PacArcadeComp-1.0.0-rc1-win64.zip
+e2f2940567b1b0006faa199b9011e788181d612f  dist/PacArcadeComp/PacArcadeComp.exe

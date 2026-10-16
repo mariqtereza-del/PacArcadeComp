@@ -27,7 +27,8 @@ uint32_t Machine::run_frame() {
     ticks = 0;
     for (;;) {
         wrapped = false;
-        on_step();
+        if (rules && rules[on_get_pc()]) rules[on_get_pc()](*this); // T02a: a readable rule instead of the ROM routine (only when switched on)
+        else on_step();
         if (ticks >= cycles_per_frame) break;
         if (prototype_quirks && wrapped) break;
     }

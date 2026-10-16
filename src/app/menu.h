@@ -51,6 +51,8 @@ enum class Cmd {
     Surround,
     SaveSlot,
     LoadSlot,
+    Rules,      // T02i: RULES ORIGINAL / READABLE
+    WriteRules, // T02i: write the standard rules.cfg for modders
     Locked
 };
 enum class Key { Up, Down, Left, Right, Enter, Back };
@@ -79,6 +81,8 @@ struct Model {
     int pad_symbols = 0;                // S34C: 0 auto, 1 Xbox, 2 PS4, 3 PS5 (which button pictures to draw)
     int lives = 2, bonus = 0;           // DipSettings::Lives (0 = 1 life, 1 = 2, 2 = 3, 3 = 5), DipSettings::Bonus (0 = 10000, 1 = 15000, 2 = 20000, 3 = none)
     bool diff_normal = true, names_normal = true;
+    bool rules_readable = false;                // T02i: RULES READABLE chosen (the proved readable rules run instead of the ROM routines)
+    bool rules_file = false;                    // T02i: a rules file with changed values is in use (the game is MODDED and uses the readable rules)
     std::string assist;                         // X03: label of the first reason this game is assisted ("" = the game counts)
     bool pending = false;                       // game options changed that need a restart of the machine
     PadType pad_type = PadType::None;           // S34C
@@ -110,6 +114,7 @@ struct Settings {
     int curve = 0;           // X42
     int surround = 0;        // X44
     int pad_symbols = 0;     // S34C: 0 auto, 1 Xbox, 2 PS4, 3 PS5
+    bool rules_readable = false; // T02i: key rules (original, readable)
 };
 bool load_settings(const std::string &path, Settings &s, std::string *problems); // false if there is no file
 bool save_settings(const std::string &path, const Settings &s, std::string *error);

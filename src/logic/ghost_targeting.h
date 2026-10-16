@@ -47,6 +47,14 @@ inline uint8_t distance_along_one_axis(uint8_t x, uint8_t y) { return x >= y ? (
 inline uint16_t squared_distance(Tile p, Tile q) { return (uint16_t)(square(distance_along_one_axis(p.a, q.a)) + square(distance_along_one_axis(p.b, q.b))); }
 
 // ---- 2966: the direction chooser
+// What the chooser did with each of the four directions (T02d: the game needs this to carry on exactly like the ROM: timing and registers).
+struct ChooserTrace {
+    struct Way {
+        bool is_reverse = false, is_wall = false, taken_as_best = false; // reverse: skipped; wall: skipped; taken: the best so far after this way
+        Tile next{0, 0};
+        uint16_t distance = 0;
+    } way[4];
+};
 struct Choice {
     uint8_t direction;
     uint16_t step;
@@ -55,7 +63,7 @@ struct Choice {
 // `video` is the maze: a tile whose code has both top bits set (code & 0xC0 == 0xC0) is a wall.
 // The original keeps its working values in RAM; they are written here too so that memory stays identical: 4D3E tile, 4D40 target, 4D3B best
 // direction so far, 4D3D the forbidden (reverse) direction, 4D42 the tile last tried, 4D44 best distance so far, 4DC7 the loop counter.
-inline Choice choose_direction(WorkRam ram, VideoRam video, Tile ghost, Tile target, uint8_t direction) {
+inline Choice choose_direction(WorkRam ram, VideoRam video, Tile ghost, Tile target, uint8_t direction, ChooserTrace *trace = nullptr) {
     const uint8_t reverse = direction ^ 2;
     ram[0x4D3E] = ghost.a;
     ram[0x4D3F] = ghost.b;
@@ -69,13 +77,23 @@ inline Choice choose_direction(WorkRam ram, VideoRam video, Tile ghost, Tile tar
     uint8_t best = direction; // if every way is blocked the ghost keeps its direction
     for (uint8_t d = 0; d < 4; ++d) {
         ram[0x4DC7] = d;
-        if (d == reverse) continue; // never turn back
+        if (trace) trace->way[d] = ChooserTrace::Way{};
+        if (d == reverse) {
+            if (trace) trace->way[d].is_reverse = true;
+            continue; // never turn back
+        }
         const Tile next = tile_after_step(ghost, d);
         ram[0x4D42] = next.a;
         ram[0x4D43] = next.b;
-        if ((video[video_address_of_tile(next.a, next.b)] & 0xC0) == 0xC0) continue; // a wall
+        if (trace) trace->way[d].next = next;
+        if ((video[video_address_of_tile(next.a, next.b)] & 0xC0) == 0xC0) {
+            if (trace) trace->way[d].is_wall = true;
+            continue; // a wall
+        }
         const uint16_t distance = squared_distance(target, next);
+        if (trace) trace->way[d].distance = distance;
         if (best_distance < distance) continue; // farther than the best so far (equal distances: the later direction wins)
+        if (trace) trace->way[d].taken_as_best = true;
         best_distance = distance;
         best = d;
         ram[0x4D44] = (uint8_t)(distance & 255);
@@ -87,6 +105,15 @@ inline Choice choose_direction(WorkRam ram, VideoRam video, Tile ghost, Tile tar
 }
 
 // ---- the four target rules (each task: pick a target, ask the chooser, store the answer)
+// T02d: what a target task did, for the game to carry on exactly like the ROM.
+struct TaskReport {
+    Tile ghost{0, 0}, target{0, 0};
+    uint8_t direction = 0;
+    bool scatter = false; // the corner was the target
+    bool near_pacman = false; // Clyde only: Pac-Man closer than 8 tiles
+    ChooserTrace trace;
+    Choice choice{0, 0};
+};
 inline Tile tile_at(WorkRam ram, unsigned address) { return Tile{ram[address], ram[address + 1]}; }
 inline void store_choice(WorkRam ram, unsigned ghost, const Choice &c) {
     ram[kGhostVectorAddress[ghost]] = (uint8_t)(c.step & 255);
@@ -97,42 +124,61 @@ inline void store_choice(WorkRam ram, unsigned ghost, const Choice &c) {
 inline bool scatter_phase(WorkRam ram) { return (ram[kPhaseAddress] & 1) == 0 && ram[kLevelStateAddress] == kLevelStateRunning; }
 
 // Blinky (task at 2730): the corner while scattering, unless he is Cruise Elroy; otherwise Pac-Man's own tile.
-inline void blinky_target_task(WorkRam ram, VideoRam video) {
+inline void blinky_target_task(WorkRam ram, VideoRam video, TaskReport *rep = nullptr) {
     const bool scatter = scatter_phase(ram) && ram[kElroyAddress] == 0;
     const Tile target = scatter ? kScatterTarget[0] : tile_at(ram, kPacmanTileAddress);
-    store_choice(ram, 0, choose_direction(ram, video, tile_at(ram, kGhostTileAddress[0]), target, ram[kGhostDirectionAddress[0]]));
+    const Tile ghost = tile_at(ram, kGhostTileAddress[0]);
+    const uint8_t direction = ram[kGhostDirectionAddress[0]];
+    const Choice c = choose_direction(ram, video, ghost, target, direction, rep ? &rep->trace : nullptr);
+    if (rep) { rep->ghost = ghost; rep->target = target; rep->direction = direction; rep->scatter = scatter; rep->choice = c; }
+    store_choice(ram, 0, c);
 }
 
 // Pinky (276C): the corner while scattering; otherwise FOUR tiles ahead of Pac-Man. The ROM adds four times Pac-Man's step to his tile as 16-bit
 // words, so a step of (da, db) = (-1, 0), which is the word 00FF, carries from a into b: "up" aims four tiles up AND four tiles to the side.
-inline void pinky_target_task(WorkRam ram, VideoRam video) {
+inline void pinky_target_task(WorkRam ram, VideoRam video, TaskReport *rep = nullptr) {
     Tile target = kScatterTarget[1];
-    if (!scatter_phase(ram)) {
+    const bool scatter = scatter_phase(ram);
+    if (!scatter) {
         const uint16_t pac_step = (uint16_t)(ram[kPacmanVectorAddress] | (ram[kPacmanVectorAddress + 1] << 8));
         target = from_word((uint16_t)(as_word(tile_at(ram, kPacmanTileAddress)) + (uint16_t)(pac_step * 4)));
     }
-    store_choice(ram, 1, choose_direction(ram, video, tile_at(ram, kGhostTileAddress[1]), target, ram[kGhostDirectionAddress[1]]));
+    const Tile ghost = tile_at(ram, kGhostTileAddress[1]);
+    const uint8_t direction = ram[kGhostDirectionAddress[1]];
+    const Choice c = choose_direction(ram, video, ghost, target, direction, rep ? &rep->trace : nullptr);
+    if (rep) { rep->ghost = ghost; rep->target = target; rep->direction = direction; rep->scatter = scatter; rep->choice = c; }
+    store_choice(ram, 1, c);
 }
 
 // Inky (27A9): the corner while scattering; otherwise a point found with Blinky: take the tile TWO ahead of Pac-Man (same 16-bit word sum, so
 // the same carry quirk as Pinky) and double its distance from Blinky's tile: target = 2 * ahead - blinky, for each of a and b (8 bits each).
-inline void inky_target_task(WorkRam ram, VideoRam video) {
+inline void inky_target_task(WorkRam ram, VideoRam video, TaskReport *rep = nullptr) {
     Tile target = kScatterTarget[2];
-    if (!scatter_phase(ram)) {
+    const bool scatter = scatter_phase(ram);
+    if (!scatter) {
         const Tile blinky = tile_at(ram, kGhostTileAddress[0]);
         const uint16_t pac_step = (uint16_t)(ram[kPacmanVectorAddress] | (ram[kPacmanVectorAddress + 1] << 8));
         const Tile ahead = from_word((uint16_t)(as_word(tile_at(ram, kPacmanTileAddress)) + (uint16_t)(pac_step * 2)));
         target = Tile{(uint8_t)(ahead.a * 2 - blinky.a), (uint8_t)(ahead.b * 2 - blinky.b)};
     }
-    store_choice(ram, 2, choose_direction(ram, video, tile_at(ram, kGhostTileAddress[2]), target, ram[kGhostDirectionAddress[2]]));
+    const Tile ghost = tile_at(ram, kGhostTileAddress[2]);
+    const uint8_t direction = ram[kGhostDirectionAddress[2]];
+    const Choice c = choose_direction(ram, video, ghost, target, direction, rep ? &rep->trace : nullptr);
+    if (rep) { rep->ghost = ghost; rep->target = target; rep->direction = direction; rep->scatter = scatter; rep->choice = c; }
+    store_choice(ram, 2, c);
 }
 
 // Clyde (27F1): the corner while scattering; otherwise Pac-Man's tile, but when he is closer than 8 tiles (squared distance under 64) he runs to his corner.
-inline void clyde_target_task(WorkRam ram, VideoRam video) {
+inline void clyde_target_task(WorkRam ram, VideoRam video, TaskReport *rep = nullptr) {
     const Tile clyde = tile_at(ram, kGhostTileAddress[3]), pac = tile_at(ram, kPacmanTileAddress);
     Tile target = kScatterTarget[3];
-    if (!scatter_phase(ram) && squared_distance(pac, clyde) >= 0x40) target = pac;
-    store_choice(ram, 3, choose_direction(ram, video, clyde, target, ram[kGhostDirectionAddress[3]]));
+    const bool scatter = scatter_phase(ram);
+    const bool near = !scatter && squared_distance(pac, clyde) < 0x40;
+    if (!scatter && !near) target = pac;
+    const uint8_t direction = ram[kGhostDirectionAddress[3]];
+    const Choice c = choose_direction(ram, video, clyde, target, direction, rep ? &rep->trace : nullptr);
+    if (rep) { rep->ghost = clyde; rep->target = target; rep->direction = direction; rep->scatter = scatter; rep->near_pacman = near; rep->choice = c; }
+    store_choice(ram, 3, c);
 }
 
 } // namespace logic

@@ -68,19 +68,23 @@ inline uint8_t add_bcd_byte(uint8_t a, uint8_t b, bool &carry) {
     return (uint8_t)((high << 4) | low);
 }
 
-// The extra life (ROM 2B33). `flags` is the byte after the player's score.
-inline void give_extra_life_once(WorkRam ram, unsigned flags_address) {
-    if (ram[flags_address] & kExtraLifeGivenBit) return; // already given in this game
+// The extra life (ROM 2B33). `flags` is the byte after the player's score. Returns true when a life was actually given now.
+inline bool give_extra_life_once(WorkRam ram, unsigned flags_address) {
+    if (ram[flags_address] & kExtraLifeGivenBit) return false; // already given in this game
     ram[flags_address] |= kExtraLifeGivenBit;
     ram[kSoundRequestAddress] |= 0x01; // the jingle
     ram[kLivesAddress] = (uint8_t)(ram[kLivesAddress] + 1);
     ram[kLivesShownAddress] = (uint8_t)(ram[kLivesShownAddress] + 1);
     // (the ROM also redraws the little Pac-Man pictures at the bottom of the screen: video RAM, not done here)
+    return true;
 }
 
-// The whole routine for one score event.
-inline void add_score(WorkRam ram, unsigned points_index) {
-    if (ram[kGameStateAddress] == kStateDemo) return; // nobody scores in the demo
+// What the points did besides raising the score (T02b: the game needs to know, to carry on with the ROM's drawing).
+enum ExtraLife { kNoExtraLife, kExtraLifeAlreadyGiven, kExtraLifeGivenNow };
+
+// Steps 1 and 2 of the routine: the points are added to the current player's score and the extra life is given when the limit is reached.
+// (The demo check is the caller's.) Returns what happened with the extra life.
+inline ExtraLife add_points(WorkRam ram, unsigned points_index) {
     const unsigned score = kScoreAddress[ram[kCurrentPlayerAddress] != 0];
 
     // 1. add the points: the table value as BCD, low byte first, carried into the third byte
@@ -95,17 +99,34 @@ inline void add_score(WorkRam ram, unsigned points_index) {
     //    as one BCD byte) are at least the limit. The ROM tests "limit - 1 < digits" with ordinary byte arithmetic, which is the same thing
     //    and also makes the limit 0xFF ("never") unreachable, because no BCD pair is 0xFF.
     const uint8_t ten_thousands_and_thousands = (uint8_t)((ram[score + 2] << 4) | (ram[score + 1] >> 4));
-    if ((uint8_t)(ram[kBonusLifeLimitAddress] - 1) < ten_thousands_and_thousands) give_extra_life_once(ram, score + kScoreBytes);
+    if ((uint8_t)(ram[kBonusLifeLimitAddress] - 1) < ten_thousands_and_thousands)
+        return give_extra_life_once(ram, score + kScoreBytes) ? kExtraLifeGivenNow : kExtraLifeAlreadyGiven;
+    return kNoExtraLife;
+}
 
-    // 3. high score: copied when the new score is higher (compare from the top byte down; equal scores do nothing)
+// Step 3: the high score. The score of the player whose turn it is is compared with the high score from the top byte down; equal scores do nothing.
+// `bytes_equal` (if given) is how many top bytes were equal before the bytes that decided (0, 1 or 2; 3 = the scores are equal).
+// Returns true when the high score was raised (copied).
+inline bool update_high_score(WorkRam ram, unsigned *bytes_equal = nullptr) {
+    const unsigned score = kScoreAddress[ram[kCurrentPlayerAddress] != 0];
     for (int i = (int)kScoreBytes - 1; i >= 0; --i) {
         const uint8_t mine = ram[score + i], best = ram[kHighScoreAddress + i];
-        if (mine < best) return;
+        if (bytes_equal) *bytes_equal = (unsigned)((int)kScoreBytes - 1 - i);
+        if (mine < best) return false;
         if (mine > best) {
             for (unsigned k = 0; k < kScoreBytes; ++k) ram[kHighScoreAddress + k] = ram[score + k];
-            return;
+            return true;
         }
     }
+    if (bytes_equal) *bytes_equal = kScoreBytes;
+    return false;
+}
+
+// The whole routine for one score event.
+inline void add_score(WorkRam ram, unsigned points_index) {
+    if (ram[kGameStateAddress] == kStateDemo) return; // nobody scores in the demo
+    add_points(ram, points_index);
+    update_high_score(ram);
 }
 
 } // namespace logic

@@ -1,0 +1,19 @@
+T02d evidence: ghost targeting and direction chooser in use (2026-10-16)
+Readable code: src/logic/ghost_targeting.h; adapters in src/rules/rules.h (namespace ghosts). ROM routines replaced when "--rules readable" is on:
+2966 (direction chooser, with 29EA and 2A12 inside) and the four target tasks 2730 (Blinky), 276C (Pinky), 27A9 (Inky), 27F1 (Clyde).
+Purist and the normal game are unchanged: they always use the original ROM routines.
+Test: sh tests/test_rules_ghosts.sh 3000000 1000000 (full output below). Garbage was put in A, F, BC, DE, HL, IX, IY before every isolated call.
+
+replay: 7273 frame hashes with the readable rules = original rules = Python prototype
+part 1: 1000000 isolated whole calls of each routine with garbage in all registers: 2966 differences 0; Blinky 2730 0; Pinky 276C 0; Inky 27A9 0; Clyde 27F1 0
+part 2: 3000000 frames; the original machine entered the tasks Blinky 138103, Pinky 112657, Inky 68659, Clyde 51909 times and 2966 614466 times (also from inside the tasks); the hooks ran the tasks 138103 / 112657 / 68659 / 51909 times and 2966 on its own 243148 times (the hooks gave way to the ROM 2156 times)
+part 3: wrong version "direction chooser one cycle too slow": caught (5000 of 5000 cases differ)
+part 3: wrong version "Blinky stores a wrong step": caught (4071 of 5000 cases differ)
+part 3: wrong version "Pinky stores a wrong direction": caught (5000 of 5000 cases differ)
+part 3: wrong version "Inky one cycle too slow": caught (5000 of 5000 cases differ)
+part 3: wrong version "Clyde stores a wrong step": caught (4052 of 5000 cases differ)
+PASS test_rules_ghosts: 1000000 isolated calls per routine, 3000000 frames, 0 differences required
+
+Notes: the hooks gave way to the ROM only where a call would run past the end of the frame (safety rule), 2156 times in 3,000,000 frames; the frame was still identical.
+Fix found on the way: the older tests T02a-T02c compared the I/O log with memcmp, which also looks at unused padding bytes; now compared field by field (tests re-run: random, scoring, dots, ghosts all PASS).
+Fast check also run: tests/test_purist.sh PASS, tests/test_replay.sh PASS (7273 frame hashes identical), tests/test_logic_ghosts.sh PASS, tools/check_docs.py OK.

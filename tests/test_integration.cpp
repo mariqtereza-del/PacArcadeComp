@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
     s.curve = 2;
     s.surround = 2;
     s.pad_symbols = 3;
+    s.rules_readable = true; // T02i
     std::string err;
     CHECK(menu::save_settings(a, s, &err), "settings saved");
     const std::string text = slurp(a);
@@ -79,14 +80,14 @@ int main(int argc, char **argv) {
         kv[k] = line.substr(sp + 1);
     }
     CHECK(tidy && !dup && comments == 1, "settings file: one comment line, then one 'key value' line per setting, no blank lines, no repeated key");
-    CHECK(kv.size() == 21, "settings file: 21 settings (every field of the Settings table)");
+    CHECK(kv.size() == 22, "settings file: 22 settings (every field of the Settings table)");
     menu::Settings t;
     std::string prob;
     CHECK(menu::load_settings(a, t, &prob) && prob.empty(), "settings read back with no problems");
     CHECK(menu::save_settings(b, t, &err) && slurp(a) == slurp(b), "read back and written again: identical bytes");
     CHECK(t.purist && t.overlay && t.scanlines && t.fill && t.smooth && !t.frame && t.help_pin && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal &&
               t.vibration == 1 && !t.pause_focus && t.hints == 2 && !t.lightbar && !t.run_summary && t.crt_mask == 2 && t.glow == 1 && t.curve == 2 && t.surround == 2 &&
-              t.pad_symbols == 3,
+              t.pad_symbols == 3 && t.rules_readable,
           "every value survived the round trip");
     {
         std::ofstream f(dir + "/int_bad.cfg");
@@ -141,7 +142,9 @@ int main(int argc, char **argv) {
                {menu::Cmd::CrtLook, "CrtLook", true},
                {menu::Cmd::Surround, "Surround", true},
                {menu::Cmd::SaveSlot, "SaveSlot", true},
-               {menu::Cmd::LoadSlot, "LoadSlot", true}};
+               {menu::Cmd::LoadSlot, "LoadSlot", true},
+               {menu::Cmd::Rules, "Rules", true},
+               {menu::Cmd::WriteRules, "WriteRules", false}};
     std::printf("PURIST TABLE (menu command: locked in Purist?)\n");
     int locked_n = 0;
     for (const auto &e : tab) {
@@ -150,7 +153,7 @@ int main(int argc, char **argv) {
         std::printf("  %-14s %s\n", e.name, l ? "locked" : "available");
         CHECK(l == e.locked && !menu::locked(e.c, off), (std::string("Purist table: ") + e.name).c_str());
     }
-    CHECK(locked_n == 19, "19 commands are locked in Purist");
+    CHECK(locked_n == 20, "20 commands are locked in Purist");
     CHECK(menu::value_text(menu::Cmd::Surround, m) == "BLACK" && menu::value_text(menu::Cmd::Glow, m) == "OFF" && menu::value_text(menu::Cmd::Curve, m) == "OFF" &&
               menu::value_text(menu::Cmd::CrtMask, m) == "OFF",
           "Purist shows the visual extras as off");

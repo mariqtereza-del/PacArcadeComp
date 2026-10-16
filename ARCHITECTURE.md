@@ -75,7 +75,7 @@ This page is a map of the whole repository: what each folder and file is for, an
 | `haptics.h`, `lightbar.h`, `lastdevice.h` | Pad vibration, light bar colours, and "which device was used last" (to show keyboard or pad hints). |
 
 ### `src/logic/` the readable game rules (optional "Track B")
-The game's rules rewritten as small readable C++ pieces, each proved identical to the ROM routine it copies. **Not yet used by the game**: the game still runs the original program. See `src/logic/README.md` and [MODDING.md](MODDING.md).
+The game's rules rewritten as small readable C++ pieces, each proved identical to the ROM routine it copies. **Used by the game only with RULES READABLE** (Esc > GAME OPTIONS > RULES, or `--rules readable`; a `rules.cfg` with changed values switches it on): the adapters in `src/rules/` run these functions in place of 24 arcade routines. With RULES ORIGINAL (the standard) and in Purist mode the original program runs untouched. See `src/logic/README.md`, [MODDING.md](MODDING.md) and `src/rules/` below.
 
 | File | Content |
 |---|---|
@@ -85,6 +85,16 @@ The game's rules rewritten as small readable C++ pieces, each proved identical t
 | `ghost_targeting.h` | Each ghost's target tile and direction choice. |
 | `movement.h` | Pac-Man and ghost movement, speeds, tunnel, Cruise Elroy. |
 | `mode_timers.h` | Scatter/chase and frightened timers, per-level settings. |
+| `ghost_house.h` | When each ghost leaves the ghost house (dot counters, the common counter after a death), the eaten ghost's wait, the inactivity timer. |
+
+### `src/rules/` the bridge between the machine and `src/logic/`
+| File | Content |
+|---|---|
+| `rules.h` | The adapters: one hook per replaced arcade routine (24). A hook runs the readable function, then leaves memory, registers, flags and the cycle count exactly as the arcade routine would. `table()` is the list `Machine::rules` points to (empty with RULES ORIGINAL). |
+| `z80sim.h` | The timing and register model used by the adapters (a transcription of the instruction path of each replaced routine). |
+| `rules_file.h` | The `rules.cfg` reader/writer (24 keys), and the code that puts the file's numbers into the level set-up and the scoring. |
+
+The example mods are in `mods/`; their tests in `tests/test_mods.sh`.
 
 ### `src/third_party/` and `src/hello/`
 `miniz/` is the zip reader (MIT, compiled into the program). `hello/main.cpp` is the very first toolchain test (a window that proves a Windows exe can be built).

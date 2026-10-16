@@ -1,0 +1,23 @@
+T02g evidence: readable ghost house release (src/logic/ghost_house.h) vs the ROM, 2026-10-16
+Command: sh tests/test_logic_house.sh 3000000 1000000
+
+part A: 3000000 frames (13.8 hours of game time): calls 1066 4230425 (changed memory 3274), Pinky 2069 3437957 (1575), Inky 208C 3437957 (1362), Clyde 20AF 3437957 (611), inactivity 13DD 2024532 (1863910); release calls in the common counter mode 1759821, its end seen 56 times; differences 0
+part B1: 1066 alone: every waiting value 0-255 x 8 random fillings: 2048 calls, differences so far 0
+part B2: the three release checks alone: every own counter x every limit x out flag x common mode, and every common counter value: 789504 calls, differences so far 0
+part B3: 13DD alone: every counter 0-65535 x limit ahead/elsewhere/equal x dot count same/changed x which ghosts are out: 1572864 calls, differences so far 0
+part B4: 1000000 random runs of each routine: differences 0
+PASS test_logic_house: 16568828 live calls and 7364416 isolated calls compared, 0 differences
+caught wrong version: Pinky common limit 7 -> 8
+caught wrong version: Inky common limit 17 -> 18
+caught wrong version: Clyde common limit 32 -> 33
+caught wrong version: Inky out flag 3 -> 2
+caught wrong version: own counter must exceed the limit
+caught wrong version: Clyde let out in common mode
+caught wrong version: common mode not ended
+caught wrong version: eaten ghost wait off by one
+caught wrong version: eaten ghost 3 marks wrong ghost
+caught wrong version: inactivity counter not reset on a dot
+caught wrong version: inactivity limit off by one
+caught wrong version: inactivity lets out Clyde before Pinky
+
+Full regression (sh tests/run_all.sh, includes the short version of this test): ALL TESTS PASSED

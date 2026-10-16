@@ -48,7 +48,7 @@ inline Rect bezel_outer(int win_w, int win_h, Rect pic) {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // X45: the original cabinet look, drawn in code (no image file is shipped, nothing copied from any real cabinet: our own wording and shapes, no company names or logos).
-inline const char *marquee_text() { return "MAZE CHASE"; }
+inline const char *marquee_text() { return "PACARCADECOMP"; }
 inline const char *forbidden_words() { return "NAMCO MIDWAY BALLY"; } // never to appear in any text this file draws (checked by the unit test)
 
 // A 5 x 7 letter font (capitals, digits, space, '-' and '.'), one string of 35 characters per glyph (rows from the top, '1' = lit); other characters draw as a space.

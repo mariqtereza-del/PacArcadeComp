@@ -10,7 +10,7 @@ export DISPLAY=${DISPLAY:-:99}; pgrep Xvfb >/dev/null || { Xvfb :99 -screen 0 12
 fail=0; chk() { if [ "$2" = "$3" ]; then echo "  ok: $1 ($2)"; else echo "  FAIL: $1 (got \"$2\", wanted \"$3\")"; fail=1; fi; }
 rm -f $D/a.txt $D/quicksave.sav
 build/app/pacman-port --no-audio --scale 2 --config $D/a.cfg --report $D/a.txt --hiscore $D/hs.txt --ticks 10000000 >/dev/null 2>&1 &
-P=$!; sleep 4; W=$(xdotool search --name "Maze Chase" | head -1)
+P=$!; sleep 4; W=$(xdotool search --name "PacArcadeComp" | head -1)
 xdotool key --window $W Escape; sleep 1.5
 eval $(xdotool getwindowgeometry --shell $W)       # X, Y, WIDTH, HEIGHT (the window is 352 wide while the menu is open)
 S=$(( WIDTH * 1000 / 352 ))                        # window pixels per picture pixel, times 1000
@@ -23,8 +23,8 @@ xdotool click 1; sleep 0.6
 import -window $W $D/controls_page.png 2>/dev/null
 at 100 $(row 10); xdotool click 1; sleep 0.6
 at 100 $(row 5); xdotool click 1; sleep 0.6; xdotool click 3; sleep 0.6
-chk "right click on a page goes back (no menu close yet)" "$(xdotool getwindowname $W)" "Maze Chase - MENU"
-at 100 $(row 0); xdotool click 3; sleep 1; chk "right click on the main page closes the menu" "$(xdotool getwindowname $W)" "Maze Chase"
+chk "right click on a page goes back (no menu close yet)" "$(xdotool getwindowname $W)" "PacArcadeComp - MENU"
+at 100 $(row 0); xdotool click 3; sleep 1; chk "right click on the main page closes the menu" "$(xdotool getwindowname $W)" "PacArcadeComp"
 kill $P 2>/dev/null; wait $P 2>/dev/null; sleep 1
 chk "hover over row 5 (DISPLAY) selected it (at least once)" "$([ $(grep -c 'mouse on item 5 of page 0' $D/a.txt) -ge 1 ] && echo yes)" yes
 chk "hover follows the pointer (row 4)" "$(grep -c 'mouse on item 4 of page 0' $D/a.txt)" 1

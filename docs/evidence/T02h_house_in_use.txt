@@ -1,0 +1,46 @@
+T02h evidence: ghost house release in use (readable rules in the game), 2026-10-16
+Commands: sh tests/test_rules_house.sh 3000000 1000000; sh tests/test_rules_all.sh 3000000 (all seven pieces; second pass with garbage registers)
+
+replay: 7273 frame hashes with the readable rules = original rules = Python prototype
+part 1: 1000000 isolated whole calls of each routine with garbage in all registers: 1066 differences 0; Pinky 2069 0; Inky 208C 0; Clyde 20AF 0; inactivity 13DD 0
+  (the hook gave way to the ROM in 4907 / 3838 / 3861 / 3680 / 6198 of those calls)
+part 2: 3000000 frames; the original machine entered 1066 4205604, 2069 3495170, 208C 3495170, 20AF 3495170, 13DD 2077419 times; the hooks ran 4205604 / 3495170 / 3495170 / 3495170 / 2077419 times (the hooks gave way to the ROM 102952 times)
+  readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+  ISOLATED MISMATCH (routine 1066) case 0: cycle count (ROM 28 cycles, hook 29)
+  ISOLATED MISMATCH (routine 1066) case 1: cycle count (ROM 105 cycles, hook 106)
+  ISOLATED MISMATCH (routine 1066) case 2: cycle count (ROM 73 cycles, hook 74)
+  ISOLATED MISMATCH (routine 1066) case 3: cycle count (ROM 110 cycles, hook 111)
+part 3: wrong version "1066 one cycle too slow": caught (5000 of 5000 cases differ)
+  ISOLATED MISMATCH (routine 2069) case 0: work RAM (ROM 28 cycles, hook 28)
+  ISOLATED MISMATCH (routine 2069) case 1: work RAM (ROM 80 cycles, hook 80)
+  ISOLATED MISMATCH (routine 2069) case 2: work RAM (ROM 28 cycles, hook 28)
+  ISOLATED MISMATCH (routine 2069) case 3: work RAM (ROM 90 cycles, hook 90)
+part 3: wrong version "Pinky: out flag flipped": caught (4982 of 5000 cases differ)
+  ISOLATED MISMATCH (routine 208C) case 0: work RAM (ROM 28 cycles, hook 28)
+  ISOLATED MISMATCH (routine 208C) case 1: work RAM (ROM 90 cycles, hook 90)
+  ISOLATED MISMATCH (routine 208C) case 2: work RAM (ROM 28 cycles, hook 28)
+  ISOLATED MISMATCH (routine 208C) case 3: work RAM (ROM 28 cycles, hook 28)
+part 3: wrong version "Inky: common counter changed": caught (5000 of 5000 cases differ)
+  ISOLATED MISMATCH (routine 20AF) case 0: cycle count (ROM 28 cycles, hook 29)
+  ISOLATED MISMATCH (routine 20AF) case 1: cycle count (ROM 28 cycles, hook 29)
+  ISOLATED MISMATCH (routine 20AF) case 2: cycle count (ROM 28 cycles, hook 29)
+  ISOLATED MISMATCH (routine 20AF) case 3: cycle count (ROM 114 cycles, hook 115)
+part 3: wrong version "Clyde one cycle too slow": caught (5000 of 5000 cases differ)
+  ISOLATED MISMATCH (routine 13DD) case 0: work RAM (ROM 76 cycles, hook 76)
+  ISOLATED MISMATCH (routine 13DD) case 1: work RAM (ROM 76 cycles, hook 76)
+  ISOLATED MISMATCH (routine 13DD) case 2: work RAM (ROM 128 cycles, hook 128)
+  ISOLATED MISMATCH (routine 13DD) case 3: work RAM (ROM 76 cycles, hook 76)
+part 3: wrong version "inactivity counter changed": caught (4987 of 5000 cases differ)
+PASS test_rules_house: 1000000 isolated calls per routine, 3000000 frames, 0 differences required
+replay: 7273 frame hashes with the readable rules = original rules = Python prototype
+3000000 frames with all 24 readable rules on: the original entered the replaced routines 46467853 times (24 different routines); the hooks gave way to the ROM 103941 times
+  all readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+PASS test_rules_all: 3000000 frames, 0 differences required
+3000000 frames with all 24 readable rules on: the original entered the replaced routines 46467853 times (24 different routines); the hooks gave way to the ROM 103941 times
+  all readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+PASS test_rules_all: 3000000 frames, 0 differences required
+
+Full regression (sh tests/run_all.sh): ALL TESTS PASSED

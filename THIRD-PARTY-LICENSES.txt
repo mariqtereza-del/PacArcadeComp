@@ -1,4 +1,4 @@
-THIRD-PARTY LICENCES  (Maze Chase)
+THIRD-PARTY LICENCES  (PacArcadeComp)
 
 This program is built from our own code plus the following third-party software. The program does NOT contain any game ROM, any game artwork or any game code: the player supplies their own ROM file.
 

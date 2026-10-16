@@ -1,10 +1,10 @@
-# Maze Chase (working title)
+# PacArcadeComp
 
 **An arcade-accurate Windows player for a classic 1980 maze game, with modern extras you can switch off.**
 
-Maze Chase contains a software copy of the arcade machine's computer (a Z80 processor, the memory map, the video and sound chips). It runs the game's **original program** instead of a re-creation, so the game behaves like the arcade board: same ghost behaviour, same speeds, same bugs (including the famous level 256). Around that machine sits a modern front end: menus, save states, rewind, game-pad support, screen effects and more.
+PacArcadeComp contains a software copy of the arcade machine's computer (a Z80 processor, the memory map, the video and sound chips). It runs the game's **original program** instead of a re-creation, so the game behaves like the arcade board: same ghost behaviour, same speeds, same bugs (including the famous level 256). Around that machine sits a modern front end: menus, save states, rewind, game-pad support, screen effects and more.
 
-> **This repository does not contain the game.** No ROM, no artwork, no sound and nothing made from them is included. You supply your own copy of the ROM set (a file named `pacman.zip`). The name "Maze Chase" is a working title. The project is not affiliated with, authorised by or endorsed by the owners of the original game or its trademarks.
+> **This repository does not contain the game.** No ROM, no artwork, no sound and nothing made from them is included. You supply your own copy of the ROM set (a file named `pacman.zip`). The name "PacArcadeComp" is a working title. The project is not affiliated with, authorised by or endorsed by the owners of the original game or its trademarks.
 
 ![The menu pages: pause menu, game options and key list](docs/images/menu_pages.png)
 
@@ -26,10 +26,10 @@ Maze Chase contains a software copy of the arcade machine's computer (a Z80 proc
 
 You need: a Windows 10 or 11 PC (64-bit) and your own `pacman.zip` ROM set (the file you may legally use; the program checks that it is the right one and never changes, copies or uploads it).
 
-1. Open the **[Releases](../../releases)** page of this repository and download `MazeChase-1.0.1-win64.zip` (under "Assets").
+1. Open the **[Releases](../../releases)** page of this repository and download `PacArcadeComp-1.1.0-win64.zip` (under "Assets").
 2. Right-click the downloaded zip, choose **Extract All...** and extract it somewhere (your Desktop is fine). Do **not** run the program from inside the zip.
-3. Copy your `pacman.zip` into the extracted `MazeChase` folder, **next to `MazeChase.exe`**.
-4. Double-click `MazeChase.exe`.
+3. Copy your `pacman.zip` into the extracted `PacArcadeComp` folder, **next to `PacArcadeComp.exe`**.
+4. Double-click `PacArcadeComp.exe`.
    - Windows may show a blue **"Windows protected your PC"** window, because the program is new and not signed with a paid certificate. Click **More info**, then **Run anyway**.
    - If the program cannot find the ROM it says so and offers **Choose file**: pick your `pacman.zip` once; the choice is remembered.
 5. Press **5** to insert a coin, **1** to start. Press **Esc** for the menu.
@@ -59,6 +59,10 @@ The release folder also contains `REPORT-A-PROBLEM.bat`: start the game with it 
 - Remap every key; use Xbox, PlayStation 4 and PlayStation 5 pads with matching button pictures; vibration; lightbar colours on PlayStation pads (yellow while playing, red near a ghost, blue when ghosts are blue).
 - Pad buttons for menu, pause, save, load and rewind; the program shows keyboard or pad hints depending on what you used last.
 - Mouse works in all menus. Pause when the window loses focus.
+
+**Modding**
+- Esc > GAME OPTIONS > **RULES**: ORIGINAL (the arcade program's own routines, the standard) or READABLE (the same rules written as C++, proved frame-for-frame identical).
+- A text file `rules.cfg` changes the game's numbers without programming: speeds, scatter/chase and blue-ghost times, Cruise Elroy and ghost-house limits, points, the extra-life score. Three ready-made example mods in [mods/](mods/). Modded games are marked MODDED and never count for records; Purist mode ignores the file. See [MODDING.md](MODDING.md).
 
 **Statistics and records**
 - Per-run statistics, personal bests for each level, achievements (taken from the public RetroAchievements list for this game, none invented by us), recorder for replays used by the tests.
@@ -94,7 +98,7 @@ Esc > **PURIST MODE** switches every extra off (overlay, scanlines, fill scaling
 
 **"Windows protected your PC".** Click More info > Run anyway. The program is not code-signed (a certificate costs money). You can instead build it yourself ([BUILDING.md](BUILDING.md)).
 
-**The program says it cannot find the ROM.** Put `pacman.zip` next to `MazeChase.exe` or use "Choose file". The zip must be the Midway "pacman" set (the same 10 files MAME uses); the message names what is wrong if it is a different set.
+**The program says it cannot find the ROM.** Put `pacman.zip` next to `PacArcadeComp.exe` or use "Choose file". The zip must be the Midway "pacman" set (the same 10 files MAME uses); the message names what is wrong if it is a different set.
 
 **Where do I get the ROM?** This project cannot provide it or point you to it. You must own the game and have the right to use the file.
 
@@ -113,12 +117,12 @@ Esc > **PURIST MODE** switches every extra off (overlay, scanlines, fill scaling
 ## For people who want to look inside or change the game
 
 - **[BUILDING.md](BUILDING.md)**: build the program yourself (Windows and Linux) and run the tests.
-- **[MODDING.md](MODDING.md)**: what you can change today and how (menus, screen effects, controls, achievements, settings), and the honest state of the readable game rules.
+- **[MODDING.md](MODDING.md)**: change the game's numbers with a text file (`rules.cfg`, three example mods in [mods/](mods/)), change the readable rules in C++ (with a worked example), change the menus and the look, and the honest list of what is still original arcade code.
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: a map of every folder and file and how the emulator, video, audio and app fit together.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: how to report a problem or send a change.
 - **[CHANGELOG.md](CHANGELOG.md)**: what changed in each version.
 - [MACHINE_NOTES.md](MACHINE_NOTES.md): everything we learned about how the arcade machine works (memory map, video, sound, timing, inputs, routines).
-- [src/logic/README.md](src/logic/README.md): the game's rules rewritten as readable C++, each piece proved identical to the original routine.
+- [src/logic/README.md](src/logic/README.md): the game's rules rewritten as readable C++, each piece proved identical to the original routine (and used by the game with RULES READABLE).
 
 ## How the project was made
 
@@ -134,5 +138,5 @@ The project was built step by step by a non-programmer working with an AI assist
 ## Legal
 
 - No game ROM, artwork, sound or code of the original game is in this repository or in the release download. The player supplies their own ROM file; the program only reads it.
-- Not affiliated with, authorised by or endorsed by the owners of the original game or its trademarks. "Maze Chase" is a working title and not an official name.
+- Not affiliated with, authorised by or endorsed by the owners of the original game or its trademarks. "PacArcadeComp" is our own project name; it is not an official name of the original game.
 - The code and documents written for this project are under the [MIT licence](LICENSE). Third-party components (SDL2, miniz, the z80 emulator core) have their own licences: [THIRD-PARTY-LICENSES.txt](THIRD-PARTY-LICENSES.txt).

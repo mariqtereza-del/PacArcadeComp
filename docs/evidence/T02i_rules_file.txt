@@ -1,0 +1,9 @@
+T02i evidence: RULES setting and the rules file, 2026-10-16
+Command: sh tests/test_rules_file.sh 60000 (and the full regression sh tests/run_all.sh)
+
+part 5: 60000 frames of play: ghost steps with the standard rules 116683, with ghosts at 60% 70752; the machine with the standard tuning equals the original: yes; the slow-ghost machine equals the original: no (as it must)
+PASS test_rules_file: 270 checks, 0 failed
+PASS test_rules_file: reader and numbers checked; original, readable and the standard file give the prototype's 7273 frame hashes; the slow-ghost mod differs from frame 561 and is marked MODDED (no high score saved); Purist ignores the file; wrong lines are reported
+
+Also: tests/test_menu.sh PASS (936 checks), tests/test_integration.sh PASS (22 settings, 20 Purist locks), tests/test_assist.sh PASS, tests/test_rules_all.sh PASS.
+Full regression (sh tests/run_all.sh): ALL TESTS PASSED

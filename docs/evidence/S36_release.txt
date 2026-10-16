@@ -67,17 +67,17 @@ ALL TESTS PASSED
 DONE
 
 == Package ==
-Archive:  dist/MazeChase-1.0.0-win64.zip
+Archive:  dist/PacArcadeComp-1.0.0-win64.zip
   Length      Date    Time    Name
 ---------  ---------- -----   ----
-        0  2026-10-15 13:58   MazeChase/
-  3267584  2026-10-15 13:58   MazeChase/MazeChase.exe
-     2725  2026-10-15 13:58   MazeChase/README.txt
-     3551  2026-10-15 13:58   MazeChase/THIRD-PARTY-LICENSES.txt
-      427  2026-10-15 13:58   MazeChase/REPORT-A-PROBLEM.bat
+        0  2026-10-15 13:58   PacArcadeComp/
+  3267584  2026-10-15 13:58   PacArcadeComp/PacArcadeComp.exe
+     2725  2026-10-15 13:58   PacArcadeComp/README.txt
+     3551  2026-10-15 13:58   PacArcadeComp/THIRD-PARTY-LICENSES.txt
+      427  2026-10-15 13:58   PacArcadeComp/REPORT-A-PROBLEM.bat
 ---------                     -------
   3274287                     5 files
-06267db7d287cef87db6255bfe9077011b6bfc18  dist/MazeChase-1.0.0-win64.zip
-13ca88a712f7472d444f22cb04967b839e31b488  dist/MazeChase/MazeChase.exe
+06267db7d287cef87db6255bfe9077011b6bfc18  dist/PacArcadeComp-1.0.0-win64.zip
+13ca88a712f7472d444f22cb04967b839e31b488  dist/PacArcadeComp/PacArcadeComp.exe
 
 User sessions (three clean 30-minute sessions on this package): PENDING.

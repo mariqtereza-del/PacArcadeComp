@@ -4,8 +4,11 @@ The program ROM of the arcade machine is a Z80 program. The port runs that progr
 holds the same rules written the way a person would write them, one small piece at a time, so the code can be read, studied and edited.
 
 Rules of this folder:
-- A piece is added only after a test has shown that it does exactly what the ROM routine does (see "Proof" below). Nothing here is used by
-  the game yet: the game still runs the ROM. A piece becomes "in use" only in a later, separate step.
+- A piece is added only after a test has shown that it does exactly what the ROM routine does (see "Proof" below). The game uses these pieces
+  only with RULES READABLE (Esc > GAME OPTIONS > RULES, or `--rules readable`): the adapters in `src/rules/` run them in place of the ROM routines
+  (T02a to T02h), again proved identical frame for frame (`tests/test_rules_all.sh`). With RULES ORIGINAL (the standard) and in Purist mode the ROM runs.
+  To change the rules, change a piece here: see [MODDING.md](../../MODDING.md) (a worked example is in it). The numbers can also be changed without
+  programming with a `rules.cfg` file (`src/rules/rules_file.h`, examples in `mods/`).
 - Every piece names the ROM address it copies, and the RAM addresses it reads or writes (docs/notes/ram_map.md, docs/notes/gameplay_routines.md).
 - No piece reads the player's ROM except through the argument the caller passes in (the ROM is never part of this repository).
 
@@ -21,5 +24,6 @@ byte the routine writes. Any difference stops the run and prints the frame, the 
 | Ghost targeting: the four target rules and the direction chooser (T01d) | ghost_targeting.h | 2966 (+29EA, 2A12), 2730, 276C, 27A9, 27F1 | tests/test_logic_ghosts.sh, docs/evidence/T01d_ghost_targeting.txt |
 | Movement: Pac-Man and the four ghosts, speed patterns, tunnel, Cruise Elroy, fruit eating (T01e) | movement.h | 1806, 1B36, 1C4B, 1D22, 1DF9 (+2000, 2018, 205A, 1ED0, 1EFE-1F73, 20D7) | tests/test_logic_movement.sh, docs/evidence/T01e_movement.txt |
 | Mode timers: scatter/chase timer, frightened timer, turn-round flags, level settings (T01f) | mode_timers.h | 0E36, 1376, 070E (tables 0796, 0843-0873, 330F) | tests/test_logic_timers.sh, docs/evidence/T01f_mode_timers.txt |
+| Ghost house release: eaten ghost waiting, Pinky/Inky/Clyde leave the house (dot counters, common counter after a death), inactivity timer (T02g) | ghost_house.h | 1066, 2069, 208C, 20AF, 13DD | tests/test_logic_house.sh, docs/evidence/T02g_ghost_house.txt |
 
 Not copied (left to the ROM): redrawing the score, the high score and the little Pac-Man pictures in video RAM (T01b); Pac-Man eating the fruit, ROM 19A1-19C4 (T01c); the drawing of the level's fruits, ROM 2BEA (T01f). The proof of T01b compares all work RAM (4C00-4FEF) after every call; the proof of T01c also compares the video RAM (the maze, where the dots are) and the colour RAM.

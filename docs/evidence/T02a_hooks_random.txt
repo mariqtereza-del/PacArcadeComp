@@ -1,0 +1,52 @@
+T02a evidence: hook mechanism and random numbers in use (2026-10-15)
+
+What was built
+  src/board/machine.h/.cpp: Machine::rules, a pointer to a table of 65,536 entries (nullptr = the standard = the original ROM routines, exactly as before).
+    Machine::run_frame: before each instruction, if the table is set and has an entry for the instruction's address, that entry runs INSTEAD of the ROM
+    routine starting there. One extra test per instruction when the table is set; none of the machine's behaviour changes when it is not.
+  src/rules/rules.h (new): the adapters that put the readable rules (src/logic) into the game.
+    return_like_ret(): leaves like the routine's final RET (return address from the stack, WZ, the refresh register R by the routine's instruction count,
+      the EI delay cleared, and the same number of cycles as the ROM routine charged, so the frame timing is unchanged).
+    random_byte_2A23(): seed from RAM 4DC9/4DCA, logic::get_random_byte (src/logic/random_number.h), new seed written back, answer in A; 111 cycles, 13 instructions.
+    Scratch registers (F, DE, HL): left alone in the game; the tests fill them with garbage (rules::poison) to prove no caller reads them.
+    rules::table(): the table (this step: one entry, 2A23).
+  src/app/main.cpp: --rules readable switches the readable rules on (at start and at every machine restart); Purist mode switches them off; the log says
+    "Game rules: READABLE (...)" or "Game rules: original ROM routines". src/app/replay.cpp: the replay tool takes --rules readable too.
+  tests/test_rules_random.cpp/.sh (new); tests/run_all.sh runs it with 100,000 frames (PLAN CHANGE: run_all.sh was not in the MAY TOUCH list; the
+    checkpoint rule needs the new test in it, as for the T01 tests).
+
+Why charging the ROM's cycles: measured before planning (T02 feasibility): the readable routine run instead of 2A23 gave identical replay hashes both
+  with 111 cycles charged and with none, because the routine runs inside the interrupt handler early in the frame. Charging the same cycles keeps even the
+  cycle count of every frame identical (checked below), which matters for the larger pieces later.
+
+VERIFY
+1. Replay test (7,273 frames, a one-player game then a two-player game), tests/test_rules_random.sh:
+   replay tool with --rules readable: 7,273 frame hashes = the original rules = the Python prototype.
+   window program (the real game loop) with --rules readable --replay --fast: 7,273 frame hashes = the Python prototype; its log says "Game rules: READABLE".
+   window program with --rules readable --purist: the log says "Game rules: original ROM routines"; hashes = the prototype.
+2. 3,000,000-frame side-by-side run (13.8 hours of game time), build/t02/test_rules_random build/rom/prog.bin 3000000:
+   three machines in lockstep, the T01a scripted player (coins, start, a new random direction every 10 to 41 frames, five lives):
+     A original (counts every entry of ROM 2A23), B readable rules (Machine::run_frame), C readable rules with garbage in F, DE, HL after every call.
+   Compared after EVERY frame: work RAM, video RAM, colour RAM, sprite RAM and coordinates, sound registers, latches, interrupt vector, watchdog count,
+   every I/O write of the frame in order, the cycle count of the frame; B also all CPU registers.
+   Result:
+     part 1: 3000000 frames, original machine entered ROM 2A23 100839 times; the readable rule ran 100839 times (frames with blue ghosts: 652119)
+       readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+       CPU registers at the end of every frame: identical too
+     part 2: garbage in F, DE, HL after every call: identical on every frame
+     part 3: a wrong adapter (seed * 5 + 3): caught
+       first difference at frame 2656
+     PASS test_rules_random: 3000000 frames, 100839 calls of the readable rule, 0 differences required
+   (100,839 calls: the same number the T01a evidence counted with the same player.)
+3. Rules off: the replay log of the new replay tool is byte-identical to the one built from the S37 checkpoint sources (sha256 cdcf193947a291acf144...).
+   tests/test_replay.sh PASS (7,273 hashes, run 1 = run 2 = prototype); tests/test_purist.sh PASS; tests/test_integration.sh PASS (main.cpp touched).
+4. Speed: the replay tool (7,273 frames) took 1.05-1.32 s before the step, 1.14-1.25 s after with the rules off and 1.12-1.26 s with them on (three runs
+   each, while another test was running): no difference beyond the noise; the game runs about 100 times faster than real time.
+5. Formatting: clang-format applied to the changed files (layout only).
+
+Honest limits
+1. Only the random numbers are in use; the game you play is unchanged (the rules are switched on only with --rules readable; the menu setting comes in T02i).
+2. src/logic/README.md and MODDING.md still say the readable code is not used by the game; they are rewritten in T02j (not in this step's MAY TOUCH list).
+3. The hook replaces a whole routine at once. For 2A23 this cannot be seen because it runs inside the interrupt handler (no interrupt can arrive in the
+   middle). Routines run by the main loop (later pieces, for example the level start 070E) could be interrupted half-way in the original; that case is
+   checked by the same frame-by-frame comparison in their steps.

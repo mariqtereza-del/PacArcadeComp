@@ -41,7 +41,14 @@ public:
         }
     }
 
+    // T02a: the readable rules (src/rules/rules.h). nullptr (the standard) = the original ROM routines run, exactly as before. Otherwise a table
+    // of 65,536 entries, one per address: when the next instruction's address has an entry, that function runs INSTEAD of the ROM routine that
+    // starts there, and must leave the machine as the routine's RET would (src/rules/rules.h, return_like_ret). Purist mode never sets it.
+    typedef void (*RuleHook)(Machine &);
+    const RuleHook *rules = nullptr;
+
     uint32_t ticks_in_frame() const { return ticks; }
+    void set_ticks_in_frame(uint32_t t) { ticks = t; } // tests only (T02b): start a routine at a chosen point of the frame
     void deliver_vblank_interrupt();
 
 private:

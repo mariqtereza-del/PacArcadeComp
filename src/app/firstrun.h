@@ -8,7 +8,7 @@
 
 namespace firstrun {
 
-constexpr const char *kAppName = "Maze Chase"; // the program's own name (the window title and the dialogs); the original game's name is not used
+constexpr const char *kAppName = "PacArcadeComp"; // the program's own name (the window title and the dialogs); the original game's name is not used
 
 struct
     Ui { // what the player sees: ask() shows a message with a button for the action and a Close button (true = the action button); pick() shows a file picker (false = cancelled)

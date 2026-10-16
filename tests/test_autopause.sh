@@ -26,12 +26,12 @@ PB=$(run off); sleep 4; WB=$(win $PB); xdotool windowfocus $WB; sleep 1; xdotool
 PP=$(run pur --purist); sleep 4; WP=$(win $PP); xdotool windowfocus $WP; sleep 1; xdotool windowfocus $WO; sleep 1; T5=$(title $WP)
 # 4. the menu item (Esc, Controls, wheel down to the item) -- keyboard only
 kill $PB $PP $PO 2>/dev/null; wait 2>/dev/null; sleep 1
-chk "title while in focus" "$T0" "Maze Chase"
-chk "focus lost: the game pauses by itself" "$T1" "Maze Chase - PAUSED (PRESS ANY KEY)"
-chk "focus back: still paused" "$T2" "Maze Chase - PAUSED (PRESS ANY KEY)"
-chk "any key goes on" "$T3" "Maze Chase"
-chk "option off: focus loss does not pause" "$T4" "Maze Chase"
-chk "Purist: focus loss does not pause" "$T5" "Maze Chase"
+chk "title while in focus" "$T0" "PacArcadeComp"
+chk "focus lost: the game pauses by itself" "$T1" "PacArcadeComp - PAUSED (PRESS ANY KEY)"
+chk "focus back: still paused" "$T2" "PacArcadeComp - PAUSED (PRESS ANY KEY)"
+chk "any key goes on" "$T3" "PacArcadeComp"
+chk "option off: focus loss does not pause" "$T4" "PacArcadeComp"
+chk "Purist: focus loss does not pause" "$T5" "PacArcadeComp"
 chk "log: paused once, went on once" "$(grep -c 'Focus: the window lost focus' $D/on/r.txt)/$(grep -c 'Focus: going on' $D/on/r.txt)" "1/1"
 chk "log: no focus pause with the option off" "$(grep -c 'Focus:' $D/off/r.txt)" 0
 # the machine really stood still while paused: far fewer ticks than the 60.6 per second of running time

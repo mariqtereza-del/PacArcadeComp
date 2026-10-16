@@ -8,7 +8,7 @@
 
 namespace assist {
 
-enum Reason { kLoad, kRewind, kStartLevel, kTrainer, kSlowMotion, kFrameAdvance, kCheatHelp, kTestSetup, kReasonCount };
+enum Reason { kLoad, kRewind, kStartLevel, kTrainer, kSlowMotion, kFrameAdvance, kCheatHelp, kTestSetup, kModded, kReasonCount };
 
 struct Info {
     const char *label;
@@ -17,7 +17,8 @@ struct Info {
 inline const Info &info(int r) {
     static const Info t[kReasonCount] = {{"STATE LOADED", "loaded a save state"},  {"REWIND", "rewound the game"},      {"START LEVEL", "started at a later level"},
                                          {"TRAINER", "used the trainer"},          {"SLOW MOTION", "used slow motion"}, {"FRAME STEP", "stepped frame by frame"},
-                                         {"CHEAT HELP", "used a cheat-like help"}, {"TEST SETUP", "used a test set-up"}};
+                                         {"CHEAT HELP", "used a cheat-like help"}, {"TEST SETUP", "used a test set-up"},
+                                         {"MODDED", "played with modified rules"}};
     return t[r >= 0 && r < kReasonCount ? r : 0];
 }
 

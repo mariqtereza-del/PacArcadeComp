@@ -39,31 +39,35 @@ constexpr uint8_t kTaskAddScore = 0x19;                              // the id o
 // ---- the two little systems the routines use
 // The task queue (ROM 0042): two bytes (task id, parameter) are stored at the write pointer, which then moves on two bytes and wraps inside 4Cxx
 // from the end of the page back to 4CC0.
-inline void task_queue_push(WorkRam ram, uint8_t task, uint8_t parameter) {
+inline bool task_queue_push(WorkRam ram, uint8_t task, uint8_t parameter) { // returns true when the pointer wrapped back to 4CC0
     unsigned hl = ram[kTaskQueueWritePointerAddress] | (ram[kTaskQueueWritePointerAddress + 1] << 8);
     uint8_t l = (uint8_t)(hl & 255), h = (uint8_t)(hl >> 8);
     ram[(unsigned)(h << 8 | l)] = task;
     l = (uint8_t)(l + 1);
     ram[(unsigned)(h << 8 | l)] = parameter;
     l = (uint8_t)(l + 1);
-    if (l == 0) l = 0xC0;
+    const bool wrapped = l == 0;
+    if (wrapped) l = 0xC0;
     ram[kTaskQueueWritePointerAddress] = l;
     ram[kTaskQueueWritePointerAddress + 1] = h;
+    return wrapped;
 }
 
 // A timed event (ROM rst 30h): three bytes go into the first free slot (a slot whose first byte is 0). Returns false when all 16 slots are taken
 // (the ROM would then run on into the data bytes; that never happens in the game and is not modelled).
-inline bool schedule_timed_event(WorkRam ram, uint8_t b0, uint8_t b1, uint8_t b2) {
+// Returns the number of the slot used (0..15), or -1 when none is free.
+inline int schedule_timed_event_slot(WorkRam ram, uint8_t b0, uint8_t b1, uint8_t b2) {
     for (unsigned i = 0; i < kTimedEventSlots; ++i) {
         const unsigned slot = kTimedEventTableAddress + 3 * i;
         if (ram[slot] != 0) continue;
         ram[slot] = b0;
         ram[slot + 1] = b1;
         ram[slot + 2] = b2;
-        return true;
+        return (int)i;
     }
-    return false;
+    return -1;
 }
+inline bool schedule_timed_event(WorkRam ram, uint8_t b0, uint8_t b1, uint8_t b2) { return schedule_timed_event_slot(ram, b0, b1, b2) >= 0; }
 
 // The video RAM address of a maze tile (ROM 202D), from Pac-Man's tile bytes a and b.
 inline unsigned video_address_of_tile(uint8_t a, uint8_t b) { return kVideoRamStart + (uint8_t)(a - 32) + 32 * ((uint8_t)(b - 32) & 0x1F) + 0x40; }
@@ -75,21 +79,23 @@ inline unsigned video_address_of_tile(uint8_t a, uint8_t b) { return kVideoRamSt
 constexpr unsigned kDiedThisLevelAddress = 0x4E12, kGlobalDotCounterAddress = 0x4D9F;
 constexpr unsigned kLeftHouseAddress[3] = {0x4DA1, 0x4DA2, 0x4DA3};          // Pinky out, Inky out, Clyde out
 constexpr unsigned kPersonalDotCounterAddress[3] = {0x4E0F, 0x4E10, 0x4E11}; // Pinky's, Inky's, Clyde's
-inline void count_dot_for_ghost_house(WorkRam ram) {
+enum HouseCounter { kCountsNobody, kCountsCommon, kCountsClyde, kCountsInky, kCountsPinky }; // which counter took the dot (T02c: the game needs to know)
+inline HouseCounter count_dot_for_ghost_house(WorkRam ram) {
     if (ram[kDiedThisLevelAddress] != 0) {
         ram[kGlobalDotCounterAddress] = (uint8_t)(ram[kGlobalDotCounterAddress] + 1);
-        return;
+        return kCountsCommon;
     }
-    if (ram[kLeftHouseAddress[2]] != 0) return; // everybody is out
+    if (ram[kLeftHouseAddress[2]] != 0) return kCountsNobody; // everybody is out
     if (ram[kLeftHouseAddress[1]] != 0) {
         ram[kPersonalDotCounterAddress[2]] = (uint8_t)(ram[kPersonalDotCounterAddress[2]] + 1);
-        return;
+        return kCountsClyde;
     }
     if (ram[kLeftHouseAddress[0]] != 0) {
         ram[kPersonalDotCounterAddress[1]] = (uint8_t)(ram[kPersonalDotCounterAddress[1]] + 1);
-        return;
+        return kCountsInky;
     }
     ram[kPersonalDotCounterAddress[0]] = (uint8_t)(ram[kPersonalDotCounterAddress[0]] + 1);
+    return kCountsPinky;
 }
 
 // ---- 1A70: an energizer was eaten
@@ -114,17 +120,24 @@ inline void start_power_pill(WorkRam ram) {
 }
 
 // ---- 19CD: Pac-Man is on a tile
-inline void pacman_eats_on_tile(WorkRam ram, VideoRam video) {
+struct EatOutcome { // what happened (T02c: the game needs to know, to carry on exactly like the ROM)
+    bool ate = false, energizer = false, queue_wrapped = false;
+    HouseCounter counter = kCountsNobody;
+};
+inline EatOutcome pacman_eats_on_tile(WorkRam ram, VideoRam video) {
+    EatOutcome out;
     ram[kPacmanPauseAddress] = 0xFF; // nothing eaten (yet)
     const unsigned at = video_address_of_tile(ram[kPacmanTileAddress], ram[kPacmanTileAddress + 1]);
     const uint8_t tile = video[at];
-    if (tile != kTileDot && tile != kTileEnergizer) return;
+    if (tile != kTileDot && tile != kTileEnergizer) return out;
+    out.ate = true;
     ram[kDotsEatenAddress] = (uint8_t)(ram[kDotsEatenAddress] + 1);
     const bool energizer = tile == kTileEnergizer;
     video[at] = kTileBlank;                                             // the dot disappears from the maze
-    task_queue_push(ram, kTaskAddScore, energizer ? kEnergizer : kDot); // 10 or 50 points
+    out.queue_wrapped = task_queue_push(ram, kTaskAddScore, energizer ? kEnergizer : kDot); // 10 or 50 points
+    out.energizer = energizer;
     ram[kPacmanPauseAddress] = energizer ? 6 : 1;                       // Pac-Man stops for 1 frame (dot) or 6 frames (energizer)
-    count_dot_for_ghost_house(ram);
+    out.counter = count_dot_for_ghost_house(ram);
     if (ram[kPacmanPauseAddress] == 6) start_power_pill(ram);
     if (ram[kDotsEatenAddress] & 1) {
         ram[kFootstepSoundAddress] = (uint8_t)((ram[kFootstepSoundAddress] & ~0x01) | 0x02);
@@ -132,6 +145,7 @@ inline void pacman_eats_on_tile(WorkRam ram, VideoRam video) {
     else {
         ram[kFootstepSoundAddress] = (uint8_t)((ram[kFootstepSoundAddress] & ~0x02) | 0x01);
     } // even dot: the first
+    return out;
 }
 
 // ---- the fruit (ROM 0EAD; its table at 0EFD gives, for each level, the fruit's picture, colour and points)
@@ -153,26 +167,35 @@ constexpr unsigned kFruitLastLevel = 20;                      // the ROM's table
 
 // Called every frame: shows the fruit when the dot count is exactly 70 (first fruit) or 170 (second fruit), once each, and only while no fruit is
 // showing and Pac-Man is not dying.
-inline void maybe_show_fruit(WorkRam ram) {
-    if (ram[kPacmanDyingAddress] != 0) return;
-    if (ram[kFruitPointsAddress] != 0) return; // a fruit is already on the screen
+enum FruitOutcome { // T02c: which way the ROM routine went
+    kFruitDying, kFruitOnScreen, kFruitNotYet, kFruit70AlreadyShown, kFruit170AlreadyShown, kFruitShown70, kFruitShown170, kFruitNoFreeSlot
+};
+inline FruitOutcome maybe_show_fruit(WorkRam ram, unsigned *slot = nullptr, bool *level_clamped = nullptr) {
+    if (ram[kPacmanDyingAddress] != 0) return kFruitDying;
+    if (ram[kFruitPointsAddress] != 0) return kFruitOnScreen; // a fruit is already on the screen
     const uint8_t dots = ram[kDotsEatenAddress];
+    FruitOutcome outcome;
     if (dots == kFruitFirstAtDots) {
-        if (ram[kFirstFruitShownAddress] != 0) return;
+        if (ram[kFirstFruitShownAddress] != 0) return kFruit70AlreadyShown;
         ram[kFirstFruitShownAddress] = (uint8_t)(ram[kFirstFruitShownAddress] + 1);
+        outcome = kFruitShown70;
     } else if (dots == kFruitSecondAtDots) {
-        if (ram[kSecondFruitShownAddress] != 0) return;
+        if (ram[kSecondFruitShownAddress] != 0) return kFruit170AlreadyShown;
         ram[kSecondFruitShownAddress] = (uint8_t)(ram[kSecondFruitShownAddress] + 1);
-    } else return;
+        outcome = kFruitShown170;
+    } else return kFruitNotYet;
     ram[kFruitPositionAddress] = (uint8_t)(kFruitPosition & 255);
     ram[kFruitPositionAddress + 1] = (uint8_t)(kFruitPosition >> 8);
     unsigned level = ram[kLevelAddress];
+    if (level_clamped) *level_clamped = level >= kFruitLastLevel;
     if (level > kFruitLastLevel) level = kFruitLastLevel;
     const FruitKind &fruit = fruit_for_level(level);
     ram[kFruitSpriteAddress] = fruit.sprite_code;
     ram[kFruitSpriteAddress + 1] = fruit.colour;
     ram[kFruitPointsAddress] = (uint8_t)fruit.points;
-    schedule_timed_event(ram, kFruitTimeoutEvent[0], kFruitTimeoutEvent[1], kFruitTimeoutEvent[2]);
+    const int used = schedule_timed_event_slot(ram, kFruitTimeoutEvent[0], kFruitTimeoutEvent[1], kFruitTimeoutEvent[2]);
+    if (slot) *slot = used < 0 ? 0 : (unsigned)used;
+    return used < 0 ? kFruitNoFreeSlot : outcome;
 }
 
 } // namespace logic

@@ -29,4 +29,4 @@ RESULT: PASS
 PASS test_audio_stall: 15 checks, 0 failures
 test_purist PASS, test_replay PASS, test_package PASS (wine runs the 1.0.1 exe), test_soak 8 min PASS (tick rate 59.968, memory flat)
 
-2a04fe8888bdd9efc51ee4e9a0b250e3cd8eadc8  dist/MazeChase-1.0.1-win64.zip
+2a04fe8888bdd9efc51ee4e9a0b250e3cd8eadc8  dist/PacArcadeComp-1.0.1-win64.zip

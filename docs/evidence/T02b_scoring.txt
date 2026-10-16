@@ -1,0 +1,37 @@
+T02b evidence: the readable scoring and extra life IN the game (src/rules/rules.h: add_score_2A5A, high_score_2A89; src/logic/scoring.h) versus the ROM routine add_score 2A5A / 2B33 (2026-10-15)
+
+== What was done ==
+The ROM routine 2A5A is cut into two hooked parts; the drawing stays original ROM code and the hooks hand over to it at exactly the address the ROM would be at:
+  Part 1 (hook at 2A5A): demo check, adding the points, extra life rule (readable: logic::add_points). Then the ROM carries on at 2A86 (draws the score) or, when a life was given now, at 2B4A (draws the life pictures); the hook pushes the return address 2A86 for that case.
+  Part 2 (hook at 2A89, after the score is drawn): high score compare and copy (readable: logic::update_high_score). If raised, the ROM carries on at 2ABE (draws the high score); otherwise the routine returns.
+src/logic/scoring.h was split into add_points() and update_high_score() (add_score() is the two together; the T01b test still passes).
+Each hook leaves the CPU registers exactly as the ROM does where the ROM would return (demo: A and the flags of CP 1; high score not raised: A, flags of CP, B, DE, HL) and charges the exact cycles and refresh-register count of the replaced instructions. Where the ROM carries on, only DE (and B for the life pictures) are set; the ROM sets everything else before using it.
+NEW SAFETY RULE (rules::fits): a hook only replaces a routine when the whole piece fits into what is left of the frame (50,688 cycles); otherwise the hook lets the ROM run its own instruction (counted in rules::fallbacks). Reason: the ROM loop would be cut by the interrupt in the middle of the routine; a hook running in one piece could not reproduce that. The same rule was added to the T02a random-number hook. Part 1 below runs calls starting near the end of the frame (about 1 in 5) and proves the fallback gives the same result; in the 3,000,000 lockstep frames the fallback was never needed (0 times).
+
+== How it was proved (tests/test_rules_scoring.sh 3000000 2000000) ==
+Part 1: 2,000,000 whole calls of 2A5A from random situations (random work RAM and video RAM, both players, demo and game, extra-life limits 10/15/20/never and random, flags, lives, every points kind, high score equal / next to / unrelated), the ROM alone versus the hooks: compared all memory (work RAM including the stack, video RAM, colour RAM), the cycle count of the whole call, the stack pointer, ALL CPU registers (including R) and the I/O writes.
+Part 2: 3 machines in lockstep for 3,000,000 frames: A original, B readable rules (random numbers and scoring), C like B with garbage written into A, F, BC, DE, HL after every hook. Scripted player (one- and two-player games, 4 extra-life limits, 3 and 5 lives); the same score is written into all three machines 400 times so that the extra life and the high score are reached. After EVERY frame: all memory, I/O writes, the cycle count of the frame, (B) all CPU registers.
+Part 3: deliberately wrong versions (an energizer scored as a dot; the extra life one step early; the high score rule one cycle too slow).
+Also: the replay (7,273 frames) with the readable rules on equals the original run and the Python prototype; the window program with --rules readable gives the same frame hashes; Purist mode keeps the original routines.
+
+== Result ==
+replay: 7273 frame hashes with the readable rules = original rules = Python prototype
+part 1: 2000000 isolated whole calls of 2A5A (demo 496218, game 1503782, player 2 743216, life given now 542374, high score raised 1068343): differences 0
+part 2: 3000000 frames, original machine entered 2A5A 88157 times, readable scoring ran 88157 times (hook gave way to the ROM 0 times); extra lives in game 1128 frames, high score raised in 208 frames, score written 400 times
+  readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+part 2b: garbage in A, F, BC, DE, HL after every call: identical on every frame
+part 3: wrong version "energizer scored as a dot": caught
+part 3: wrong version "extra life one step early": caught
+part 3: wrong version "high score routine one cycle too slow": caught
+PASS test_rules_scoring: 2000000 isolated calls, 3000000 frames, 88157 calls of the readable scoring, 0 differences required
+
+== Other checks ==
+tests/test_rules_random.sh 200000 (T02a with the new safety rule): PASS. tests/test_logic_scoring.sh (T01b after the split): PASS. tests/test_purist.sh PASS, tests/test_replay.sh PASS. tests/run_all.sh: see the end of this file.
+
+== Honest limits ==
+1. The drawing of the score digits, the high score and the life pictures is still the original ROM code (as planned). The hooks hand over to it and continue where the ROM would be.
+2. A DIP extra-life limit and a score that is not valid decimal (impossible in the game) were not tested live; random limits were run in part 1 with valid decimal scores only.
+3. Found while writing the test: the registers a ROM routine leaves behind are pushed onto the stack by the interrupt handler, so stale register values show up as different leftover bytes in the stack area of the work RAM. The hooks therefore leave the registers exactly as the ROM does (shown by part 1 comparing all registers and by part 2 comparing all memory).
+4. Under garbage in the registers, the test machine C stays identical, which proves the game does not read A, F, BC, DE, HL after the hooks where the ROM carries on.
+tests/run_all.sh: ALL TESTS PASSED (2026-10-15), including tests/test_rules_scoring.sh 100000 100000.

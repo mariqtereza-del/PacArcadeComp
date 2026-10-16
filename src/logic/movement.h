@@ -93,7 +93,8 @@ struct JoystickPorts {
 }; // what the ROM reads at 5000 and 5040 (a 0 bit = pressed: bit 0 up, 1 left, 2 right, 3 down)
 
 // One update of Pac-Man's movement (ROM 1806).
-inline void pacman_move(WorkRam ram, Screen screen, JoystickPorts ports) {
+// T02e: `eat` = false leaves out the last step (19CD, the dots and energizers), for the game, which runs that ROM routine's readable version on its own.
+inline void pacman_move(WorkRam ram, Screen screen, JoystickPorts ports, bool eat = true) {
     const VideoRam video{screen.video, screen.colour};
     // -- 1806: is it time to move?
     if (ram[0x4D9D] != 0xFF) {
@@ -209,7 +210,7 @@ moved_to:
         schedule_timed_event(ram, kTimedEventFruitEaten[0], kTimedEventFruitEaten[1], kTimedEventFruitEaten[2]);
         ram[kFootstepSoundAddress] |= 4;
     }
-    pacman_eats_on_tile(ram, video); // 19CD, the T01c code
+    if (eat) pacman_eats_on_tile(ram, video); // 19CD, the T01c code
 }
 
 // ---- the ghosts: where each one keeps its things (index 0 Blinky, 1 Pinky, 2 Inky, 3 Clyde)

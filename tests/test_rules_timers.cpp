@@ -1,0 +1,235 @@
+// T02f: the readable scatter/chase timer, frightened timer and level start IN the game (src/rules/rules.h: timers::timer_0E36, frightened_1376, level_070E)
+// against the original ROM routines 0E36, 1376 and 070E (the level start hands over to the ROM's fruit drawing at 0792).
+// Usage: test_rules_timers PROG.BIN FRAMES [ISOLATED_CASES_PER_ROUTINE]
+// Part 1 (isolated): the ROM routine and the hook each run a whole call from the same random situation until it returns. All CPU registers are filled
+//   with garbage first (garbage-register test). Compared: all memory (work RAM with the stack, video RAM, colour RAM), the cycle count of the call, all
+//   CPU registers including R, the I/O writes. Also counted: how often the hook gave way to the ROM (it must stay rare).
+// Part 2 (lockstep): original machine versus the machine with ALL readable rules so far, for FRAMES frames of scripted play; after EVERY frame: all
+//   memory, I/O writes, the cycle count of the frame, the CPU registers.
+// Part 3: deliberately wrong versions must be caught.
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+#include "logic_probe.h"
+#include "../src/rules/rules.h"
+
+static unsigned long g_calls[3] = {0, 0, 0};
+static void c_phase(Machine &m) { ++g_calls[0]; rules::timers::timer_0E36(m); }
+static void c_fright(Machine &m) { ++g_calls[1]; rules::timers::frightened_1376(m); }
+static void c_level(Machine &m) { ++g_calls[2]; rules::timers::level_070E(m); }
+static void wrong_phase(Machine &m) { rules::timers::timer_0E36(m); m.on_tick(1); }
+static void wrong_fright(Machine &m) { rules::timers::frightened_1376(m); m.bus.workram[0x4C0B - 0x4C00] ^= 1; }
+static void wrong_level(Machine &m) { rules::timers::level_070E(m); m.bus.workram[0x4DBB - 0x4C00] ^= 1; }
+
+// Compares two machines; returns a short name of the first difference or nullptr. regs = also compare the CPU registers.
+static const char *differ(Machine &a, Machine &b, bool regs) {
+    const Bus &x = a.bus, &y = b.bus;
+    if (std::memcmp(x.workram, y.workram, sizeof x.workram)) return "work RAM";
+    if (std::memcmp(x.videoram, y.videoram, sizeof x.videoram)) return "video RAM";
+    if (std::memcmp(x.colorram, y.colorram, sizeof x.colorram)) return "colour RAM";
+    if (std::memcmp(x.spriteram, y.spriteram, sizeof x.spriteram) || std::memcmp(x.sprite_coords, y.sprite_coords, sizeof x.sprite_coords)) return "sprites";
+    if (std::memcmp(x.sound_regs, y.sound_regs, sizeof x.sound_regs)) return "sound registers";
+    if (std::memcmp(x.latch, y.latch, sizeof x.latch) || x.irq_vector != y.irq_vector || x.watchdog_writes != y.watchdog_writes) return "latches";
+    if (x.io_log.size() != y.io_log.size()) return "I/O writes";
+    for (size_t i = 0; i < x.io_log.size(); ++i)
+        if (x.io_log[i].frame != y.io_log[i].frame || x.io_log[i].address != y.io_log[i].address || x.io_log[i].value != y.io_log[i].value) return "I/O writes";
+    if (regs && (a.on_get_af() != b.on_get_af() || a.on_get_bc() != b.on_get_bc() || a.on_get_de() != b.on_get_de() || a.on_get_hl() != b.on_get_hl() ||
+                 a.on_get_ix() != b.on_get_ix() || a.on_get_iy() != b.on_get_iy() || a.on_get_sp() != b.on_get_sp() || a.on_get_pc() != b.on_get_pc() ||
+                 a.on_get_ir() != b.on_get_ir() || a.on_get_iff1() != b.on_get_iff1()))
+        return "CPU registers";
+    return nullptr;
+}
+
+
+
+
+
+static std::vector<unsigned> g_low_bytes; // ROM addresses whose byte is a valid level number (0-20)
+static uint32_t g_rng = 424242;
+static unsigned rnd() { g_rng = g_rng * 1664525u + 1013904223u; return g_rng >> 8; }
+
+enum Routine { kPhase = 0, kFright, kLevel };
+static const uint16_t kEntry[3] = {0x0E36, 0x1376, 0x070E};
+
+static unsigned long g_isolated_fallbacks = 0;
+static unsigned long isolated(Machine &X, Machine &Y, const Machine::RuleHook *table, Routine which, long cases) {
+    Y.rules = table;
+    X.rules = nullptr;
+    unsigned long bad = 0;
+    const uint16_t kRet = 0x3F00, sp = 0x4FC0;
+    static const int sa[4] = {-1, 0, 1, 0}, sb[4] = {0, 1, 0, -1}; // (these are the ROM's steps; not stored as bytes of the ROM)
+    for (long c = 0; c < cases; ++c) {
+        uint8_t ram[0x3F0];
+        for (auto &b : ram) b = (uint8_t)rnd();
+        auto W = [&](unsigned a) -> uint8_t & { return ram[a - 0x4C00]; };
+        auto word = [&](unsigned a, unsigned v) { W(a) = (uint8_t)(v & 255); W(a + 1) = (uint8_t)(v >> 8); };
+        auto step = [&](unsigned a, unsigned d) { W(a) = (uint8_t)sa[d]; W(a + 1) = (uint8_t)sb[d]; };
+        uint8_t video[0x400];
+        for (auto &b : video) b = (rnd() % 4 == 0) ? (uint8_t)(0xC0 | (rnd() & 0x3F)) : (uint8_t)(rnd() & 0x3F);
+        // ---- the timers' memory
+        W(0x4DA6) = (rnd() % 3 == 0) ? 1 : 0;
+        for (int g = 0; g < 4; ++g) { W(0x4DA7 + g) = (rnd() % 3 == 0) ? 1 : 0; W(0x4DAC + g) = (rnd() % 4 == 0) ? 1 : 0; W(0x4DB1 + g) = (uint8_t)(rnd() % 2); }
+        W(0x4DC1) = (rnd() % 12 == 0) ? (uint8_t)rnd() : (uint8_t)(rnd() % 9);
+        for (unsigned a = 0; a < 7; ++a) { unsigned v = (rnd() % 2) ? (rnd() % 7000) : (rnd() & 0xFFFF); W(0x4D86 + 2 * a) = (uint8_t)(v & 255); W(0x4D87 + 2 * a) = (uint8_t)(v >> 8); }
+        {
+            const unsigned ph = W(0x4DC1) & 7;                  // (the ROM doubles the phase in one byte)
+            const unsigned lim = W(0x4D86 + 2 * (((W(0x4DC1) * 2) & 255) / 2 > 7 ? 0 : ph)) | (W(0x4D87 + 2 * (((W(0x4DC1) * 2) & 255) / 2 > 7 ? 0 : ph)) << 8);
+            const unsigned cnt = (rnd() % 2) ? (lim - 1) & 0xFFFF : (rnd() % 3 == 0) ? lim : (rnd() & 0xFFFF);
+            W(0x4DC2) = (uint8_t)(cnt & 255); W(0x4DC3) = (uint8_t)(cnt >> 8);
+        }
+        { const unsigned fr = (rnd() % 3 == 0) ? (rnd() % 4) : (rnd() & 0xFFFF); W(0x4DCB) = (uint8_t)(fr & 255); W(0x4DCC) = (uint8_t)(fr >> 8); }
+        W(0x4C0B) = (uint8_t)rnd(); W(0x4DC8) = (uint8_t)rnd(); W(0x4DD0) = (uint8_t)rnd();
+        // ---- the level start: the level number in B (or 0 and the demo's pointer into the ROM)
+        { const unsigned at = g_low_bytes[rnd() % g_low_bytes.size()]; W(0x4E0A) = (uint8_t)(at & 255); W(0x4E0B) = (uint8_t)(at >> 8); }
+        uint8_t colour[0x400];
+        for (unsigned k = 0; k < 0x400; ++k) colour[k] = (rnd() % 8 == 0) ? (uint8_t)0x1B : (rnd() % 8 == 0) ? (uint8_t)0x1A : (uint8_t)(k * 3 + c);
+        for (Machine *m : {&X, &Y}) {
+            std::memcpy(m->bus.workram, ram, sizeof ram);
+            std::memcpy(m->bus.videoram, video, sizeof video);
+            std::memcpy(m->bus.colorram, colour, sizeof colour);
+        }
+        const uint8_t in0 = (uint8_t)(0xF0 | (rnd() % 3 == 0 ? 0x0F : (0x0F & ~(1u << (rnd() % 4))))), in1 = (uint8_t)(0xF0 | (rnd() % 3 == 0 ? 0x0F : (0x0F & ~(1u << (rnd() % 4)))));
+        for (Machine *m : {&X, &Y}) {
+            m->bus.write((uint16_t)(sp - 2), kRet & 255);
+            m->bus.write((uint16_t)(sp - 1), kRet >> 8);
+            m->bus.in0 = in0;
+            m->bus.in1 = in1;
+        }
+        uint16_t bc = (uint16_t)rnd();
+        if (which == kLevel) bc = (uint16_t)((bc & 0x00FF) | ((rnd() % 5 == 0 ? 0 : rnd() % (rnd() % 20 == 0 ? 40 : 21)) << 8));
+        const uint16_t hl = (uint16_t)rnd(), de = (uint16_t)rnd(), af = (uint16_t)rnd(), ix = (uint16_t)rnd(), iy = (uint16_t)rnd();
+        for (Machine *m : {&X, &Y}) {
+            m->on_set_sp((uint16_t)(sp - 2));
+            m->on_set_pc(kEntry[which]);
+            m->on_set_af(af); m->on_set_bc(bc); m->on_set_de(de); m->on_set_hl(hl); m->on_set_ix(ix); m->on_set_iy(iy);
+            m->on_set_is_int_disabled(false); m->on_set_r((uint8_t)(c * 7));
+            m->bus.io_log.clear();
+        }
+        const uint32_t start = (rnd() % 5) ? (rnd() % 20000) : (50688 - 1 - (rnd() % 4000));
+        X.set_ticks_in_frame(start);
+        Y.set_ticks_in_frame(start);
+        unsigned guard = 0;
+        while (X.on_get_pc() != kRet && guard++ < 100000) X.on_step();
+        guard = 0;
+        const unsigned long fb0 = rules::fallbacks;
+        while (Y.on_get_pc() != kRet && guard++ < 100000) {
+            if (Y.rules[Y.on_get_pc()]) Y.rules[Y.on_get_pc()](Y);
+            else Y.on_step();
+        }
+        g_isolated_fallbacks += rules::fallbacks - fb0;
+        const char *w = differ(X, Y, true);
+        if (!w && X.ticks_in_frame() != Y.ticks_in_frame()) w = "cycle count";
+        if (w && ++bad <= 4) std::printf("  ISOLATED MISMATCH (routine %04X) case %ld: %s (ROM %u cycles, hook %u)\n", kEntry[which], c, w, X.ticks_in_frame() - start, Y.ticks_in_frame() - start);
+    }
+    return bad;
+}
+
+int main(int argc, char **argv) {
+    if (argc < 3) {
+        std::fprintf(stderr, "usage: test_rules_timers PROG.BIN FRAMES [ISOLATED_CASES]\n");
+        return 2;
+    }
+    std::vector<uint8_t> prog(0x4000);
+    FILE *f = std::fopen(argv[1], "rb");
+    if (!f || std::fread(prog.data(), 1, prog.size(), f) != prog.size()) {
+        std::fprintf(stderr, "cannot read %s\n", argv[1]);
+        return 2;
+    }
+    std::fclose(f);
+    for (unsigned a = 0; a < 0x3000; ++a) if (prog[a] <= 20) g_low_bytes.push_back(a);
+    const long frames = std::atol(argv[2]);
+    const long cases = argc > 3 ? std::atol(argv[3]) : 100000;
+
+    // ---------------- Part 1
+    static Machine X(prog), Y(prog);
+    unsigned long bad[3];
+    unsigned long fb[3];
+    for (int r = 0; r < 3; ++r) {
+        g_isolated_fallbacks = 0;
+        bad[r] = isolated(X, Y, rules::table(), (Routine)r, cases);
+        fb[r] = g_isolated_fallbacks;
+    }
+    std::printf("part 1: %ld isolated whole calls of each routine with garbage in all registers: phase timer 0E36 differences %lu; frightened timer 1376 %lu; level start 070E %lu\n", cases, bad[0], bad[1], bad[2]);
+    std::printf("  (the hook gave way to the ROM in %lu / %lu / %lu of those calls)\n", fb[0], fb[1], fb[2]);
+
+    // ---------------- Part 2
+    static Machine::RuleHook counted[0x10000] = {};
+    for (int i = 0; i < 0x10000; ++i) counted[i] = rules::table()[i];
+    counted[0x0E36] = c_phase;
+    counted[0x1376] = c_fright;
+    counted[0x070E] = c_level;
+    static Machine A(prog), B(prog);
+    B.rules = counted;
+    rules::fallbacks = 0;
+    uint32_t rng = 2024;
+    int dir = 0x04, hold = 0;
+    unsigned long entries[3] = {0, 0, 0};
+    long bad_b = -1, reg_b = -1;
+    const char *why_b = nullptr;
+    for (long fr = 0; fr < frames; ++fr) {
+        long p = fr % 15000, game = fr / 15000;
+        const bool two = game % 3 == 2;
+        if (p >= 430) {
+            if (hold <= 0) {
+                rng = rng * 1664525u + 1013904223u;
+                static const int d[4] = {0x01, 0x02, 0x04, 0x08};
+                dir = d[(rng >> 24) & 3];
+                hold = 10 + (int)((rng >> 16) & 31);
+            }
+            --hold;
+        }
+        for (Machine *m : {&A, &B}) {
+            uint8_t in0 = 0xFF, in1 = 0xFF;
+            if (p >= 400 && p < 405) in0 &= (uint8_t)~0x20;
+            if (two && p >= 410 && p < 415) in0 &= (uint8_t)~0x20;
+            if (p >= 420 && p < 424) in1 &= (uint8_t) ~(two ? 0x40 : 0x20);
+            if (p >= 430) in0 &= (uint8_t)~dir;
+            m->bus.in0 = in0;
+            m->bus.in1 = in1;
+            m->bus.dsw1 = (uint8_t)(0xC9 | ((game % 2) ? 0x04 : 0));
+            if (p == 1000 && game % 3 == 1) m->bus.write(0x4E13, (uint8_t)(game % 24)); // other levels
+            if (p == 1200 && game % 4 == 2) m->bus.write(0x4E0E, 200); // near the end of the level: Cruise Elroy
+        }
+        const uint32_t a0 = A.ticks_in_frame();
+        probe::run_frame(A, [&](uint16_t pc) {
+            for (int r = 0; r < 3; ++r) if (pc == kEntry[r]) ++entries[r];
+        });
+        const uint32_t a_cycles = A.ticks_in_frame() - a0;
+        B.run_frame();
+        if (bad_b < 0) {
+            const char *w = differ(A, B, false);
+            if (!w && a_cycles != B.ticks_in_frame()) w = "cycle count of the frame";
+            if (w) {
+                bad_b = fr, why_b = w;
+                if (!std::strcmp(w, "work RAM"))
+                    for (unsigned k = 0; k < sizeof A.bus.workram; ++k)
+                        if (A.bus.workram[k] != B.bus.workram[k]) { std::printf("  work RAM %04X: original %02X, readable %02X\n", 0x4C00 + k, A.bus.workram[k], B.bus.workram[k]); break; }
+            } else if (reg_b < 0 && differ(A, B, true)) reg_b = fr;
+        }
+        if (bad_b >= 0) break;
+    }
+    std::printf("part 2: %ld frames; the original machine entered the phase timer %lu, the frightened timer %lu, the level start %lu times; the hooks ran %lu / %lu / %lu times (the hooks gave way to the ROM %lu times)\n",
+                frames, entries[0], entries[1], entries[2], g_calls[0], g_calls[1], g_calls[2], rules::fallbacks);
+    std::printf("  readable rules vs original: %s\n", bad_b < 0 ? "identical on every frame (all memory, I/O writes, cycle count of every frame)" : "DIFFERENT");
+    if (bad_b >= 0) std::printf("  first difference at frame %ld: %s\n", bad_b, why_b);
+    std::printf("  CPU registers at the end of every frame: %s\n", reg_b < 0 ? "identical too" : "DIFFER");
+
+    // ---------------- Part 3
+    struct Wrong { const char *name; Routine r; unsigned pc; Machine::RuleHook hook; };
+    const Wrong wrongs[] = {{"phase timer one cycle too slow", kPhase, 0x0E36, wrong_phase}, {"frightened end: Pac-Man colour changed", kFright, 0x1376, wrong_fright},
+                            {"level start: Cruise Elroy limit changed", kLevel, 0x070E, wrong_level}};
+    unsigned caught = 0;
+    static Machine::RuleHook table_w[0x10000];
+    for (const Wrong &w : wrongs) {
+        for (int i = 0; i < 0x10000; ++i) table_w[i] = rules::table()[i];
+        table_w[w.pc] = w.hook;
+        const unsigned long n = isolated(X, Y, table_w, w.r, 5000);
+        std::printf("part 3: wrong version \"%s\": %s (%lu of 5000 cases differ)\n", w.name, n ? "caught" : "NOT caught", n);
+        caught += n > 0;
+    }
+    unsigned long total_bad = bad[0] + bad[1] + bad[2];
+    const bool ok = total_bad == 0 && bad_b < 0 && reg_b < 0 && caught == 3 && entries[0] == g_calls[0] && entries[1] == g_calls[1] && entries[2] == g_calls[2] && entries[2] > 0;
+    std::printf("%s test_rules_timers: %ld isolated calls per routine, %ld frames, 0 differences required\n", ok ? "PASS" : "FAIL", cases, frames);
+    return ok ? 0 : 1;
+}

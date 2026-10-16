@@ -22,7 +22,8 @@ static const Item kMain[] = {{"RESUME", Cmd::Resume, -1},        {"SAVE STATE F2
                              {"RECORDS", Cmd::None, 6},          {"ACHIEVEMENTS", Cmd::None, 7},       {"PURIST MODE", Cmd::Purist, -1},
                              {"RESTART GAME", Cmd::Restart, -1}, {"QUIT GAME", Cmd::Quit, -1}};
 static const Item kGame[] = {{"LIVES", Cmd::Lives, -1},       {"BONUS LIFE", Cmd::Bonus, -1},        {"DIFFICULTY", Cmd::Difficulty, -1},
-                             {"GHOST NAMES", Cmd::Names, -1}, {"APPLY - RESTART", Cmd::Restart, -1}, {"BACK", Cmd::None, -1}};
+                             {"GHOST NAMES", Cmd::Names, -1}, {"APPLY - RESTART", Cmd::Restart, -1}, {"RULES", Cmd::Rules, -1},
+                             {"WRITE RULES FILE", Cmd::WriteRules, -1}, {"BACK", Cmd::None, -1}};
 static const Item kControls[] = {{"BINDINGS", Cmd::Bindings, -1},
                                  {"CHANGE KEYS F9", Cmd::Keys, -1},
                                  {"CHANGE PAD F10", Cmd::Pad, -1},
@@ -82,7 +83,7 @@ bool locked(Cmd c, const Model &m) {
     if (!m.purist) return false;
     return c == Cmd::SaveState || c == Cmd::LoadState || c == Cmd::SaveSlot || c == Cmd::LoadSlot || c == Cmd::OneButton || c == Cmd::Vibration || c == Cmd::FocusPause ||
            c == Cmd::Hints || c == Cmd::Lightbar || c == Cmd::RunSummary || c == Cmd::CrtMask || c == Cmd::Glow || c == Cmd::Curve || c == Cmd::CrtLook ||
-           c == Cmd::Surround || c == Cmd::Overlay || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Scaling;
+           c == Cmd::Surround || c == Cmd::Overlay || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Scaling || c == Cmd::Rules;
 }
 std::string label_of(Cmd c) {
     for (int p = 0; p < 8; ++p) {
@@ -101,6 +102,7 @@ std::string value_text(Cmd c, const Model &m) {
     case Cmd::Bonus: return bonus[m.bonus & 3];
     case Cmd::Difficulty: return m.diff_normal ? "NORMAL" : "HARD";
     case Cmd::Names: return m.names_normal ? "NORMAL" : "ALTERNATE";
+    case Cmd::Rules: return m.purist ? "ORIGINAL" : m.rules_file ? "FILE" : m.rules_readable ? "READABLE" : "ORIGINAL";
     case Cmd::OneButton: return onoff(m.one_button && !m.purist);
     case Cmd::PadSymbols: return m.pad_symbols == 1 ? "XBOX" : m.pad_symbols == 2 ? "PS4" : m.pad_symbols == 3 ? "PS5" : "AUTO";
     case Cmd::Vibration: return m.purist || m.vibration == 0 ? "OFF" : m.vibration == 1 ? "LIGHT" : "FULL";
@@ -132,7 +134,7 @@ static bool is_choice(Cmd c) {
     return c == Cmd::Lives || c == Cmd::Bonus || c == Cmd::Difficulty || c == Cmd::Names || c == Cmd::OneButton || c == Cmd::Vibration || c == Cmd::PadSymbols ||
            c == Cmd::FocusPause || c == Cmd::Hints || c == Cmd::Lightbar || c == Cmd::RunSummary || c == Cmd::CrtMask || c == Cmd::Glow || c == Cmd::Curve ||
            c == Cmd::CrtLook || c == Cmd::Surround || c == Cmd::Overlay || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Frame || c == Cmd::Scaling ||
-           c == Cmd::FullScreen || c == Cmd::HelpPin || c == Cmd::Purist;
+           c == Cmd::FullScreen || c == Cmd::HelpPin || c == Cmd::Purist || c == Cmd::Rules;
 }
 // The menu box as Menu::draw() puts it (keep these numbers in step with draw()).
 static const int kRowH = 14, kBoxW = 208, kBoxX = 8, kBoxY = 20, kRow0 = 28;
@@ -815,6 +817,7 @@ bool load_settings(const std::string &path, Settings &s, std::string *problems) 
         else if (k == "vibration") s.vibration = v == "off" ? 0 : v == "light" ? 1 : 2;
         else if (k == "difficulty") s.diff_normal = v != "hard";
         else if (k == "ghost_names") s.names_normal = v != "alternate";
+        else if (k == "rules") s.rules_readable = v == "readable";
         else if (problems) *problems += "  ignored: " + line + "\n";
     }
     return true;
@@ -854,6 +857,7 @@ bool save_settings(const std::string &path, const Settings &s, std::string *erro
     std::fprintf(f, "curve %s\n", s.curve == 1 ? "light" : s.curve == 2 ? "strong" : "off");               // X42
     std::fprintf(f, "glow %s\n", s.glow == 1 ? "light" : s.glow == 2 ? "strong" : "off");                  // X41
     std::fprintf(f, "crt_mask %s\n", s.crt_mask == 1 ? "light" : s.crt_mask == 2 ? "strong" : "off");      // X40
+    std::fprintf(f, "rules %s\n", s.rules_readable ? "readable" : "original");                              // T02i
     std::fclose(f);
     std::remove(path.c_str());
     if (std::rename(tmp.c_str(), path.c_str()) != 0) {

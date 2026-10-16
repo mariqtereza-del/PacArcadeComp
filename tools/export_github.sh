@@ -1,11 +1,11 @@
 #!/bin/sh
 # S37: builds a CLEAN copy of the project for GitHub, and refuses to finish if anything made from the original ROM is in it.
-# Usage:  sh tools/export_github.sh [OUTPUT_FOLDER]        (default: ../maze-chase-github next to the project folder)
+# Usage:  sh tools/export_github.sh [OUTPUT_FOLDER]        (default: ../PacArcadeComp-github next to the project folder)
 # Needs the project's own ROM only for the final safety scan: it reads the ROM from roms/pacman.zip (or build/rom/) into a temporary folder
 # and removes it again. The ROM itself is never copied into the export.
 # What goes in: the source (src/), tests (tests/), tools (tools/), documentation (docs/), the licence files and the top-level documents.
 # What stays out (and why):
-#   build/ dist/MazeChase dist/PacmanPortTest roms/ *.zip *.exe *.o   build output (dist/res, dist/README-PACKAGE.txt and dist/REPORT-A-PROBLEM.bat stay: tools/package.sh needs them), the player's ROM, release files (the exe and zip go on the GitHub Releases page)
+#   build/ dist/PacArcadeComp dist/PacmanPortTest roms/ *.zip *.exe *.o   build output (dist/res, dist/README-PACKAGE.txt and dist/REPORT-A-PROBLEM.bat stay: tools/package.sh needs them), the player's ROM, release files (the exe and zip go on the GitHub Releases page)
 #   docs/disasm/pacman.asm, pacman_raw.asm   the disassembly contains the original program's instructions (made from the ROM)
 #   tests/data/rom_tables.json, tests/test_rom_tables.py   tables decoded from the ROM, and the test that compares them
 #   docs/evidence/*.png, docs/evidence/prototype/   screenshots of the running game: they show the game's graphics (made from the ROM). Only docs/images/ (our own menus) is published
@@ -13,13 +13,13 @@
 #   PROJECT_STATUS.md has the "## User" section removed (personal notes)
 set -e
 HERE=$(cd "$(dirname "$0")/.." && pwd)
-OUT=${1:-"$HERE/../maze-chase-github"}
+OUT=${1:-"$HERE/../PacArcadeComp-github"}
 case "$OUT" in /*) ;; *) OUT="$(pwd)/$OUT";; esac
 cd "$HERE"
 rm -rf "$OUT"; mkdir -p "$OUT"
 echo "Copying files to $OUT ..."
 tar cf - \
-  --exclude='./build' --exclude='./dist/MazeChase' --exclude='./dist/PacmanPortTest' --exclude='./roms' --exclude='./.git' \
+  --exclude='./build' --exclude='./dist/PacArcadeComp' --exclude='./dist/PacmanPortTest' --exclude='./dist/PacArcadeComp-*' --exclude='./roms' --exclude='./.git' \
   --exclude='__pycache__' --exclude='*.zip' --exclude='*.exe' --exclude='*.o' --exclude='*.bin' \
   --exclude='./docs/disasm/pacman.asm' --exclude='./docs/disasm/pacman_raw.asm' \
   --exclude='./tests/data/rom_tables.json' --exclude='./tests/test_rom_tables.py' \
@@ -108,9 +108,9 @@ RESULT=$?
 if [ "$RESULT" != 0 ]; then echo "STOP: the export contains ROM bytes (see above). It was deleted."; rm -rf "$OUT"; exit 1; fi
 echo "Scan clean. Export ready: $OUT"
 # the release zip (exe) is NOT part of the repository; if it exists, copy it beside the export for the GitHub Releases page, after the same scan
-REL=$(ls dist/MazeChase-*-win64.zip 2>/dev/null | tail -1 || true)
+REL=$(ls dist/PacArcadeComp-*-win64.zip 2>/dev/null | tail -1 || true)
 if [ -n "$REL" ]; then
-  RELDIR="$(dirname "$OUT")/maze-chase-release"; rm -rf "$RELDIR"; mkdir -p "$RELDIR"; cp "$REL" "$RELDIR"/
+  RELDIR="$(dirname "$OUT")/PacArcadeComp-release"; rm -rf "$RELDIR"; mkdir -p "$RELDIR"; cp "$REL" "$RELDIR"/
   mkdir -p "$TMP/relcheck" && ( cd "$TMP/relcheck" && unzip -q "$HERE/$REL" )
   python3 - "$TMP" "$TMP/relcheck" <<'PY' || { echo "STOP: the release zip contains ROM bytes. Not copied."; rm -rf "$RELDIR"; exit 1; }
 import os, sys

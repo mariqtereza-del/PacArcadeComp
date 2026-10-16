@@ -5,7 +5,7 @@ The user-facing version is docs/Pac-Man_PC_Port_Plan.html (also published as an 
 Approach (unchanged): Track A first: a C++ board emulator runs the player's own ROM (accuracy comes from running the original program), wrapped in a modern PC front end. Track B (readable rewrite) is optional (T01). The ROM is never bundled. Modern features live outside the accuracy core, with a Purist mode.
 Reference oracle: the Python prototype in tools/analysis (S05). Every C++ step is compared against it or against ROM data or documented arcade values.
 
-Status now: 78 steps. VERIFIED 76, AWAITING USER TEST 1, PARTIAL 1.
+Status now: 146 steps. VERIFIED 88, PARTIAL 1, AWAITING USER TEST 1, NOT STARTED 56.
 
 ## Rules for every step
 1. One primary objective per step.
@@ -101,14 +101,82 @@ Rollback: tools/checkpoint.sh SNN writes pacman-port_SNN.zip after every step. T
 | X48 | EXTRAS | Extras integration check | VERIFIED | X08, X11, X24, X29, X43, X45, X46, X06, X05, X47, X12 |
 | S35 | RELEASE | Package the .exe | VERIFIED | S34C, S34V, S26, X48 |
 | S36 | RELEASE | Release testing, version 1.0 | VERIFIED | S35 |
-| S37 | RELEASE | Publish on GitHub (no ROM) | AWAITING USER TEST | S36 |
-| T01 | OPTIONAL | Readable rewrite of the game logic (Track B) | PARTIAL | S36 |
+| S37 | RELEASE | Publish on GitHub (no ROM) | VERIFIED | S36 |
+| T01 | OPTIONAL | Readable rewrite of the game logic (Track B) | VERIFIED | S36 |
 | T01a | OPTIONAL | T01a: Random numbers as readable code | VERIFIED | S36 |
 | T01b | OPTIONAL | T01b: Scoring and lives as readable code | VERIFIED | T01a |
 | T01c | OPTIONAL | T01c: Dots and fruit as readable code | VERIFIED | T01b |
 | T01d | OPTIONAL | T01d: Ghost targeting as readable code | VERIFIED | T01c, T01a |
 | T01e | OPTIONAL | T01e: Movement as readable code | VERIFIED | T01d |
 | T01f | OPTIONAL | T01f: Mode timers as readable code | VERIFIED | T01e |
+| T02 | MODDING | The game runs the readable rules (Track C) | PARTIAL | T01f, S37 |
+| T02a | MODDING | T02a: Hook mechanism and random numbers in use | VERIFIED | T01f, S37 |
+| T02b | MODDING | T02b: Scoring and the extra life in use | VERIFIED | T02a |
+| T02c | MODDING | T02c: Dots, energizers and fruit in use | VERIFIED | T02b |
+| T02d | MODDING | T02d: Ghost targeting in use | VERIFIED | T02c |
+| T02e | MODDING | T02e: Movement in use | VERIFIED | T02d |
+| T02f | MODDING | T02f: Mode timers and level settings in use (milestone) | VERIFIED | T02e |
+| T02g | MODDING | T02g: Ghost house release as readable code | VERIFIED | T02f |
+| T02h | MODDING | T02h: Ghost house release in use | VERIFIED | T02g |
+| T02i | MODDING | T02i: RULES setting and the rules file | VERIFIED | T02h |
+| T02j | MODDING | T02j: Modding guide and example mods | VERIFIED | T02i |
+| T02k | MODDING | T02k: Release 1.1.0 and GitHub update | AWAITING USER TEST | T02j |
+| N00 | NATIVE | The game without the emulator (Track D, Option A) | NOT STARTED | T02k |
+| N01 | NATIVE | Routine map: what the original program consists of | NOT STARTED | T02a |
+| N02 | NATIVE | Coverage player A: attract mode, credit, play, death, game over | NOT STARTED | N01 |
+| N03 | NATIVE | Coverage player B: ghosts eaten, fruit, power pills, extra life, two players, DIP variants | NOT STARTED | N02 |
+| N04 | NATIVE | Coverage player C: all level changes, the three intermissions, levels 21 and 256 | NOT STARTED | N03 |
+| N05 | NATIVE | Coverage report: what is never executed | NOT STARTED | N04 |
+| N06 | NATIVE | Timing study: where the interrupt lands inside a running task | NOT STARTED | N05 |
+| N07 | NATIVE | Cycle meter: the exact time a ROM routine takes | NOT STARTED | N06 |
+| N08 | NATIVE | Reusable lockstep harness | NOT STARTED | N07 |
+| N09 | NATIVE | Test package for you: PLAY-ORIGINAL.bat and PLAY-READABLE.bat | NOT STARTED | N08 |
+| N10 | NATIVE | ROM data map: which ROM bytes the program reads as data | NOT STARTED | N09 |
+| N11 | NATIVE | The ROM data reader (src/data/) | NOT STARTED | N10 |
+| N12 | NATIVE | Fill, copy and table-reading helpers | NOT STARTED | T02k |
+| N13 | NATIVE | Screen address helpers | NOT STARTED | N12 |
+| N14 | NATIVE | Number helpers: BCD maths and digit conversion | NOT STARTED | N13 |
+| N15 | NATIVE | Text printing | NOT STARTED | N14 |
+| N16 | NATIVE | Score, high score, credits and life pictures on the screen | NOT STARTED | N15 |
+| N17 | NATIVE | Long routines: a native routine that can be paused after a number of cycles (prototype) | NOT STARTED | N16 |
+| N18 | NATIVE | Maze drawing and dot placement at level start | NOT STARTED | N17 |
+| N19 | NATIVE | The video-RAM scan loops used during play | NOT STARTED | N17 |
+| N20 | NATIVE | Sprite staging: positions to sprite registers | NOT STARTED | N19 |
+| N21 | NATIVE | Sprite pictures: mouth, eyes, blue and flashing ghosts, fruit and score sprites | NOT STARTED | N20 |
+| N22 | NATIVE | Frame counters, clocks and the 1UP blink | NOT STARTED | N21 |
+| N23 | NATIVE | Coin and start inputs, credits and coin counter | NOT STARTED | N22 |
+| N24 | NATIVE | Player labels, ready and lives display bits | NOT STARTED | N23 |
+| N25 | NATIVE | The interrupt handler's copies: sound registers and sprites | NOT STARTED | N24 |
+| N26 | NATIVE | Timed events | NOT STARTED | N25 |
+| N27 | NATIVE | Game mode dispatch (the state machine at 4E00) (milestone: full regression and your play test) | NOT STARTED | N26 |
+| N28 | NATIVE | Attract mode: the character and nickname introduction | NOT STARTED | N27 |
+| N29 | NATIVE | Attract mode: the demo game | NOT STARTED | N28 |
+| N30 | NATIVE | Credit and push-start screens; starting a game | NOT STARTED | N29 |
+| N31 | NATIVE | Level start: READY!, level variables, per-player saved state | NOT STARTED | N30 |
+| N32 | NATIVE | The gameplay frame update (run twice per frame) | NOT STARTED | N31 |
+| N33 | NATIVE | Ghost and Pac-Man meeting: who is eaten | NOT STARTED | N32 |
+| N34 | NATIVE | Eating a ghost: the pause, the score and the eyes going home | NOT STARTED | N33 |
+| N35 | NATIVE | Pac-Man caught: the death animation, the life lost, game over | NOT STARTED | N34 |
+| N36 | NATIVE | Level cleared: the maze flash and the next level | NOT STARTED | N35 |
+| N37 | NATIVE | Bonus fruit: appearing, timing, eating, points | NOT STARTED | N36 |
+| N38 | NATIVE | Extra life, game over screen, high score, back to attract mode | NOT STARTED | N37 |
+| N39 | NATIVE | Two players: turn changes and per-player state | NOT STARTED | N38 |
+| N40 | NATIVE | Intermission 1 (the first cartoon) | NOT STARTED | N39 |
+| N41 | NATIVE | Intermission 2 | NOT STARTED | N40 |
+| N42 | NATIVE | Intermission 3 (milestone: full regression and your play test) | NOT STARTED | N41 |
+| N43 | NATIVE | Sound: effects requests and the first sound group | NOT STARTED | N42 |
+| N44 | NATIVE | Sound: the second group and the tunes (milestone: full regression and your play test) | NOT STARTED | N43 |
+| N45 | NATIVE | The task queue and RST 28/30 scheduling as a native scheduler | NOT STARTED | N44 |
+| N46 | NATIVE | The main loop and the interrupt entry as a native frame driver | NOT STARTED | N45 |
+| N47 | NATIVE | Boot: power-on self test and the first screen | NOT STARTED | N46 |
+| N48 | NATIVE | Proof: no ROM instruction is executed any more (milestone: full regression and your play test) | NOT STARTED | N47 |
+| N49 | NATIVE | Remove the Z80 from the game (milestone: full regression and your play test) | NOT STARTED | N48 |
+| N50 | NATIVE | The emulator becomes a test tool | NOT STARTED | N49 |
+| N51 | NATIVE | Named game state: the actors and the maze | NOT STARTED | N50 |
+| N52 | NATIVE | Named game state: flow, scores and settings | NOT STARTED | N51 |
+| N53 | NATIVE | Named output state: screen, sprites and sound | NOT STARTED | N52 |
+| N54 | NATIVE | Documentation for the native game | NOT STARTED | N53 |
+| N55 | NATIVE | Release 2.0.0 and GitHub update | NOT STARTED | N54 |
 
 ## Old plan to new plan
 | Old phase | New steps |
@@ -129,3 +197,5 @@ Rollback: tools/checkpoint.sh SNN writes pacman-port_SNN.zip after every step. T
 | 11a Publish on GitHub | S37 |
 | 11b Online (after release) | none: X49 to X56 all removed by the user (2026-10-15) |
 | 12 Optional rewrite | T01, T01a to T01f |
+| 13 Modding: the game runs the readable rules | T02, T02a to T02k |
+| 14 The game without the emulator (Option A) | N00, N01 to N55 |

@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
             if (t.find(bad.substr(i, j - i)) != std::string::npos) clean = false;
             i = j + 1;
         }
-        CHECK(clean && t == "MAZE CHASE", "marquee wording is our own and has no company name");
+        CHECK(clean && t == "PACARCADECOMP", "marquee wording is our own and has no company name");
     }
     struct S {
         int w, h;

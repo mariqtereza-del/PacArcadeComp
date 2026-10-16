@@ -1,4 +1,4 @@
-# Building Maze Chase and running the tests
+# Building PacArcadeComp and running the tests
 
 Two ways to get a program you can run:
 - **Just play:** download the Windows release (see [README.md](README.md)). No building needed.
@@ -20,7 +20,7 @@ Works on Ubuntu or Debian (and similar). Open a terminal.
    ```
 2. **Go to the project folder** (the folder you downloaded or cloned):
    ```
-   cd maze-chase
+   cd PacArcadeComp
    ```
 3. **Build the program:**
    ```
@@ -67,11 +67,11 @@ Works on Ubuntu or Debian (and similar). Open a terminal.
    ```
 4. Go to the project folder (Windows drives appear as `/c/...`):
    ```
-   cd /c/Users/YOURNAME/Downloads/maze-chase
+   cd /c/Users/YOURNAME/Downloads/PacArcadeComp
    ```
 5. Build: `sh tools/build_app.sh`. Put `pacman.zip` next to the built `build/app/pacman-port.exe` (or in a `roms` folder in the project folder) and start it with `build/app/pacman-port.exe`.
 
-## C. Building the Windows release (`MazeChase.exe` and the zip) on Linux (tested)
+## C. Building the Windows release (`PacArcadeComp.exe` and the zip) on Linux (tested)
 This is how the downloadable release is made: Linux builds a Windows program with the MinGW cross-compiler. The exe needs no other files.
 1. Install the compiler and zip tool:
    ```
@@ -86,7 +86,7 @@ This is how the downloadable release is made: Linux builds a Windows program wit
    ```
    sh tools/package.sh
    ```
-   The result is the folder `dist/MazeChase` and the file `dist/MazeChase-1.0.1-win64.zip` (program, README, licences, REPORT-A-PROBLEM.bat; never a ROM).
+   The result is the folder `dist/PacArcadeComp` and the file `dist/PacArcadeComp-1.1.0-win64.zip` (program, README, licences, REPORT-A-PROBLEM.bat; never a ROM).
 4. Only the exe is built here: to test it you need a Windows PC.
 
 ## D. Making the clean copy for GitHub

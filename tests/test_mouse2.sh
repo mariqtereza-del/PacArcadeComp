@@ -8,7 +8,7 @@ export DISPLAY=${DISPLAY:-:99}; pgrep Xvfb >/dev/null || { Xvfb :99 -screen 0 12
 fail=0; chk() { if [ "$2" = "$3" ]; then echo "  ok: $1 ($2)"; else echo "  FAIL: $1 (got \"$2\", wanted \"$3\")"; fail=1; fi; }
 rm -f $D/a.txt $D/a.cfg $D/controls.cfg $D/settings.cfg $D/quicksave.sav
 build/app/pacman-port --no-audio --scale 2 --config $D/a.cfg --report $D/a.txt --hiscore $D/hs.txt --ticks 10000000 >/dev/null 2>&1 &
-P=$!; sleep 4; W=$(xdotool search --name "Maze Chase" | head -1)
+P=$!; sleep 4; W=$(xdotool search --name "PacArcadeComp" | head -1)
 xdotool key --window $W Escape; sleep 1.5
 eval $(xdotool getwindowgeometry --shell $W)
 S=$(( WIDTH * 1000 / 352 ))
@@ -33,14 +33,14 @@ import -window $W $D/after_pin.png 2>/dev/null
 kill $P 2>/dev/null; wait $P 2>/dev/null; sleep 1
 chk "wheel down x3 then up x1 on the menu ends on item 2" "$(grep 'mouse wheel to item' $D/a.txt | tail -1 | sed 's/.*item \([0-9]*\) of.*/\1/')" 2
 chk "wheel moved the menu 4 times" "$(grep -c 'mouse wheel to item' $D/a.txt)" 4
-chk "BINDINGS opened by clicking" "$T1" "Maze Chase - BINDINGS"
+chk "BINDINGS opened by clicking" "$T1" "PacArcadeComp - BINDINGS"
 chk "wheel on the Bindings screen (3 steps)" "$(grep -c 'Controls: mouse wheel to row' $D/a.txt)" 3
 chk "click on COIN KEY 1 waits for a key" "$(grep -c 'mouse click on row 4, column 0 (waiting for a key)' $D/a.txt)" 1
 chk "the pressed key 7 was bound to COIN (log)" "$(grep -c 'Controls: COIN = 7' $D/a.txt)" 1
 chk "the controls file has coin = 7" "$(grep -c '^coin = 7' $D/a.cfg)" 1
 chk "click on START 1 KEY 2 waits" "$(grep -c 'mouse click on row 5, column 1 (waiting for a key)' $D/a.txt)" 1
 chk "right click cancels the wait" "$(grep -c 'mouse right click (cancelled)' $D/a.txt)" 1
-chk "right click again goes back (menu)" "$T2" "Maze Chase - MENU"
+chk "right click again goes back (menu)" "$T2" "PacArcadeComp - MENU"
 chk "click on the key panel header pinned it" "$(grep -c 'panel pinned' $D/a.txt)" 1
 chk "click again unpinned it" "$(grep -c 'panel unpinned' $D/a.txt)" 1
 [ $fail = 0 ] && echo "RESULT: PASS" || { echo "RESULT: FAIL"; exit 1; }

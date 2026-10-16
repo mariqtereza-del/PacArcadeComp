@@ -1,0 +1,34 @@
+T02f evidence: mode timers and level settings in use; all pieces together; full regression (2026-10-16)
+Readable code: src/logic/mode_timers.h; adapters in src/rules/rules.h (namespace timers); the instruction model is src/rules/z80sim.h.
+ROM routines replaced when "--rules readable" is on: 0E36 (scatter / chase timer, every frame), 1376 (frightened timer, every frame), 070E (level start: the speed patterns, phase limits, ghost house limits, Cruise Elroy limits, frightened and inactivity times). The level start's last part, the drawing of the level's fruits (ROM 2BEA), stays ROM code: the hook does everything up to the CALL and carries on in the ROM there.
+With T02a-T02f 19 ROM routines are replaced by their readable versions (random numbers, scoring and extra life, dots / energizers / ghost house counters / fruit, ghost targeting and direction chooser, movement of Pac-Man and the four ghosts, the timers and the level start). Purist and the normal game still use only the original ROM routines.
+
+== Part 1: the three timer routines alone, then all pieces together ==
+replay: 7273 frame hashes with the readable rules = original rules = Python prototype
+part 1: 1000000 isolated whole calls of each routine with garbage in all registers: phase timer 0E36 differences 0; frightened timer 1376 0; level start 070E 0
+  (the hook gave way to the ROM in 7425 / 5124 / 141269 of those calls)
+part 2: 3000000 frames; the original machine entered the phase timer 2077419, the frightened timer 3495170, the level start 1919 times; the hooks ran 2077419 / 3495170 / 1919 times (the hooks gave way to the ROM 102952 times)
+  readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+part 3: wrong version "phase timer one cycle too slow": caught (5000 of 5000 cases differ)
+part 3: wrong version "frightened end: Pac-Man colour changed": caught (4989 of 5000 cases differ)
+part 3: wrong version "level start: Cruise Elroy limit changed": caught (4319 of 5000 cases differ)
+PASS test_rules_timers: 1000000 isolated calls per routine, 3000000 frames, 0 differences required
+
+== Part 2: ALL readable rules together vs the original, 3,000,000 frames (tests/test_rules_all.sh 3000000) ==
+Without garbage, then a second pass with the garbage mode on:
+replay: 7273 frame hashes with the readable rules = original rules = Python prototype
+3000000 frames with all 19 readable rules on: the original entered the replaced routines 29670620 times (19 different routines); the hooks gave way to the ROM 103941 times
+  all readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+PASS test_rules_all: 3000000 frames, 0 differences required
+3000000 frames with all 19 readable rules on: the original entered the replaced routines 29670620 times (19 different routines); the hooks gave way to the ROM 103941 times
+  all readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+PASS test_rules_all: 3000000 frames, 0 differences required
+
+== Part 3: the FULL regression (sh tests/run_all.sh, every test script, 2026-10-16) ==
+Result: ALL TESTS PASSED (exit 0). 21 PASS lines, including test_rules_random, scoring, dots, ghosts, movement, timers and all (100,000 frames each in the regression), test_logic_* (six pieces), the prototype, S06-S11 checks, test_purist, test_replay and check_docs.
+tools/export_github.sh was also run (its scanner for ROM bytes in the source finished clean: "Done").
+Notes: the fruit drawing (2BEA) was not replaced on purpose. In the 3,000,000-frame run the hooks gave way to the ROM 103,941 times of about 29.7 million calls (0.35%, calls that would cross the end of a frame); the frames were identical anyway.
+Honest limit: the timer hooks and the movement hooks were proved to equal the ROM in the game as played by the scripted player (many games, other levels, other dip-switch settings) and in isolated random calls; like every hook they fall back to the ROM for situations the model does not cover.

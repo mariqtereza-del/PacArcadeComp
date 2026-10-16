@@ -30,6 +30,7 @@
 //         own DIP switches: they are read at power-on, so "Apply - restart" (or Restart game) restarts the machine. Purist mode (menu, or --purist) switches off every
 //         addition (overlay, scanlines, fill scaling, smooth pacing, one-button start, save states, rewind, saved high score) and restarts the machine. Settings are kept in
 //         settings.cfg next to controls.cfg. Test aids: --replay FILE plays a recorded input file (tools/replay format), --hashlog FILE writes "frame sha1", --fast = no waiting.
+//   T02a: --rules readable runs the readable rules (src/rules/rules.h, src/logic) instead of the original ROM routines (Purist mode ignores it).
 //   S34A (controls.h BindEditor, menu.cpp draw_bindings): Controls > Bindings (also F9, and F10 which starts on the pad column) opens a table of every command
 //         with key 1, key 2 and pad button: arrows move, Enter then a key changes only that slot (a key already in use is swapped with the other slot and the screen says so),
 //         Backspace clears a slot, Esc cancels or goes back. The d-pad and left stick always move (shown as fixed). Changes are saved at once in controls.cfg.
@@ -82,9 +83,10 @@
 #include "display.cpp"
 #include "controls.cpp"
 #include "state.cpp"
-#include "replay.cpp" // S34: the per-frame hash used by --replay / --hashlog
-#include "lightbar.h" // X09
-#include "menu.cpp"   // S34: pause menu, help panel, settings, Purist rules
+#include "replay.cpp"       // S34: the per-frame hash used by --replay / --hashlog
+#include "lightbar.h"       // X09
+#include "menu.cpp"         // S34: pause menu, help panel, settings, Purist rules
+#include "../rules/rules.h" // T02a: the readable rules in the game (only with --rules readable)
 
 void render_tilemap(const Gfx &g, const uint8_t *videoram, const uint8_t *colorram, uint32_t *out);
 void render_sprites(const Gfx &g, const uint8_t *lookup, const uint8_t *spriteram, const uint8_t *coords, uint32_t *out, bool mame_rules);
@@ -148,6 +150,8 @@ struct Options {
     std::string keys;
     std::string shot, events_file, stats_file, test_clears, replay, hashlog, pad_buttons, pad_virtual;
     bool purist = false, fast = false, virtual_pad = false;
+    std::string rules_file, write_rules; // T02i: --rules-file PATH (a rules file for this run, also in replays), --write-rules-file PATH (write the standard file and stop)
+    bool rules_readable = false; // T02a: --rules readable runs the readable rules (src/rules) instead of the ROM routines; never in Purist mode
     std::string virtual_type;
     int vibration = -1,
         pad_symbols =
@@ -214,6 +218,9 @@ int main(int argc, char **argv) {
             o.stats_file = argv[++i]; // X22: test aid, writes the per-run statistics of every finished game (and the games still running at exit)
         else if (a == "--events" && i + 1 < argc) o.events_file = argv[++i]; // X01: test aid, writes every game event as a text line
         else if (a == "--purist") o.purist = true;
+        else if (a == "--rules" && i + 1 < argc) o.rules_readable = std::string(argv[++i]) == "readable";
+        else if (a == "--rules-file" && i + 1 < argc) o.rules_file = argv[++i];
+        else if (a == "--write-rules-file" && i + 1 < argc) o.write_rules = argv[++i];
         else if (a == "--pad-buttons" && i + 1 < argc) o.pad_buttons = argv[++i];
         else if (a == "--virtual-pad") o.virtual_pad = true;
         else if (a == "--vibration" && i + 1 < argc) {
@@ -240,6 +247,17 @@ int main(int argc, char **argv) {
         }
     }
     if (o.scale < 1) o.scale = 1;
+    if (!o.write_rules.empty()) { // T02i: write the standard rules file for modders and stop
+        std::string e;
+        if (!rules::write_standard_file(o.write_rules, &e)) {
+            say("Rules file: " + e);
+            write_report();
+            return 2;
+        }
+        say("Rules file: wrote the standard rules to " + o.write_rules);
+        write_report();
+        return 0;
+    }
 
     { // S35: find the ROM (next to the program, a roms folder, the current folder, the place chosen last time), else a friendly message and a file picker (not in scripted or measuring runs)
         const std::vector<std::string> cands = {o.exe_dir + "pacman.zip", o.exe_dir + "roms/pacman.zip", "pacman.zip", "roms/pacman.zip"};
@@ -268,6 +286,17 @@ int main(int argc, char **argv) {
         return 2;
     }
     Machine m(roms.program);
+    m.rules = (o.rules_readable && !o.purist) ? rules::table() : nullptr; // T02a
+    rules::tuning().reset();
+    if (!o.rules_file.empty()) { // T02i: a rules file given on the command line (also for replays and tests)
+        std::string pr, er;
+        if (!rules::load_file(o.rules_file, rules::tuning(), &pr, &er)) say("Rules file: " + er);
+        else {
+            say("Rules file: loaded " + o.rules_file + (rules::tuning().active ? " (values differ from the standard: MODDED)" : " (all values standard)"));
+            if (!pr.empty()) say("Rules file: some lines were ignored:\n" + pr);
+        }
+        if (rules::tuning().active && !o.purist) m.rules = rules::table();
+    }
     static uint32_t fb[W * H];
 
     // ---- --dump: no window at all
@@ -351,6 +380,24 @@ int main(int argc, char **argv) {
         } else say("Settings: no settings file yet (" + (settings_path.empty() ? std::string("no settings folder") : settings_path) + "), using the standard settings");
     }
     bool purist = o.purist || st.purist, help_pin = st.help_pin;
+    bool rules_pref = o.rules_readable || st.rules_readable; // T02i: RULES READABLE chosen (command line or settings)
+    if (use_settings && o.rules_file.empty()) { // T02i: rules.cfg next to the program, else in the settings folder
+        const std::string settings_dir = settings_path.empty() ? std::string() : fsx::path(settings_path).parent_path().string();
+        const std::string cands[2] = {o.exe_dir + "rules.cfg", settings_dir.empty() ? std::string() : (fsx::path(settings_dir) / "rules.cfg").string()}; // next to the program first
+        for (const std::string &c : cands) {
+            std::error_code ec;
+            if (c.empty() || !fsx::exists(c, ec)) continue;
+            std::string pr, er;
+            if (rules::load_file(c, rules::tuning(), &pr, &er)) {
+                say("Rules file: loaded " + c + (rules::tuning().active ? " (values differ from the standard: MODDED" + std::string(purist ? ", but Purist mode ignores it)" : ")") : " (all values standard)"));
+                if (!pr.empty()) say("Rules file: some lines were ignored:\n" + pr);
+                break;
+            }
+        }
+    }
+    auto rules_table = [&]() -> const Machine::RuleHook * { return (!purist && (rules_pref || rules::tuning().active)) ? rules::table() : nullptr; }; // T02i
+    m.rules = rules_table(); // T02a: Purist mode always runs the original ROM routines
+    say(m.rules ? (rules::tuning().active ? "Game rules: READABLE with a rules file (MODDED)" : "Game rules: READABLE (the proved readable rules in src/logic run instead of the ROM routines)") : "Game rules: original ROM routines");
     o.overlay_on = o.overlay_on || st.overlay;
     o.scanlines = o.scanlines || st.scanlines;
     o.fit = o.fit || st.fill;
@@ -398,7 +445,7 @@ int main(int argc, char **argv) {
     int sc = o.scale;
     if (SDL_GetDesktopDisplayMode(0, &dm) == 0)
         while (sc > 1 && (W * sc > dm.w || H * sc > dm.h - 80)) --sc; // keep the first window on the screen
-    SDL_Window *win = SDL_CreateWindow("Maze Chase", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (panel0 ? overlay::kOutW : W) * sc, H * sc,
+    SDL_Window *win = SDL_CreateWindow("PacArcadeComp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (panel0 ? overlay::kOutW : W) * sc, H * sc,
                                        SDL_WINDOW_RESIZABLE | (o.borderless ? SDL_WINDOW_BORDERLESS : 0));
     if (!win) {
         say(std::string("Could not open a window: ") + SDL_GetError());
@@ -767,7 +814,7 @@ int main(int argc, char **argv) {
     const fsx::path state_dir = cfg_path.empty() ? fsx::path(".") : fsx::path(cfg_path).parent_path();
     const std::string hs_path = o.no_hiscore ? std::string() : (o.hiscore.empty() ? (state_dir / "highscore.txt").string() : o.hiscore);
     state::HighScoreKeeper keeper(hs_path);
-    game_title = [&]() { return keeper.assisted() ? std::string("Maze Chase - ASSISTED: ") + keeper.rule().label() : std::string("Maze Chase"); };
+    game_title = [&]() { return keeper.assisted() ? std::string("PacArcadeComp - ASSISTED: ") + keeper.rule().label() : std::string("PacArcadeComp"); };
     uint32_t last_assist_mask = 0;
     bool pointer_shown = true;
     lastdevice::Tracker lastdev; // X07: keyboard, mouse or pad? (for the hints that switch pictures, X08); off in Purist mode
@@ -795,7 +842,7 @@ int main(int argc, char **argv) {
     auto flash = [&](const std::string &t) {
         say("State: " + t);
         if (!bed.active()) {
-            set_title("Maze Chase - " + t);
+            set_title("PacArcadeComp - " + t);
             flash_until = SDL_GetTicks() + 2500;
         }
     };
@@ -1039,6 +1086,7 @@ int main(int argc, char **argv) {
         if (!o.events_file.empty() && !purist) evr.feed(events::read_raw([&](unsigned a) { return (int)m.bus.read(a); }), (unsigned)ticks);
         if (extras) {
             keeper.after_tick(m);
+            if (!purist && rules::tuning().active) keeper.note_assist(assist::kModded); // T02i: a modded game does not count
             std::string msg = keeper.take_message();
             if (!msg.empty()) say(msg);
         }
@@ -1311,6 +1359,8 @@ int main(int argc, char **argv) {
         model.bonus = (int)dip_chosen.bonus;
         model.diff_normal = dip_chosen.normal_difficulty;
         model.names_normal = dip_chosen.normal_ghost_names;
+        model.rules_readable = rules_pref;
+        model.rules_file = rules::tuning().active;
         model.assist = keeper.assisted() ? keeper.rule().label() : std::string();
         model.pending = dip_chosen.to_byte() != applied_dip.to_byte();
         menu::binding_lines(bind, model.bind_line);
@@ -1344,6 +1394,7 @@ int main(int argc, char **argv) {
         x.bonus = (int)dip_chosen.bonus;
         x.diff_normal = dip_chosen.normal_difficulty;
         x.names_normal = dip_chosen.normal_ghost_names;
+        x.rules_readable = rules_pref;
         std::string e;
         if (!menu::save_settings(settings_path, x, &e)) say("Settings: could not save (" + e + ")");
     };
@@ -1356,6 +1407,7 @@ int main(int argc, char **argv) {
             }
             m.~Machine();
             new (&m) Machine(roms.program);
+            m.rules = rules_table(); // T02a, T02i
             wsg.~Wsg();
             new (&wsg) Wsg(roms.sound1.data());
             keeper.~HighScoreKeeper();
@@ -1388,7 +1440,7 @@ int main(int argc, char **argv) {
         mn.open();
         paused = true;
         force_redraw = true;
-        set_title("Maze Chase - MENU");
+        set_title("PacArcadeComp - MENU");
         say("Menu: opened (the game is paused)");
     };
     auto close_menu = [&]() {
@@ -1509,6 +1561,35 @@ int main(int argc, char **argv) {
             fill_model();
             say("Game options: ghost names " + menu::value_text(c, model) + " (restart the game to apply)");
             break;
+        case Cmd::Rules:
+            if (rules::tuning().active) {
+                mn.note = "A RULES FILE IS IN USE";
+                say("Game options: a rules file is in use, so the game runs the readable rules (remove rules.cfg to choose)");
+                break;
+            }
+            rules_pref = !rules_pref;
+            m.rules = rules_table(); // the readable rules give the same frames as the ROM routines, so the switch can be made at any moment
+            persist();
+            fill_model();
+            say(std::string("Game options: rules ") + menu::value_text(c, model));
+            break;
+        case Cmd::WriteRules: {
+            const std::string dir = settings_path.empty() ? std::string() : fsx::path(settings_path).parent_path().string();
+            const std::string target = dir.empty() ? std::string("rules.cfg") : (fsx::path(dir) / "rules.cfg").string();
+            std::error_code ec;
+            std::string e;
+            if (fsx::exists(target, ec)) {
+                mn.note = "RULES.CFG EXISTS ALREADY";
+                say("Rules file: " + target + " exists already, not overwritten");
+            } else if (!rules::write_standard_file(target, &e)) {
+                mn.note = "COULD NOT WRITE";
+                say("Rules file: " + e);
+            } else {
+                mn.note = "RULES.CFG WRITTEN";
+                say("Rules file: wrote the standard rules to " + target + " (edit it with Notepad, then restart the program)");
+            }
+            break;
+        }
         case Cmd::Restart:
             restart_machine("from the menu");
             close_menu();
@@ -1526,7 +1607,7 @@ int main(int argc, char **argv) {
             bed_from_hotkey = !was_open;
             bed.begin(bind, c == Cmd::Pad && pad ? (int)controls::Coin : 0, c == Cmd::Pad && pad ? 2 : 0);
             force_redraw = true;
-            set_title("Maze Chase - BINDINGS");
+            set_title("PacArcadeComp - BINDINGS");
             say("Controls: bindings screen opened");
             break;
         }
@@ -1745,7 +1826,7 @@ int main(int argc, char **argv) {
                     paused = true;
                     focus_paused = true;
                     force_redraw = true;
-                    set_title("Maze Chase - PAUSED (PRESS ANY KEY)");
+                    set_title("PacArcadeComp - PAUSED (PRESS ANY KEY)");
                     say("Focus: the window lost focus, the game is paused (press any key to go on)");
                 }
             } else if (e.type == SDL_WINDOWEVENT && (e.window.event == SDL_WINDOWEVENT_FOCUS_GAINED || e.window.event == SDL_WINDOWEVENT_RESTORED)) {
@@ -1811,7 +1892,7 @@ int main(int argc, char **argv) {
                 else if (b == SDL_CONTROLLER_BUTTON_B) {
                     if (bed.back()) {
                         if (bed_from_hotkey) close_menu();
-                        else set_title("Maze Chase - MENU");
+                        else set_title("PacArcadeComp - MENU");
                     }
                 }
                 if (ch) {
@@ -1839,7 +1920,7 @@ int main(int argc, char **argv) {
                 } else if (down && pc == controls::PadCommand::Menu) open_menu();
                 else if (down && pc == controls::PadCommand::Pause) {
                     paused = !paused;
-                    set_title(paused ? "Maze Chase - PAUSED (press the pause button again)" : game_title());
+                    set_title(paused ? "PacArcadeComp - PAUSED (press the pause button again)" : game_title());
                     say(paused ? "State: paused" : "State: resumed");
                     flash_until = 0;
                     force_redraw = true;
@@ -1877,7 +1958,7 @@ int main(int argc, char **argv) {
                         say(bed.waiting() ? "Controls: mouse right click (cancelled)" : "Controls: mouse right click (back)");
                         if (bed.back()) {
                             if (bed_from_hotkey) close_menu();
-                            else set_title("Maze Chase - MENU");
+                            else set_title("PacArcadeComp - MENU");
                         }
                         force_redraw = true;
                     }
@@ -1924,7 +2005,7 @@ int main(int argc, char **argv) {
                     if (k == SDLK_ESCAPE) {
                         if (bed.back()) {
                             if (bed_from_hotkey) close_menu();
-                            else set_title("Maze Chase - MENU");
+                            else set_title("PacArcadeComp - MENU");
                         }
                     } else if (k == SDLK_BACKSPACE || k == SDLK_DELETE) ch = bed.clear();
                     else if (bed.waiting()) ch = bed.on_key(sc);
@@ -1959,7 +2040,7 @@ int main(int argc, char **argv) {
                     if (mn.is_open()) do_cmd(menu::Cmd::Resume, 1);
                     else {
                         paused = !paused;
-                        set_title(paused ? "Maze Chase - PAUSED (F1 resumes)" : game_title());
+                        set_title(paused ? "PacArcadeComp - PAUSED (F1 resumes)" : game_title());
                         say(paused ? "State: paused" : "State: resumed");
                         flash_until = 0;
                         force_redraw = true;
@@ -2030,7 +2111,7 @@ int main(int argc, char **argv) {
             }
             if (flash_until && SDL_GetTicks() > flash_until) {
                 flash_until = 0;
-                if (!bed.active()) set_title(focus_paused ? "Maze Chase - PAUSED (PRESS ANY KEY)" : paused ? "Maze Chase - PAUSED (F1 resumes)" : game_title());
+                if (!bed.active()) set_title(focus_paused ? "PacArcadeComp - PAUSED (PRESS ANY KEY)" : paused ? "PacArcadeComp - PAUSED (F1 resumes)" : game_title());
             }
         }
         steps_this_pass = 0;
@@ -2086,7 +2167,7 @@ int main(int argc, char **argv) {
             lbd.discontinuity();
             haptics::Out z;
             if (rumble_last != z) rumble_send(z);
-        }                                                                          // nothing shakes while the game is paused, rewinding or in a menu
+        } // nothing shakes while the game is paused, rewinding or in a menu
         if (paused || mn.is_open() || bed.active() || focus_paused) lb_step(true); // X09: the menu colour (no machine frames run then)
         {
             static uint32_t last_toast = 0;

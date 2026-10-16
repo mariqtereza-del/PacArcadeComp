@@ -1,0 +1,13 @@
+T02j evidence: modding guide and example mods, 2026-10-16
+Command: sh tests/test_mods.sh 30000 (and the full regression sh tests/run_all.sh)
+
+original rules, 30000 frames: ghost steps 58080, frightened time of the level 720, dot score changes { 10 50 }, dots 925
+double_points.cfg: ghost steps 58080, frightened time 720, dot score changes { 20 100 }, dots 925
+long_blue_time.cfg: ghost steps 47189, frightened time 1440, dot score changes { 10 50 }, dots 831
+slow_ghosts.cfg: ghost steps 32742, frightened time 720, dot score changes { 10 }, dots 725
+PASS test_mods (game part): 19 checks, 0 failed
+Pinky's target (a b) with Pac-Man at 100 100 moving one tile step (1, 0): original rules: 104 100; copy with 6 tiles ahead: 106 100
+documents: all linked files and paths exist
+PASS test_mods: all example mods load and change what they say; the Pinky example moves the target from 104 to 106; the documents' links and paths exist
+
+Full regression (sh tests/run_all.sh): ALL TESTS PASSED

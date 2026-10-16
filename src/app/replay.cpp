@@ -109,10 +109,11 @@ std::string state_hash(const Bus &bus) {
 }
 
 // ---------------------------------------------------------------- command-line tool (compile with -DREPLAY_MAIN)
-// usage: replay_tool PROG.BIN REPLAY LOG [--record OUT_REPLAY]
+// usage: replay_tool PROG.BIN REPLAY LOG [--record OUT_REPLAY] [--rules readable]
 //   Runs the replay on the C++ machine and writes "frame sha1" for every frame (frame = number of frames run so far).
 //   With --record the inputs are passed through a Recorder and saved, to prove that recording then loading gives the same replay.
 #ifdef REPLAY_MAIN
+#include "../rules/rules.h" // T02a: --rules readable
 int main(int argc, char **argv) {
     if (argc < 4) {
         std::fprintf(stderr, "usage: replay_tool PROG.BIN REPLAY LOG [--record OUT_REPLAY]\n");
@@ -132,9 +133,13 @@ int main(int argc, char **argv) {
         return 2;
     }
     const char *rec_path = nullptr;
-    for (int i = 4; i + 1 < argc; ++i)
+    bool readable = false; // T02a: --rules readable runs the readable rules (src/rules/rules.h) instead of the ROM routines
+    for (int i = 4; i + 1 < argc; ++i) {
         if (!std::strcmp(argv[i], "--record")) rec_path = argv[i + 1];
+        if (!std::strcmp(argv[i], "--rules")) readable = !std::strcmp(argv[i + 1], "readable");
+    }
     static Machine m(prog);
+    if (readable) m.rules = rules::table();
     Recorder rec(rp.dip);
     FILE *log = std::fopen(argv[3], "wb");
     if (!log) {
