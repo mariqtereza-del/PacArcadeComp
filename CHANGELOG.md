@@ -2,8 +2,15 @@
 
 Version numbers follow `major.minor.patch`. The exe's version is set in `dist/res/app.rc` and `tools/package.sh`.
 
-## Unreleased
-- (nothing yet)
+## 2.0.0 (steps N01 to N55, 2026-10-23)
+- **The program no longer contains a Z80 emulator.** Everything below is why that is safe: the game is proved identical to the original, frame for frame.
+- The game is now native C++: the original program's routines were rewritten one by one (`src/game/`) and each step was proved identical, frame by frame and cycle by cycle, against the original running on a Z80 emulator. Zero ROM instructions are executed any more (3.1 million frames checked).
+- The Z80 emulator is no longer part of the program; it lives in `tests/oracle/` as a test tool. The ROM is read only for data tables (`src/data/`).
+- The game state has names: `src/game/state.h` (work RAM) and `src/game/output.h` (screen, sprites, sound registers, latches).
+- Documentation rewritten for the native engine (README, ARCHITECTURE, BUILDING, MODDING, src/logic/README.md, MACHINE_NOTES pointers).
+- INVINCIBLE has its own CHEATS page in the menu (not in Game Options); a game played with it counts for no records, statistics or achievements.
+- The plan (docs/PLAN.md and the plan page) now records the whole project, including the removed steps.
+- Fixed: the game could crash when eating a ghost with the INVINCIBLE test option (N49c).
 
 ## 1.1.0 (steps T01a to T02k, 2026-10)
 - The project is now called PacArcadeComp (program PacArcadeComp.exe; the GitHub repository and the downloads use the same name). Your settings folder %APPDATA%\PacmanPort is unchanged, so your settings, records and high score carry over.

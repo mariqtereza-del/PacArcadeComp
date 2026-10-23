@@ -1,0 +1,10 @@
+N54 Documentation for the native game  (2026-10-23)
+ - Rewritten for the native engine: ARCHITECTURE.md (big picture without a Z80 inside, new "The native engine" table: which file holds which part of the game and which step/test proves it,
+   "What the ROM is still needed for" (data tables only, src/data), src/game, src/data and tests/oracle sections), README.md (intro, accuracy FAQ, links, project history item 7 "Native game"),
+   BUILDING.md (what is built, ~45 minute full test), MODDING.md section 2.5 (honest list: the rest of the game is an exact translation, not readable rules), src/logic/README.md,
+   MACHINE_NOTES.md (pointers to rom_routines, rom_data_tables, native_timing, state.h, output.h), CHANGELOG.md (Unreleased entry).
+ - Honest note recorded in ARCHITECTURE.md: most play logic runs from the generated instruction list src/game/attract_prog.h (exact, proved, but a translation, not readable rules).
+ - New tools/check_links.py (in tests/run_all.sh): every markdown link and every cited src/tests/tools/docs/mods path in 9 documents exists: 128 checked, OK.
+   Wrong version caught: a cited missing path made it print FAIL and name the file. tools/check_docs.py: 34 cited paths, 9 sections, OK.
+ - Export scan (tools/export_github.sh): "Scan clean", 910 files, release zip clean; both link checks also pass inside the export.
+ - Full regression (sh tests/run_all.sh): ALL TESTS PASSED. No code changed in this step.

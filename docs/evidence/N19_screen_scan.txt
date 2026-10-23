@@ -1,0 +1,76 @@
+N19 evidence: native video-RAM clean-up loop (task 13, ROM routine 2A35 with the loop 2A38 to 2A57: every dot, power-pill or 14h tile of the screen 4040 to 43BF is replaced by the blank tile 40h; src/game/scan.h; adapter src/rules/rules.h namespace scan; hooks in rules::table(), readable rules only). This is the routine the interrupt cuts most often during play (N06: about 3,000 frames).
+Date: 2026-10-17
+Command: sh tests/test_native_scan.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 15,000 isolated whole calls and 7,500 cut cases per entry address)
+How it works: hooks sit on all 17 instructions of the loop and on the start. At the loop head 2A38 whole rounds (one tile: 108 T-states, 88 to 122 when the tile is replaced) run in one go while they end before the 50,688-cycle limit; every other instruction (and the head when its round does not fit) runs by itself, exactly like the ROM instruction (registers, flags, WZ, R, T-states). The frame can therefore end between any two instructions and the interrupt arrives at exactly the same place as in the original, and no ROM instruction of the loop runs any more.
+Honest notes: (1) in the real coverage runs the loop only finds tiles to replace in rare cases; the replacing instructions 2A53 to 2A57 were not entered with real game states in these runs (proved by the isolated random cases, whose video RAM is full of such tiles, and the cut tests); (2) the progress meter here counts an address as executed only when no native hook handles it (or the hook ran the ROM instruction), because every instruction address of this loop is itself a hook; both numbers below use that same rule, so they are not comparable to the N12 to N18 meter numbers (which counted hook entry addresses).
+Two small test-set-up faults were fixed while writing the test (a start state that runs round the whole address space, and the meter rule above); no fault in the native code was found by the comparisons except the opcode fetch count of the start (3 instead of 1), found by the first isolated run and fixed.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2A35 0, 2A38 0, 2A3B 0, 2A3C 0, 2A3E 0, 2A3F 0, 2A40 0, 2A42 0, 2A45 0, 2A47 0, 2A4A 0, 2A4C 0, 2A4F 0, 2A50 0, 2A53 0, 2A55 0, 2A56 0, 2A57 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 2A35 14773 of 15000, 2A38 15000 of 15000, 2A3B 15000 of 15000, 2A3C 15000 of 15000, 2A3E 15000 of 15000, 2A3F 15000 of 15000, 2A40 15000 of 15000, 2A42 15000 of 15000, 2A45 15000 of 15000, 2A47 15000 of 15000, 2A4A 15000 of 15000, 2A4C 15000 of 15000, 2A4F 15000 of 15000, 2A50 15000 of 15000, 2A53 15000 of 15000, 2A55 15000 of 15000, 2A56 15000 of 15000, 2A57 15000 of 15000
+part 3b: cut test from random states, 75000 cases of each routine, the frame ends at a random place inside it, 3 frames compared (memory, I/O writes, registers, cycles): differences 2A35 0, 2A38 0, 2A3B 0, 2A3C 0, 2A3E 0, 2A3F 0, 2A40 0, 2A42 0, 2A45 0, 2A47 0, 2A4A 0, 2A4C 0, 2A4F 0, 2A50 0, 2A53 0, 2A55 0, 2A56 0, 2A57 0
+  cases in which the native routine really ran up to the end of the frame and left the rest to the ROM (a cut): 97981 of 135000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  2A35: 140 / 140 / 0
+  2A38: 125580 / 418 / 0
+  2A3B: 125580 / 418 / 0
+  2A3C: 125580 / 418 / 0
+  2A3E: 125580 / 418 / 0
+  2A3F: 125440 / 417 / 0
+  2A40: 125440 / 417 / 0
+  2A42: 125440 / 417 / 0
+  2A45: 125440 / 417 / 0
+  2A47: 125440 / 417 / 0
+  2A4A: 125440 / 417 / 0
+  2A4C: 125440 / 417 / 0
+  2A4F: 125440 / 417 / 0
+  2A50: 125440 / 417 / 0
+  2A53: 0 / 0 / 0   (never entered in these runs)
+  note: 2A53 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2A55: 0 / 0 / 0   (never entered in these runs)
+  note: 2A55 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2A56: 0 / 0 / 0   (never entered in these runs)
+  note: 2A56 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2A57: 0 / 0 / 0   (never entered in these runs)
+  note: 2A57 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 6136
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 3 variant(s)
+VARIANT A: native start 2A35 only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native start 2A35 only (calls counted): routines replaced 1 of 282 in the map (instructions 18 of 5439 = 0.33 percent); entered in this run 1; calls 633
+VARIANT B: all readable rules + N12 to N19: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N19: routines replaced 86 of 282 in the map (instructions 1581 of 5439 = 29.07 percent); entered in this run 82; calls 70798696
+VARIANT C: only the 17 loop instructions 2A38 to 2A57 (the start runs in the ROM), calls counted: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS C: only the 17 loop instructions 2A38 to 2A57 (the start runs in the ROM), calls counted: routines replaced 17 of 282 in the map (instructions 0 of 5439 = 0.00 percent); entered in this run 13; calls 7375716
+REFERENCE distinct ROM instruction addresses run: 5643
+  2A35: original machine entered it 633 times; native version (A or C) ran 633 times  (equal)
+  2A38: original machine entered it 567801 times; native version (A or C) ran 4335 times  (not compared: see above)
+  2A3B: original machine entered it 567801 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A3C: original machine entered it 567801 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A3E: original machine entered it 567801 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A3F: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A40: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A42: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A45: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A47: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A4A: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A4C: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A4F: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A50: original machine entered it 567168 times; native version (A or C) ran 1851 times  (not compared: see above)
+  2A53: original machine entered it 0 times; native version (A or C) ran 0 times  (not compared: see above)
+  2A55: original machine entered it 0 times; native version (A or C) ran 0 times  (not compared: see above)
+  2A56: original machine entered it 0 times; native version (A or C) ran 0 times  (not compared: see above)
+  2A57: original machine entered it 0 times; native version (A or C) ran 0 times  (not compared: see above)
+  video-RAM clean-up in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "2A35 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2A38 DE one too far after a cut": caught (1958 of 3000 isolated cases differ)
+part 4: wrong version "2A35 a stray tile written": caught (2990 of 3000 isolated cases differ)
+part 4: wrong version "2A45 one cycle too slow (in the middle of a round)": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2A4F one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2A57 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the clean-up (one cycle too slow): caught at frame 1718
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N19 (before N19) 4336; with the N19 clean-up loop 4322
+PASS test_native_scan
+Fast checks run after this step (all PASS): tests/test_rules_all.sh 100000, test_native_maze / sliced / status / helpers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).

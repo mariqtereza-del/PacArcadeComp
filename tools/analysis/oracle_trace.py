@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """S15 oracle: run the ROM from reset on the Python prototype's core with the same simple board as
-src/board/boot_test.cpp and print the same trace (PC and registers before every instruction).
+tests/oracle/boot_test.cpp and print the same trace (PC and registers before every instruction).
 Usage: python3 tools/analysis/oracle_trace.py COUNT > python_trace.txt
 Differences from tools/analysis/harness.py Board: none in the memory map or I/O; the interrupt is delivered
 when the CPU is halted, enabled and IFF1 is set (instead of after 50,688 cycles) so that both sides need no cycle counter.

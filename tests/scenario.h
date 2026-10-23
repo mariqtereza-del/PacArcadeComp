@@ -16,6 +16,9 @@
 #include "../src/app/events.h"
 #include "../src/app/replay.h"
 #include "../src/board/machine.h"
+#ifdef PAC_NO_Z80
+#include "../src/rules/rules.h"   // N49c: the machine without the Z80 always runs the native routines
+#endif
 
 namespace scenario {
 
@@ -32,6 +35,9 @@ public:
     // `prog` = the program ROM bytes; `replay` = the S27 replay (inputs that get a one-player game going). Runs until the maze is running (frame >= 700).
     using FrameHook = std::function<void(const events::Raw &, unsigned)>; // X24: called after every machine frame (also while the replay brings the game up)
     World(const std::vector<uint8_t> &prog, const std::string &replay_file, FrameHook hook = nullptr) : m_(new Machine(prog)), hook_(hook) {
+#ifdef PAC_NO_Z80
+        m_->rules = rules::table();
+#endif
         std::string e;
         ok_ = rp_.load(replay_file, e);
         while (ok_ && (frame_ < 700 || rd(0x4E00) != 3) && frame_ < rp_.frames) step_replay();

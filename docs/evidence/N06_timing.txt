@@ -1,0 +1,300 @@
+N06: Timing study: where the interrupt lands inside a running task  (2026-10-16)
+Tools: tests/timing_study.cpp, tests/test_timing_study.sh (in tests/run_all.sh). Design and numbers: docs/notes/native_timing.md.
+Test run (sh tests/test_timing_study.sh): PASS (output consistent: 954000 frames, 16121 inside a task, 201 places in 11 routines; notes file quotes the numbers; no run of 16 ROM bytes in the notes file).
+Not run in this step: the full regression and the display tests (the game program is unchanged; the last full check was T02k).
+
+Raw output of the study follows (every place where the interrupt arrived inside a task is in section 6).
+
+N06 timing study (tests/timing_study.cpp). Players A, B, C, D of tests/coverage_player.h; addresses, counts and cycles only.
+
+== 1. Frames
+player A: 300000 frames, 1677 with the interrupt inside a task (0.56 percent)
+player B: 300000 frames, 1580 with the interrupt inside a task (0.53 percent)
+player C: 300000 frames, 2702 with the interrupt inside a task (0.90 percent)
+player D: 54000 frames, 10162 with the interrupt inside a task (18.82 percent)
+all: 954000 frames; interrupt delivered in 929865, not delivered (interrupts off: power-on test and start-up) in 24135
+where the program counter is when the interrupt arrives (of the 929865 delivered):
+  task queue polling loop 238D-2392 : 913693 (98.26 percent)
+  taking a task off the queue 2395-23A7 : 0 (0.00 percent)
+  INSIDE A RUNNING TASK (any other ROM address) : 16121 (1.73 percent of delivered; 1.69 percent of all frames)
+  halted : 51 (at: 234B); outside the ROM : 0
+polling loop: one turn (238D to its jump back) costs 37 cycles (shortest repeat of 238D inside a frame)
+polling loop, address where the interrupt lands:
+  238D : 260297
+  2390 : 394392
+  2391 : 173127
+  2392 : 85877
+runs of consecutive frames with the interrupt inside a task: 1 frame 421, 2 74, 3 599, 4 48, 5-8 1087, 9-16 260, 17-64 182, more 0; longest 61 frames
+
+== 2. Length of a frame in cycles (the frame ends at the first instruction boundary at or after 50,688 cycles)
+shortest 50688, longest 50704, mean 50693.232
+cycles beyond 50,688 (the instruction that crosses the end of the frame; the excess is not carried into the next frame):
+  +0 : 101616 frames (10.65 percent)
+  +1 : 85649 frames (8.98 percent)
+  +2 : 124341 frames (13.03 percent)
+  +3 : 85361 frames (8.95 percent)
+  +4 : 83524 frames (8.76 percent)
+  +5 : 89050 frames (9.33 percent)
+  +6 : 71365 frames (7.48 percent)
+  +7 : 41101 frames (4.31 percent)
+  +8 : 43140 frames (4.52 percent)
+  +9 : 88639 frames (9.29 percent)
+  +10 : 23773 frames (2.49 percent)
+  +11 : 17158 frames (1.80 percent)
+  +12 : 23649 frames (2.48 percent)
+  +13 : 27710 frames (2.90 percent)
+  +14 : 26685 frames (2.80 percent)
+  +15 : 21223 frames (2.22 percent)
+  +16 : 16 frames (0.00 percent)
+
+== 3. Cost of the interrupt handler (008D to its RET, in every frame in which it ran)
+frames measured 929763; cheapest 4604, dearest 34420, mean 12910.6 cycles (25.47 percent of the frame); handler not finished at the end of a frame: 6 (stopped at: 2335 2336)
+
+== 4. Task queue depth (tasks waiting, of 32 places) and busy timed-event slots (of 16)
+at the interrupt, queue depth: 0:923796 1:6 2:18 3:943 5:644 6:2490 7:131 8:992 9:813 10:16 11:16 
+  deepest at an interrupt 11; seen at the top of the polling loop: 0:912482584 1:93336 2:15726 3:3676 4:2073 5:1795 6:1624 7:1384 8:1009 9:960 10:892 11:555 12:16 13:16 
+at the interrupt, busy timed-event slots: 0:464078 1:297514 2:142349 3:25653 4:271 
+  most at an interrupt 4
+
+== 5. What the interrupt saves on the stack (it shows in the RAM hash: the stack lies inside the hashed work RAM)
+stack pointer at the interrupt: lowest 4FB6, highest 4FC0
+distinct register sets (AF BC DE HL IX IY) at the interrupt: 9601 in all, 1444 among the frames with the interrupt inside a task
+
+== 6. Every place where the interrupt arrived inside a running task
+address | routine entry | routine kind | frames (players A/B/C/D) | task numbers in hexadecimal (frames) | cycles since this address last ran in the same frame, at the interrupt (least-most; '-' = it had not run before in the frame) | shortest repeat of this address anywhere in the frame in the whole run | verdict
+0008 | 0008 | rst vector | 1075 (332/296/419/28) | 01(799) 06(276) | 26-26 | 26 | LOOP: one turn costs the shortest repeat
+0009 | 0008 | rst vector | 377 (84/114/159/20) | 01(289) 06(88) | 26-26 | 26 | LOOP: one turn costs the shortest repeat
+000A | 0008 | rst vector | 241 (71/62/104/4) | 01(164) 06(77) | 26-26 | 26 | LOOP: one turn costs the shortest repeat
+0010 | 0010 | rst vector | 80 (0/0/0/80) | 17(80) | 889-2548 | 105 | repeat after other work
+0011 | 0010 | rst vector | 24 (0/0/0/24) | 17(24) | 889-2548 | 105 | repeat after other work
+0012 | 0010 | rst vector | 16 (0/0/0/16) | 17(16) | 1110-1555 | 105 | repeat after other work
+0014 | 0010 | rst vector | 70 (0/0/0/70) | 17(70) | 889-2548 | 105 | repeat after other work
+0015 | 0010 | rst vector | 36 (0/0/0/36) | 17(36) | 889-2548 | 105 | repeat after other work
+0016 | 0010 | rst vector | 28 (0/0/0/28) | 17(28) | 889-2548 | 105 | repeat after other work
+0017 | 0010 | rst vector | 50 (0/0/0/50) | 17(50) | 889-2548 | 105 | repeat after other work
+0018 | 0018 | rst vector | 86 (0/0/0/86) | 0B(1) 17(85) | 889-2548 | 230 | repeat after other work
+0019 | 0018 | rst vector | 58 (0/0/0/58) | 17(58) | 889-2548 | 230 | repeat after other work
+001A | 0018 | rst vector | 42 (0/0/0/42) | 17(42) | 1110-1555 | 230 | repeat after other work
+001B | 0018 | rst vector | 70 (0/0/0/70) | 17(70) | 889-2548 | 230 | repeat after other work
+001C | 0018 | rst vector | 30 (0/0/0/30) | 17(30) | 889-2548 | 230 | repeat after other work
+001D | 0018 | rst vector | 44 (0/0/0/44) | 0B(1) 17(43) | 889-2548 | 230 | repeat after other work
+001E | 0018 | rst vector | 44 (0/0/0/44) | 0B(1) 17(43) | 889-2548 | 230 | repeat after other work
+001F | 0018 | rst vector | 38 (0/0/0/38) | 17(38) | 889-2548 | 230 | repeat after other work
+241F | 2419 | jump table entry | 58 (33/15/10/0) | 02(58) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2420 | 2419 | jump table entry | 33 (15/4/14/0) | 02(33) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2422 | 2419 | jump table entry | 65 (22/11/32/0) | 02(65) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2429 | 2419 | jump table entry | 1 (0/1/0/0) | 02(1) | 584-584 | 403 | repeat after other work
+242A | 2419 | jump table entry | 2 (2/0/0/0) | 02(2) | 946-946 | 403 | repeat after other work
+242C | 2419 | jump table entry | 36 (11/6/19/0) | 02(36) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+242D | 2419 | jump table entry | 40 (14/18/8/0) | 02(40) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+242E | 2419 | jump table entry | 22 (5/6/11/0) | 02(22) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+242F | 2419 | jump table entry | 139 (43/12/74/10) | 02(139) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+2430 | 2419 | jump table entry | 25 (4/10/11/0) | 02(25) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2433 | 2419 | jump table entry | 75 (9/12/48/6) | 02(75) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2434 | 2419 | jump table entry | 11 (0/9/2/0) | 02(11) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+2436 | 2419 | jump table entry | 23 (0/2/15/6) | 02(23) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2437 | 2419 | jump table entry | 5 (0/4/1/0) | 02(5) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2439 | 2419 | jump table entry | 18 (0/9/9/0) | 02(18) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+243A | 2419 | jump table entry | 55 (28/16/11/0) | 02(55) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+243B | 2419 | jump table entry | 50 (17/18/15/0) | 02(50) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+243C | 2419 | jump table entry | 12 (4/4/4/0) | 02(12) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+243D | 2419 | jump table entry | 40 (26/3/11/0) | 02(40) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+243F | 2419 | jump table entry | 34 (0/31/3/0) | 02(34) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2440 | 2419 | jump table entry | 84 (3/36/45/0) | 02(84) | 181-222 | 181 | LOOP: one turn costs the shortest repeat
+2442 | 2419 | jump table entry | 22 (3/7/12/0) | 02(22) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+2443 | 2419 | jump table entry | 20 (6/4/10/0) | 02(20) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+2444 | 2419 | jump table entry | 31 (4/19/8/0) | 02(31) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+2445 | 2419 | jump table entry | 59 (23/12/24/0) | 02(59) | 181-181 | 181 | LOOP: one turn costs the shortest repeat
+2459 | 2448 | jump table entry | 2 (0/2/0/0) | 03(2) | 663-663 | 623 | repeat after other work
+245C | 2448 | jump table entry | 38 (22/1/15/0) | 03(38) | 77-124 | 72 | repeat after other work
+245F | 2448 | jump table entry | 27 (6/10/7/4) | 03(27) | 77-124 | 72 | repeat after other work
+2460 | 2448 | jump table entry | 33 (16/16/1/0) | 03(33) | 77-77 | 72 | repeat after other work
+2461 | 2448 | jump table entry | 3 (3/0/0/0) | 03(3) | 77-77 | 72 | repeat after other work
+2463 | 2448 | jump table entry | 2 (0/2/0/0) | 03(2) | 77-77 | 77 | LOOP: one turn costs the shortest repeat
+2465 | 2448 | jump table entry | 14 (1/11/0/2) | 03(14) | 77-77 | 72 | repeat after other work
+2467 | 2448 | jump table entry | 4 (4/0/0/0) | 03(4) | 77-77 | 72 | repeat after other work
+2468 | 2448 | jump table entry | 2 (0/0/2/0) | 03(2) | 77-77 | 72 | repeat after other work
+2A38 | 2A35 | jump table entry | 388 (102/90/190/6) | 13(388) | 108-108 | 88 | repeat after other work
+2A3B | 2A35 | jump table entry | 149 (16/61/72/0) | 13(149) | 88-108 | 88 | LOOP: one turn costs the shortest repeat
+2A3C | 2A35 | jump table entry | 199 (36/60/103/0) | 13(199) | 108-108 | 88 | repeat after other work
+2A3E | 2A35 | jump table entry | 464 (148/90/220/6) | 13(464) | 108-108 | 88 | repeat after other work
+2A3F | 2A35 | jump table entry | 181 (39/38/104/0) | 13(181) | 88-108 | 88 | LOOP: one turn costs the shortest repeat
+2A40 | 2A35 | jump table entry | 293 (69/71/153/0) | 13(293) | 108-108 | 88 | repeat after other work
+2A42 | 2A35 | jump table entry | 196 (57/47/92/0) | 13(196) | 88-108 | 88 | LOOP: one turn costs the shortest repeat
+2A45 | 2A35 | jump table entry | 268 (83/42/143/0) | 13(268) | 108-108 | 108 | LOOP: one turn costs the shortest repeat
+2A47 | 2A35 | jump table entry | 331 (102/70/149/10) | 13(331) | 108-460 | 108 | LOOP: one turn costs the shortest repeat
+2A4A | 2A35 | jump table entry | 314 (91/99/118/6) | 13(314) | 108-108 | 108 | LOOP: one turn costs the shortest repeat
+2A4C | 2A35 | jump table entry | 176 (24/57/95/0) | 13(176) | 108-108 | 108 | LOOP: one turn costs the shortest repeat
+2A4F | 2A35 | jump table entry | 198 (58/42/78/20) | 13(198) | 108-460 | 108 | LOOP: one turn costs the shortest repeat
+2A50 | 2A35 | jump table entry | 121 (41/30/50/0) | 13(121) | 108-460 | 108 | LOOP: one turn costs the shortest repeat
+2A53 | 2A35 | jump table entry | 1 (0/0/1/0) | 13(1) | 304-304 | 88 | repeat after other work
+2B80 | 2B80 | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 149 | repeat after other work
+2B83 | 2B80 | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 149 | repeat after other work
+2B88 | 2B80 | call target | 2 (0/0/2/0) | 10(2) | 357-357 | 149 | repeat after other work
+2B8D | 2B80 | call target | 3 (0/0/3/0) | 10(3) | 357-357 | 149 | repeat after other work
+2B8F | 2B8F | call target | 2 (0/0/2/0) | 10(2) | 357-357 | 178 | repeat after other work
+2B90 | 2B8F | call target | 4 (0/0/4/0) | 10(4) | 357-357 | 178 | repeat after other work
+2B94 | 2B8F | call target | 2 (0/0/2/0) | 10(2) | 357-357 | 178 | repeat after other work
+2B95 | 2B8F | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 178 | repeat after other work
+2B96 | 2B8F | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 178 | repeat after other work
+2B99 | 2B8F | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 178 | repeat after other work
+2B9A | 2B8F | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 178 | repeat after other work
+2B9F | 2B8F | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 178 | repeat after other work
+2BA0 | 2B8F | call target | 3 (0/0/3/0) | 10(3) | 357-357 | 178 | repeat after other work
+2C03 | 2BEA | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 357 | LOOP: one turn costs the shortest repeat
+2C08 | 2BEA | call target | 1 (0/0/1/0) | 10(1) | 357-357 | 357 | LOOP: one turn costs the shortest repeat
+2C0A | 2BEA | call target | 2 (0/0/2/0) | 10(2) | 357-357 | 357 | LOOP: one turn costs the shortest repeat
+2C0F | 2BEA | call target | 3 (0/0/3/0) | 10(3) | 357-357 | 357 | LOOP: one turn costs the shortest repeat
+2C5E | 2C5E | call target | 122 (0/0/0/122) | 17(122) | 889-2548 | 870 | repeat after other work
+2C61 | 2C5E | call target | 84 (0/0/0/84) | 0B(1) 17(83) | 889-2548 | 870 | repeat after other work
+2C62 | 2C5E | call target | 80 (0/0/0/80) | 17(80) | 889-2548 | 870 | repeat after other work
+2C63 | 2C5E | call target | 58 (0/0/0/58) | 17(58) | 889-2548 | 870 | repeat after other work
+2C64 | 2C5E | call target | 36 (0/0/0/36) | 0B(1) 17(35) | 889-2548 | 870 | repeat after other work
+2C65 | 2C5E | call target | 46 (0/0/0/46) | 17(46) | 889-2548 | 870 | repeat after other work
+2C69 | 2C5E | call target | 82 (0/0/0/82) | 17(82) | 889-2548 | 870 | repeat after other work
+2C6B | 2C5E | call target | 76 (0/0/0/76) | 17(76) | 889-2548 | 870 | repeat after other work
+2C6D | 2C5E | call target | 64 (0/0/0/64) | 17(64) | 889-2548 | 870 | repeat after other work
+2C70 | 2C5E | call target | 74 (0/0/0/74) | 0B(1) 17(73) | 889-2548 | 870 | repeat after other work
+2C72 | 2C5E | call target | 82 (0/0/0/82) | 0B(1) 17(81) | 889-2548 | 870 | repeat after other work
+2C75 | 2C5E | call target | 74 (0/0/0/74) | 17(74) | 889-2548 | 870 | repeat after other work
+2C77 | 2C5E | call target | 98 (0/0/0/98) | 0B(1) 17(97) | 889-2548 | 870 | repeat after other work
+2C79 | 2C5E | call target | 58 (0/0/0/58) | 0B(2) 17(56) | 889-2548 | 870 | repeat after other work
+2C7C | 2C5E | call target | 98 (0/0/0/98) | 17(98) | 889-2548 | 870 | repeat after other work
+2C7D | 2C5E | call target | 50 (0/0/0/50) | 17(50) | 889-2548 | 870 | repeat after other work
+2C7E | 2C5E | call target | 10 (0/0/0/10) | 17(10) | 889-1262 | 870 | repeat after other work
+2C81 | 2C5E | call target | 102 (0/0/0/102) | 0B(1) 17(101) | 889-2548 | 870 | repeat after other work
+2C82 | 2C5E | call target | 32 (0/0/0/32) | 17(32) | 1110-1555 | 870 | repeat after other work
+2C84 | 2C5E | call target | 736 (0/0/0/736) | 0B(5) 17(731) | 77-1239 | 77 | LOOP: one turn costs the shortest repeat
+2C85 | 2C5E | call target | 480 (0/0/0/480) | 0B(2) 17(478) | 77-1239 | 77 | LOOP: one turn costs the shortest repeat
+2C87 | 2C5E | call target | 480 (0/0/0/480) | 0B(2) 17(478) | 77-1239 | 77 | LOOP: one turn costs the shortest repeat
+2C89 | 2C5E | call target | 428 (0/0/0/428) | 0B(1) 17(427) | 77-1316 | 77 | LOOP: one turn costs the shortest repeat
+2C8C | 2C5E | call target | 946 (0/0/0/946) | 0B(5) 17(941) | 77-1316 | 77 | LOOP: one turn costs the shortest repeat
+2C8D | 2C5E | call target | 400 (0/0/0/400) | 17(400) | 77-1316 | 77 | LOOP: one turn costs the shortest repeat
+2C8F | 2C5E | call target | 572 (0/0/0/572) | 0B(1) 17(571) | 77-1316 | 77 | LOOP: one turn costs the shortest repeat
+2C90 | 2C5E | call target | 254 (0/0/0/254) | 17(254) | 77-1316 | 77 | LOOP: one turn costs the shortest repeat
+2C92 | 2C5E | call target | 104 (0/0/0/104) | 17(104) | 879-2325 | 879 | LOOP: one turn costs the shortest repeat
+2C93 | 2C5E | call target | 66 (0/0/0/66) | 17(66) | 879-2310 | 879 | LOOP: one turn costs the shortest repeat
+2C95 | 2C5E | call target | 54 (0/0/0/54) | 17(54) | 879-2325 | 879 | LOOP: one turn costs the shortest repeat
+2C96 | 2C5E | call target | 50 (0/0/0/50) | 17(50) | 879-2325 | 879 | LOOP: one turn costs the shortest repeat
+2C97 | 2C5E | call target | 22 (0/0/0/22) | 17(22) | 879-2325 | 879 | LOOP: one turn costs the shortest repeat
+2CA4 | 2C5E | call target | 726 (0/0/0/726) | 0B(5) 17(721) | 47-2043 | 47 | LOOP: one turn costs the shortest repeat
+2CA7 | 2C5E | call target | 928 (0/0/0/928) | 0B(3) 17(925) | 47-2043 | 47 | LOOP: one turn costs the shortest repeat
+2CA9 | 2C5E | call target | 676 (0/0/0/676) | 0B(3) 17(673) | 47-2043 | 47 | LOOP: one turn costs the shortest repeat
+2CAB | 2C5E | call target | 72 (0/0/0/72) | 17(72) | 738-2795 | 738 | LOOP: one turn costs the shortest repeat
+3188 | 2FAD | jump table entry | 28 (0/0/0/28) | 0B(1) 17(27) | 7349-7364 | 7349 | repeat after other work
+318B | 2FAD | jump table entry | 22 (0/0/0/22) | 17(22) | 7349-7364 | 7349 | repeat after other work
+318C | 2FAD | jump table entry | 2 (0/0/0/2) | 17(2) | 7364-7364 | 7349 | repeat after other work
+318F | 2FAD | jump table entry | 36 (0/0/0/36) | 0B(1) 17(35) | 7349-7364 | 7349 | repeat after other work
+3190 | 2FAD | jump table entry | 2 (0/0/0/2) | 17(2) | 7364-7364 | 7349 | repeat after other work
+3193 | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7364 | 7349 | repeat after other work
+3196 | 2FAD | jump table entry | 26 (0/0/0/26) | 17(26) | 7349-7364 | 7349 | repeat after other work
+319A | 2FAD | jump table entry | 18 (0/0/0/18) | 17(18) | 7349-7364 | 7349 | repeat after other work
+319B | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7364 | 7349 | repeat after other work
+319C | 2FAD | jump table entry | 4 (0/0/0/4) | 17(4) | 7349-7364 | 7349 | repeat after other work
+319E | 2FAD | jump table entry | 14 (0/0/0/14) | 17(14) | 7349-7364 | 7349 | repeat after other work
+31A0 | 2FAD | jump table entry | 2 (0/0/0/2) | 17(2) | 7364-7364 | 7364 | repeat after other work
+31A5 | 2FAD | jump table entry | 26 (0/0/0/26) | 17(26) | 7349-7364 | 7349 | repeat after other work
+31A8 | 2FAD | jump table entry | 22 (0/0/0/22) | 17(22) | 7349-7364 | 7349 | repeat after other work
+31A9 | 2FAD | jump table entry | 6 (0/0/0/6) | 17(6) | 7364-7364 | 7349 | repeat after other work
+31AC | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+31B0 | 2FAD | jump table entry | 2 (0/0/0/2) | 0B(1) 17(1) | 7364-7364 | 7364 | repeat after other work
+31B3 | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7364 | 7349 | repeat after other work
+31B4 | 2FAD | jump table entry | 4 (0/0/0/4) | 17(4) | 7364-7364 | 7349 | repeat after other work
+31B5 | 2FAD | jump table entry | 20 (0/0/0/20) | 17(20) | 7349-7364 | 7349 | repeat after other work
+31B7 | 2FAD | jump table entry | 6 (0/0/0/6) | 17(6) | 7349-7364 | 7349 | repeat after other work
+31BE | 2FAD | jump table entry | 22 (0/0/0/22) | 17(22) | 7349-7364 | 7349 | repeat after other work
+31BF | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+31C0 | 2FAD | jump table entry | 10 (0/0/0/10) | 17(10) | 7349-7349 | 7349 | repeat after other work
+31C2 | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7364 | 7349 | repeat after other work
+31C9 | 2FAD | jump table entry | 20 (0/0/0/20) | 17(20) | 7349-7364 | 7349 | repeat after other work
+31CA | 2FAD | jump table entry | 6 (0/0/0/6) | 17(6) | 7364-7364 | 7349 | repeat after other work
+31CD | 2FAD | jump table entry | 10 (0/0/0/10) | 17(10) | 7349-7364 | 7349 | repeat after other work
+31CF | 2FAD | jump table entry | 4 (0/0/0/4) | 17(4) | 7364-7364 | 7364 | repeat after other work
+31D1 | 2FAD | jump table entry | 4 (0/0/0/4) | 17(4) | 7364-7364 | 7364 | repeat after other work
+31D4 | 2FAD | jump table entry | 26 (0/0/0/26) | 17(26) | 7349-7364 | 7349 | repeat after other work
+31D5 | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7349 | 7349 | repeat after other work
+31D6 | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+31D8 | 2FAD | jump table entry | 10 (0/0/0/10) | 17(10) | 7349-7364 | 7349 | repeat after other work
+31DA | 2FAD | jump table entry | 2 (0/0/0/2) | 17(2) | 7364-7364 | 7364 | repeat after other work
+31DC | 2FAD | jump table entry | 4 (0/0/0/4) | 17(4) | 7364-7364 | 7364 | repeat after other work
+31DF | 2FAD | jump table entry | 18 (0/0/0/18) | 17(18) | 7349-7364 | 7349 | repeat after other work
+31E2 | 2FAD | jump table entry | 16 (0/0/0/16) | 17(16) | 7349-7364 | 7349 | repeat after other work
+31E4 | 2FAD | jump table entry | 14 (0/0/0/14) | 17(14) | 7349-7364 | 7349 | repeat after other work
+31E6 | 2FAD | jump table entry | 14 (0/0/0/14) | 17(14) | 7349-7364 | 7349 | repeat after other work
+31E7 | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+31EA | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+31ED | 2FAD | jump table entry | 18 (0/0/0/18) | 17(18) | 7349-7364 | 7349 | repeat after other work
+31EF | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+31F0 | 2FAD | jump table entry | 4 (0/0/0/4) | 17(4) | 7349-7364 | 7349 | repeat after other work
+31F1 | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7364 | 7349 | repeat after other work
+31F3 | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+31F5 | 2FAD | jump table entry | 16 (0/0/0/16) | 17(16) | 7349-7364 | 7349 | repeat after other work
+31FF | 2FAD | jump table entry | 24 (0/0/0/24) | 17(24) | 7349-7364 | 7349 | repeat after other work
+3200 | 2FAD | jump table entry | 6 (0/0/0/6) | 17(6) | 7349-7364 | 7349 | repeat after other work
+3201 | 2FAD | jump table entry | 20 (0/0/0/20) | 17(20) | 7349-7364 | 7349 | repeat after other work
+3202 | 2FAD | jump table entry | 10 (0/0/0/10) | 17(10) | 7349-7364 | 7349 | repeat after other work
+3204 | 2FAD | jump table entry | 18 (0/0/0/18) | 17(18) | 7349-7364 | 7349 | repeat after other work
+3207 | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7364 | 7349 | repeat after other work
+3209 | 2FAD | jump table entry | 10 (0/0/0/10) | 17(10) | 7349-7364 | 7349 | repeat after other work
+320C | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7364 | 7349 | repeat after other work
+320D | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7349 | 7349 | repeat after other work
+320F | 2FAD | jump table entry | 14 (0/0/0/14) | 17(14) | 7349-7364 | 7349 | repeat after other work
+3212 | 2FAD | jump table entry | 4 (0/0/0/4) | 17(4) | 7364-7364 | 7349 | repeat after other work
+3213 | 2FAD | jump table entry | 20 (0/0/0/20) | 17(20) | 7349-7364 | 7349 | repeat after other work
+3214 | 2FAD | jump table entry | 6 (0/0/0/6) | 17(6) | 7349-7364 | 7349 | repeat after other work
+3217 | 2FAD | jump table entry | 12 (0/0/0/12) | 17(12) | 7349-7364 | 7349 | repeat after other work
+3218 | 2FAD | jump table entry | 6 (0/0/0/6) | 17(6) | 7349-7364 | 7349 | repeat after other work
+321C | 2FAD | jump table entry | 18 (0/0/0/18) | 17(18) | 7349-7364 | 7349 | repeat after other work
+321F | 2FAD | jump table entry | 26 (0/0/0/26) | 17(26) | 7349-7364 | 7349 | repeat after other work
+3220 | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+3221 | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+3223 | 2FAD | jump table entry | 14 (0/0/0/14) | 17(14) | 7349-7364 | 7349 | repeat after other work
+3225 | 2FAD | jump table entry | 4 (0/0/0/4) | 17(4) | 7364-7364 | 7349 | repeat after other work
+3227 | 2FAD | jump table entry | 10 (0/0/0/10) | 17(10) | 7349-7364 | 7349 | repeat after other work
+322A | 2FAD | jump table entry | 16 (0/0/0/16) | 17(16) | 7349-7364 | 7349 | repeat after other work
+322D | 2FAD | jump table entry | 20 (0/0/0/20) | 17(20) | 7349-7364 | 7349 | repeat after other work
+322F | 2FAD | jump table entry | 6 (0/0/0/6) | 0B(1) 17(5) | 7364-7364 | 7349 | repeat after other work
+3232 | 2FAD | jump table entry | 16 (0/0/0/16) | 17(16) | 7349-7364 | 7349 | repeat after other work
+3235 | 2FAD | jump table entry | 22 (0/0/0/22) | 17(22) | 7349-7364 | 7349 | repeat after other work
+3236 | 2FAD | jump table entry | 14 (0/0/0/14) | 17(14) | 7349-7364 | 7349 | repeat after other work
+3238 | 2FAD | jump table entry | 6 (0/0/0/6) | 17(6) | 7349-7364 | 7349 | repeat after other work
+323A | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+323B | 2FAD | jump table entry | 2 (0/0/0/2) | 17(2) | 7349-7349 | 7349 | repeat after other work
+323E | 2FAD | jump table entry | 6 (0/0/0/6) | 17(6) | 7349-7364 | 7349 | repeat after other work
+3241 | 2FAD | jump table entry | 18 (0/0/0/18) | 17(18) | 7349-7364 | 7349 | repeat after other work
+3243 | 2FAD | jump table entry | 8 (0/0/0/8) | 17(8) | 7349-7364 | 7349 | repeat after other work
+places: 201; routines they lie in: 11; places that are inside a loop with a measured turn cost: 57
+by routine (entry : frames): 0008:1693 0010:304 0018:412 2419:960 2448:125 2A35:3279 2B80:7 2B8F:16 2BEA:7 2C5E:8320 2FAD:998
+
+== 7. Where the cycles go (exclusive: a routine's own instructions, not the routines it calls), whole run
+inside the interrupt handler and what it calls: 12004083049 cycles; outside it (tasks, polling loop, start-up): 36357260156 cycles
+routines outside the handler, most cycles first (entry : cycles : share of all frames' cycles):
+  22FE : 33786693397 : 69.870 percent
+  2FAD : 827022479 : 1.710 percent
+  2C5E : 438613436 : 0.907 percent
+  32ED : 386088600 : 0.798 percent
+  0008 : 165805258 : 0.343 percent
+  2966 : 153548720 : 0.318 percent
+  2A35 : 118575586 : 0.245 percent
+  2A12 : 113430472 : 0.235 percent
+  2018 : 81696340 : 0.169 percent
+  2419 : 55048320 : 0.114 percent
+  2000 : 40848170 : 0.084 percent
+  29EA : 34056072 : 0.070 percent
+  0010 : 22152880 : 0.046 percent
+  2448 : 19206125 : 0.040 percent
+  26A2 : 18657064 : 0.039 percent
+  0018 : 18299650 : 0.038 percent
+routines inside the handler, most cycles first (entry : cycles : mean per frame):
+  008D : 2403818677 : 2585.4
+  1490 : 1065177380 : 1145.6
+  0221 : 770900069 : 829.1
+  2018 : 683754020 : 735.4
+  2DEE : 670692073 : 721.4
+  1806 : 459406421 : 494.1
+  0020 : 390307450 : 419.8
+  1017 : 330317443 : 355.3
+  0010 : 321617880 : 345.9
+  171D : 293604146 : 315.8
+  1B36 : 268747305 : 289.0
+  2CC1 : 246809799 : 265.5

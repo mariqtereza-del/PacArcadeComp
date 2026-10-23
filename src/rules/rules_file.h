@@ -50,9 +50,18 @@ struct Tuning {
 };
 
 // The one tuning the hooks look at (the game fills it once at start-up; Purist mode never runs the hooks at all).
-inline Tuning &tuning() {
+inline Tuning &user_tuning() {   // N49b: what the rules file said (the window program's messages and checks look at this)
     static Tuning t;
     return t;
+}
+// N49b: without the Z80 core the "original rules" are the same native table, so they must not see the user's tuning (Purist mode, RULES: ORIGINAL): the program sets this.
+inline bool &standard_only() {
+    static bool b = false;
+    return b;
+}
+inline Tuning &tuning() {
+    static Tuning standard;   // never changed: all values standard, active = false
+    return standard_only() ? standard : user_tuning();
 }
 
 // ---- the keys

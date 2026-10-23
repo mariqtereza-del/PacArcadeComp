@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.." || exit 2
 N=${1:-60000}
 T=build/t02i; mkdir -p $T/c
 [ -f build/rom/prog.bin ] || python3 tools/check_rom.py >/dev/null || { echo "FAIL: no ROM"; exit 2; }
-g++ -O2 -std=c++17 -Wall -Wextra -Isrc/core -Itests tests/test_rules_file.cpp src/board/machine.cpp src/board/bus.cpp -o $T/test_rules_file || { echo "FAIL: build test"; exit 1; }
+g++ -O2 -std=c++17 -Wall -Wextra -Itests/oracle -Itests tests/test_rules_file.cpp src/board/machine.cpp src/board/bus.cpp -o $T/test_rules_file || { echo "FAIL: build test"; exit 1; }
 $T/test_rules_file build/rom/prog.bin "$N" || exit 1
 sh tools/build_app.sh >/dev/null || { echo "FAIL: build app"; exit 1; }
 export DISPLAY=${DISPLAY:-:99}; pgrep Xvfb >/dev/null || { Xvfb :99 -screen 0 1280x800x24 >/dev/null 2>&1 & sleep 1; }

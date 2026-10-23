@@ -1,24 +1,23 @@
 # Single source of truth for the plan. Edit statuses here, then run: python3 tools/make_plan.py
 # Statuses: VERIFIED / PARTIAL / UNVERIFIED / BROKEN / NOT STARTED
-PLAN_VERSION = "2.0 (2026-10-06)"
+PLAN_VERSION = "3.0 (2026-10-23)"
 
 LANES = [
  ("FOUNDATION", "Done and re-checkable. Do not redo."),
  ("STUDY", "Understand the machine from sources and the ROM. Notes only; no port code."),
- ("CPU", "A Z80 in the C++ port, proven identical to the Python prototype."),
+ ("CPU", "A Z80 in the C++ port, proven identical to the Python prototype. (Since N49 to N50 the Z80 is no longer in the game; it stays in tests/oracle as the reference.)"),
  ("BOARD", "ROM loading, memory map, interrupts and frame timing in C++."),
  ("VIDEO", "Decode and draw the picture, pixel-exact against the prototype."),
  ("INTEGRATION", "Everything runs together in a window."),
  ("INPUT", "Coin, start, joystick and the first game you can play."),
  ("AUDIO", "The three-voice sound chip."),
  ("ACCURACY", "Evidence that the game behaves like the arcade."),
- ("POLISH", "Modern features, kept outside the accuracy core."),
- ("EXTRAS", "Round-two extras (user request 2026-10-13): lightbar, mouse, save slots, statistics, records, achievements, CRT look and other display extras. Small steps, before release."),
+ ("POLISH", "Modern features, kept outside the accuracy core: display, controls, pause, save states, menus, pads, and the later Reset to defaults buttons."),
+ ("EXTRAS", "Round-two extras (user request 2026-10-13): lightbar, mouse, save slots, statistics, records, achievements, CRT look and other display extras. Small steps, done before release 1.0. Many planned extras were removed again by the user: see \"Scrapped steps\" below."),
  ("RELEASE", "Package and test."),
- ("ONLINE", "Leaderboards and two-player online. After release 1.0 because they need hosting decisions."),
- ("OPTIONAL", "Only if you want readable game source."),
- ("MODDING", "The game runs the proven readable rules, so anyone can change them (user request 2026-10-15)."),
- ("NATIVE", "Track D, Option A (user request 2026-10-15): the game without the emulator. Native code replaces the ROM program routine by routine, proved identical frame by frame; the data still comes from the player's pacman.zip. Small steps of 10 to 20 minutes."),
+ ("OPTIONAL", "Track B (done): the main game rules rewritten as readable C++ in src/logic, each proved identical to the ROM routine."),
+ ("MODDING", "Track C (done, release 1.1.0): the game can run the proven readable rules, so anyone can change them (user request 2026-10-15)."),
+ ("NATIVE", "Track D, Option A (user request 2026-10-15): the game without the emulator (release 2.0.0). Native code replaced the ROM program routine by routine, proved identical frame by frame; the data still comes from the player's pacman.zip. Small steps of 10 to 20 minutes. Finished with release 2.0.0 (N55)."),
 ]
 
 FAIL = ("Stop. Re-run only this step's VERIFY command. Undo the last edit and retry. Compare against the Python prototype "
@@ -109,13 +108,13 @@ S("S13","STUDY","MACHINE_NOTES and plain summary","VERIFIED",["S07","S09","S10",
   ["python3 tools/check_docs.py"],"Every claim has a source or evidence path; disagreements listed.",evidence="MACHINE_NOTES.md; docs/SUMMARY_for_user.md; tools/check_docs.py output"),
 
 S("S14","CPU","Bring in the Z80 core","VERIFIED",["S05"],
-  "Add the MIT-licensed Z80 core (Ivan Kosarev's z80, the same one under the Python prototype) to src/core and compile it in both toolchains.","Reuses a proven core instead of writing and debugging one.",
-  "Prototype already runs the ROM on this core.","Python package z80 (pip download z80 --no-binary :all: gives sources), github.com/kosarev/z80","src/core/, tools/build_native.sh (new), tools/build_windows.sh",
+  "Add the MIT-licensed Z80 core (Ivan Kosarev's z80, the same one under the Python prototype) to tests/oracle and compile it in both toolchains.","Reuses a proven core instead of writing and debugging one.",
+  "Prototype already runs the ROM on this core.","Python package z80 (pip download z80 --no-binary :all: gives sources), github.com/kosarev/z80","tests/oracle/, tools/build_native.sh (new), tools/build_windows.sh",
   ["Obtain the header from GitHub, or from the pip source package if GitHub is blocked.","Add its LICENSE file and credit.","Write a 10-line test program: execute a tiny known program and print registers."],["Do not write a Z80 core from scratch."],
   ["Build natively and with mingw","Test program output matches the expected registers"],"Both builds compile; the tiny program gives exactly the expected register values.",evidence="docs/evidence/S14_build.txt"),
 S("S15","CPU","CPU trace parity with the prototype","VERIFIED",["S14"],
   "Show the C++ core runs the ROM boot identically to the prototype.","Catches bus or interrupt wiring errors before they hide in graphics.",
-  "Core compiles.","tools/analysis/harness.py","src/board/boot_test.cpp, tools/analysis/oracle_trace.py (new), tests/test_cpu_parity.sh",
+  "Core compiles.","tools/analysis/harness.py","tests/oracle/boot_test.cpp, tools/analysis/oracle_trace.py (new), tests/test_cpu_parity.sh",
   ["Both sides run from reset with simple RAM and stubbed I/O for the first 20,000 instructions.","Log PC and registers every instruction; compare the logs."],["No video, no sound."],
   ["tests/test_cpu_parity.sh prints the first differing line or PASS"],"Zero differences over 20,000 instructions.",evidence="docs/evidence/S15_parity.txt"),
 
@@ -275,6 +274,43 @@ S("S34C","POLISH","Controller types, icon and button pictures (Xbox, DualShock 4
   ["No change to emulated input bits.","Do not claim a controller type was tested on real hardware when it was only simulated (the user has a DualShock 4, a DualSense and DS4Windows, so all three kinds can be tested for real)."],
   ["Test with SDL virtual controllers set to each type: the right picture set is chosen for Xbox, PS4, PS5 and unknown","Test: trigger and touch pad pictures appear in the Controls screen","Real-window screenshots of the Controls screen for each type","Scripted replay hashes unchanged"],"Right pictures for every type; hashes identical.",
   user=["With your DualShock 4: the icon says PS4, and Esc > Controls > Bindings shows cross, circle, square, triangle, L1, R1, Share, Options pictures that match the buttons you press.","Plug in the DualSense without restarting: the icon changes to PS5 and the pictures follow.","Start DS4Windows so Windows sees an Xbox pad: the icon says XBOX and the pictures are A, B, X, Y (that is what Windows reports; the program cannot see the real pad behind DS4Windows)."],evidence="docs/evidence/S34C_controller_types.txt"),
+S("S34D","POLISH","Purist mode becomes a Reset to defaults button","VERIFIED",["S34","T02i"],
+  "The menu item PURIST MODE stops being a switch that locks things and forces the ROM routines. It becomes one button, labelled PURIST MODE / RESET TO DEFAULTS: pressing it puts every setting back to the factory default (the program's standard settings, the same as a fresh settings file: no overlay, no filters, original rules, standard surround, vibration and lightbar as the standard settings file has them) WITHOUT restarting the game (user request 2026-10-21: the game goes on from the very frame where it was), and from then on the player can change any setting again and stack whatever they want on top of the defaults (user request 2026-10-21).",
+  "Today Purist is a mode: it greys out and locks every addition and runs the ROM routines until it is switched off, so a player cannot have 'almost purist plus one filter'. A button that only resets, and then leaves everything free, is simpler and keeps all the additions usable.",
+  "S34 to S34C and T02i are VERIFIED; the settings live in the settings file and menu (src/app/menu.*, src/app/main.cpp); the RULES setting (ORIGINAL or READABLE) already exists as its own menu item since T02i.",
+  "docs/notes/settings_table.md, src/app/menu.*, src/app/main.cpp, tests/test_purist.sh, tests/test_menu.sh",
+  "src/app/menu.*, src/app/main.cpp (the Purist command, the locked list, the 'purist' flag checks), docs/notes/settings_table.md, tests/test_purist.sh, tests/test_menu.sh, tests/test_integration.*, tools/plan_data.py and tools/plan_data_x.py (the repeated rule text), README",
+  ["Menu item text: PURIST MODE / RESET TO DEFAULTS (one line, in the same place as today's Purist item). Pressing it asks nothing difficult: it shows one confirmation line (Enter = reset, Esc = cancel), then sets every setting to its factory default (the table in docs/notes/settings_table.md is the single list of defaults and is checked by the test), saves the settings file and says in the log what it reset. The machine is NOT restarted and the game is not paused longer than the menu already pauses it: the reset takes effect at the next frame.",
+   "No-restart rules (to be proved in this step, not assumed): display, sound, vibration, lightbar, overlay, filters and assists change instantly. RULES back to ORIGINAL is switched at a frame boundary (the readable rules are proved cycle-identical to the ROM routines, so the game continues unchanged; a test switches READABLE to ORIGINAL in the middle of a coverage run and compares the machine hashes with an uninterrupted run). The game options that the arcade reads from its DIP switches (lives, bonus life, difficulty, ghost names, coinage): step N45k found the ROM reads the DIP switches into the game settings at power-on and at the start of a game, so the test measures exactly when; the reset stores the default values at once and they take effect at the moment the ROM itself next reads them (for example the next game), without a restart. If the current game was started with other values, the log and the menu say 'applies from the next game' for those items only. Nothing in the running game is ever changed in the middle of a game by the reset.",
+
+   "After the reset nothing is locked and nothing is forced: no 'LOCKED BY PURIST' notes, no greyed items, no overlay or extras forced off by a mode flag. Every item works as it does today when Purist is off. The 'purist' flag in the program is replaced by the real settings (each addition is off because its setting is off, not because a mode says so).",
+   "Decided here (the user can say otherwise): the reset covers display, sound/vibration/lightbar, assists, game options (lives, bonus life, difficulty, ghost names) and RULES (back to ORIGINAL). It keeps the key and pad bindings, the saved high score, records, achievements and save slots (these are the player's data, not settings), and it does not clear the cheat state beyond switching it off. The log lists what was reset.",
+   "The command-line option --purist stays as a test aid with the new meaning 'start with every setting at its default and ignore the settings file', so the replay and hash tests keep their old meaning: the default state with RULES ORIGINAL runs the original ROM routines, so all existing Purist hashes stay identical.",
+   "A game played after a reset to defaults is a normal counted game; a game in which the player later switches on an assist, a cheat, a rules file or READABLE rules is marked as before (the assisted-game rule is unchanged).",
+   "Rewrite the repeated rule in the plan and the step files: 'Purist mode always runs the original ROM routines' becomes 'The default state (RULES: ORIGINAL, which the Reset to defaults button restores) always runs the original ROM routines until the removal step'; the same for 'Purist off' in tools/plan_data_x.py and for the READABLE/Purist sentences in T02a and T02i. Update docs/notes/settings_table.md and the README."],
+  ["No change to the emulated machine, the ROM routines, the readable rules or the native code.","Do not touch the bindings, high score, records, achievements or save slots in the reset.","The old Purist hashes (tests/test_purist.sh) must stay identical: only the way the state is reached changes."],
+  ["Test: press the button in the middle of a coverage run (a game in progress): no restart happens (frame counter and machine continue), and the machine hashes of the following frames equal an uninterrupted run with the same defaults; unit test: change a dozen settings in different pages, press the button: every setting equals its default in the settings table, bindings and records are untouched, and the file on disk matches","Unit test: after the reset every menu item can be changed (no LOCKED note, no greyed item) and a changed item stays changed after another menu action","Test: --purist and 'press the reset button' give the same machine hashes for the S27 replay and the coverage runs as the old Purist mode did (hashes identical to the recorded ones)","Test: with the reset done and RULES: READABLE switched on afterwards, the machine hashes equal the READABLE hashes","tests/test_menu.sh, tests/test_integration.sh, tests/test_purist.sh, tests/test_replay.sh updated and passing; full regression at the end"],
+  "All pass; the old Purist hashes are identical; nothing is locked after the reset.",
+  user=["Esc > find the item PURIST MODE / RESET TO DEFAULTS. Before pressing it, change a few things (for example Surround, the key panel, a CRT effect, RULES: READABLE).","Press it, confirm with Enter: the game does NOT restart; it goes on from the same moment, and every one of those settings is back to its default (lives, difficulty and the other game options say 'applies from the next game' if they were changed). Controls (your keys and buttons) and your high score must still be there.","Now switch on one filter and one other option on top: they must work and stay on; nothing may say LOCKED. Close the program and start it again: the settings you chose after the reset are still there."],
+  evidence="docs/evidence/S34D_reset_to_defaults.txt"),
+S("S34E","POLISH","Two reset buttons (Display, Game settings); no Purist item; achievements follow the game settings","VERIFIED",["S34D"],
+  "User request 2026-10-21 after testing S34D. (1) The Purist item disappears from the menu everywhere. (2) DISPLAY page gets RESET TO DEFAULTS: it resets only the display settings (overlay, scanlines, scaling, window frame, CRT effects, surround, key panel and the like), takes effect at once and never restarts the game. (3) GAME SETTINGS page gets its own RESET TO DEFAULTS: it resets only the game settings (lives, bonus life, difficulty, ghost names, RULES and the assists) and restarts the game so they take effect. (4) Any game setting that is not at its default switches achievements off until it is put back to the default. (5) Display settings and save states have no effect on achievements at all.",
+  "S34D put one reset on the main page. The player wants a reset per kind of setting: a look-only reset that never disturbs a game, and a game-rules reset that is honest about needing a restart; and a simple, fair achievement rule that follows the game settings, not the look.",
+  "S34D is VERIFIED (one reset button for everything, no restart, live DIP change at the attract screen, src/app/dipnow.h). The assisted-game rule is in src/app/assist.h (reasons: STATE LOADED, REWIND, START LEVEL, TRAINER, SLOW MOTION, FRAME STEP, CHEAT HELP, TEST SETUP, MODDED); achievements already need a counted game with 3 lives.",
+  "docs/notes/settings_table.md, src/app/menu.*, src/app/main.cpp, src/app/assist.h, src/app/achievements.*, tests/test_reset_defaults.sh, tests/test_menu.sh, docs/steps/S34D.md",
+  "src/app/menu.*, src/app/main.cpp, src/app/assist.h, src/app/achievements.*, docs/notes/settings_table.md, README, tests/test_reset_defaults.sh, tests/test_menu.sh, tests/test_integration.*, tests/test_achievements*, tools/plan_data.py",
+  ["Remove every Purist item, text and word from the menu, the help panel, the log texts and the README (the command-line --purist test flag stays, it is not a button). The old main-page reset of S34D is replaced by the two page buttons.",
+   "DISPLAY page: RESET TO DEFAULTS (Enter asks, Enter again resets). It resets exactly the display list in docs/notes/settings_table.md and nothing else; no restart, no pause longer than the menu, no change to the machine. Decided here: the display list is everything on the DISPLAY page and the CRT / cabinet look pages (overlay, scanlines, scaling, smooth pacing, window frame, key panel, CRT mask / glow / curve, surround, pad symbols); sound, vibration and lightbar stay where they are unless the settings table says they belong to Display.",
+   "GAME SETTINGS page: RESET TO DEFAULTS (Enter asks and says plainly 'the game restarts', Enter again resets and restarts the machine, using the restart that exists since S34D / T02). It resets exactly the game list: lives, bonus life, difficulty, ghost names, RULES (back to ORIGINAL), the assists and the test cheat. It keeps key and pad bindings, the saved high score, records, achievements and save slots. The high score is put in again at the first attract screen as for any restart.",
+   "Achievements (item 4): an achievement can unlock only while every GAME setting is at its default (3 lives, bonus life at 10000, normal difficulty, normal ghost names, RULES ORIGINAL, no rules file in use, no assist or cheat on). The moment a game setting is changed the game is marked (a new assist reason: GAME SETTING, label 'NON-DEFAULT') and stays marked until the setting is back at its default AND a new game starts (a game that was played with a non-default setting never counts retroactively). The menu and the window title show the reason, and the achievements page says 'off while a game setting is not at its default'. Decided here: the assists already in the table (REWIND, START LEVEL, TRAINER, SLOW MOTION, FRAME STEP, CHEAT HELP, MODDED, TEST SETUP) keep their effect; they are game settings or game-changing actions.",
+   "Achievements (item 5): display settings never mark a game and never change what counts: changing, resetting or loading any display setting leaves the achievement state byte-identical (test). Save states: saving and loading a state no longer switch achievements off (the reason STATE LOADED is no longer an achievement blocker). IMPORTANT, said honestly in the log, the README and the achievements page: this allows the save-before-a-risk trick for achievements. The user asked for this on purpose. Decided here (the user can say otherwise): a loaded state still marks the game for the saved high score, records and statistics-for-records as before, because those compare players; only achievements ignore it. REWIND stays an assist for achievements (it was not mentioned).",
+   "Settings file: no new keys are required; the existing keys are split in the settings table into a Display list and a Game list (a column 'Reset by'), and the test checks that every key belongs to exactly one list.",
+   "Update tests/test_reset_defaults.sh (it currently tests the single main-page button) and tests/test_menu.sh; keep tests/test_dip_live.sh. Rewrite the S34D step text where it says 'one button' only if the check_docs tool requires it; add a dated change line to PROJECT_STATUS.md."],
+  ["No change to the emulated machine, the ROM routines, the readable rules or the native code.","Do not touch bindings, high score, records, achievements or save slots in either reset.","The old Purist hashes (tests/test_purist.sh) must stay identical."],
+  ["Test: DISPLAY reset in the middle of a game: no restart, machine hashes of the following frames equal an uninterrupted run; only display keys change in the settings file","Test: GAME SETTINGS reset: the machine restarts (log), only game keys change, a game afterwards has 3 lives and original rules; bindings, high score and records untouched","Test: every settings key is in exactly one reset list; no Purist text anywhere in the menu pages (test_menu)","Test (achievements): with lives 5 (or any other non-default game setting) a game that would unlock an achievement does not; put back to default, a NEW game unlocks it; changing every display setting, with a game in progress, changes nothing in the achievement state; save and load a state does not stop an achievement; a loaded state still marks the game for the saved high score","tests/test_menu.sh, tests/test_integration.sh, tests/test_achievements*, tests/test_purist.sh, tests/test_replay.sh, tests/test_dip_live.sh passing; fast regression"],
+  "All pass; the Purist item is gone; display reset never restarts; game reset restarts; achievements follow the game settings only.",
+  user=["Esc: there is no Purist item anywhere.","DISPLAY page > RESET TO DEFAULTS (Enter twice) in the middle of a game: the look goes back to standard and the game does not restart.","GAME SETTINGS page > RESET TO DEFAULTS (Enter twice): it warns that the game restarts, then restarts with 3 lives and original rules; your keys, pad buttons and high score are still there.","Set LIVES to 5, play: the menu / title bar says the game does not count for achievements; set LIVES back to 3 and start a new game: it counts again. Change overlay or scanlines, save and load a state: nothing changes for the achievements."],
+  evidence="docs/evidence/S34E_two_resets.txt"),
 S("S35","RELEASE","Package the .exe","VERIFIED",["S34C","S34V","S26"],
   "One folder: .exe, README.txt, third-party licences, first-run ROM picker.","Anyone can unzip and play with their own ROM.",
   "Feature complete.","src/app/","src/app/firstrun.*, dist/, THIRD-PARTY-LICENSES.txt",
@@ -387,14 +423,14 @@ STEPS[_iT:_iT] = _on
 
 # ---- Track C (user request 2026-10-15): the game runs the readable rules; modding; release 1.1.0
 _T2DONT = ["The game must stay identical with the original rules: with RULES ORIGINAL (the standard) nothing may change at all, and with RULES READABLE every frame hash must equal the ROM run.",
-           "Purist mode always runs the original ROM routines (never the readable rules).",
+           "The default state (RULES: ORIGINAL, which the Reset to defaults button restores) always runs the original ROM routines (never the readable rules unless the player switches RULES to READABLE).",
            "Never put ROM bytes into the source (tools/export_github.sh must stay clean)."]
 _T2USER = ["Nothing to test by hand: the game you play is unchanged (the readable rules are only switched on by the tests in this step). Tell me OK when you have read the result."]
 def _t2(id, name, deps, obj, why, read, touch, do, verify, ok, ev, user=None, status="NOT STARTED", dont=None):
     return S(id, "MODDING", name, status, deps, obj, why, "The earlier T02 steps are VERIFIED.", read, touch, do, dont or _T2DONT, verify, ok,
              user=user or _T2USER, evidence=ev)
 T02_STEPS = [
-S("T02","MODDING","The game runs the readable rules (Track C)","PARTIAL",["T01f","S37"],
+S("T02","MODDING","The game runs the readable rules (Track C)","VERIFIED",["T01f","S37"],
   "Let the game call the proven readable rules (src/logic) instead of the original ROM routines, one piece at a time, each time proving the game stays identical; then make the rules easy to change (a rules file, a menu setting, example mods, a modding guide) and publish the result.",
   "User request (2026-10-15): full modding capabilities for anyone. Until now the readable rules were proved but not used, so editing them changed nothing.",
   "T01a to T01f VERIFIED, S37 VERIFIED (published on GitHub).","src/logic/README.md, MODDING.md","see the sub-steps",
@@ -409,7 +445,7 @@ _t2("T02a","T02a: Hook mechanism and random numbers in use",["T01f","S37"],
   "src/board/machine.h, src/board/machine.cpp, src/rules/ (new), src/app/main.cpp (command-line option only), src/app/replay.cpp (option only), tests/test_rules_*",
   ["Machine: an optional table of hooks by address; when the readable rules are on and the next instruction is a hooked address, the hook runs instead of the ROM routine. Off by default: the machine works exactly as before.",
    "src/rules/rules.h: the adapter for 2A23 (seed from 4DC9/4DCA, answer in A, the seed written back, return like the ROM's RET, the same 111 cycles charged).",
-   "Command-line option --rules readable for the window program and the replay tool (for tests; the menu setting comes in T02i). Purist mode ignores it.",
+   "Command-line option --rules readable for the window program and the replay tool (for tests; the menu setting comes in T02i). The reset button puts RULES back to ORIGINAL.",
    "tests/test_rules_random.sh: (1) replay test with the readable rules: 7,273 frame hashes identical to the ROM run and to the Python prototype; (2) 3,000,000-frame scripted run, ROM machine and readable machine side by side, frame hashes compared every frame; (3) the same with garbage in every register the adapter does not set; (4) a deliberately wrong adapter is caught; (5) rules off: the replay log is byte-identical to the one before the step."],
   ["sh tests/test_rules_random.sh (with the 3,000,000-frame run for the evidence)","sh tests/test_replay.sh and sh tests/test_purist.sh unchanged"],
   "Zero differences; the hook ran at every call of 2A23.","docs/evidence/T02a_hooks_random.txt", status="VERIFIED"),
@@ -451,7 +487,7 @@ _t2("T02h","T02h: Ghost house release in use",["T02g"],
   ["Adapters; tests/test_rules_all.sh now includes it."],
   ["Replay and 3,000,000-frame runs with all seven pieces: identical frame hashes; garbage-register run identical"],"Zero differences.","docs/evidence/T02h_house_in_use.txt", status="VERIFIED"),
 _t2("T02i","T02i: RULES setting and the rules file",["T02h"],
-  "Esc > GAME OPTIONS > RULES: ORIGINAL (the standard: the ROM's own routines) or READABLE (the proved readable rules). A text file rules.cfg (next to the program or in the settings folder) can change the numbers in the readable rules without programming: speeds per level, scatter/chase times, frightened times, Cruise Elroy limits, points for dots, energizers, ghosts and fruit, the extra-life score, ghost house limits. With a rules file the game uses READABLE, shows MODDED in the window title, and modded games do not count for the saved high score, records and achievements (the assisted-game rule). Purist mode always uses ORIGINAL and ignores the file. Wrong lines are reported in the log and ignored.",
+  "Esc > GAME OPTIONS > RULES: ORIGINAL (the standard: the ROM's own routines) or READABLE (the proved readable rules). A text file rules.cfg (next to the program or in the settings folder) can change the numbers in the readable rules without programming: speeds per level, scatter/chase times, frightened times, Cruise Elroy limits, points for dots, energizers, ghosts and fruit, the extra-life score, ghost house limits. With a rules file the game uses READABLE, shows MODDED in the window title, and modded games do not count for the saved high score, records and achievements (the assisted-game rule). The Reset to defaults button puts RULES back to ORIGINAL (rules.cfg itself is a file and stays; the log says so). Wrong lines are reported in the log and ignored.",
   "Anyone can change the game with Notepad; programmers can change the C++ in src/logic.","docs/notes/settings_table.md, src/app/menu.*, src/app/assist.h","src/app/menu.*, src/app/main.cpp, src/app/assist.h, src/rules/, docs/notes/settings_table.md, tests/test_rules_*, tests/test_menu.sh, tests/test_integration.*",
   ["Settings key rules (original, readable); rules file reader with one line per value, a comment line explaining each; a command to write the standard file (all original values) so modders start from it.",
    "Tests: no file + ORIGINAL: hashes identical to before; READABLE without a file: identical; a test mod (for example slower ghosts) measurably changes the game (ghost positions differ, the replay shows it); bad lines are reported; Purist ignores the file; a modded game does not save a high score."],
@@ -468,14 +504,14 @@ _t2("T02k","T02k: Release 1.1.0 and GitHub update",["T02j"],
   "Everyone gets the modding version.","docs/GITHUB_UPLOAD_GUIDE.md, CHANGELOG.md, tools/package.sh","tools/package.sh, dist/res/app.rc, dist/README-PACKAGE.txt, CHANGELOG.md, README.md, docs/GITHUB_UPLOAD_GUIDE.md, tools/export_github.sh",
   ["Version number 1.1.0 in the exe and the zip; the zip also holds mods/ and a short MODDING.txt; the full regression; the export scan; the update guide (GitHub Desktop: copy the new files over, commit, push; new release v1.1.0 with the zip)."],
   ["FULL regression passes; the export scan is clean; a fresh copy of the export builds and its ROM-free tests pass"],"All pass; release zip and export ready.","docs/evidence/T02k_release_1_1.txt",
-  user=["Play one game in each mode (ORIGINAL, READABLE, one example mod) with the new exe.","Follow the update guide click by click (docs/GITHUB_UPLOAD_GUIDE.md, the Update guide at the top) to rename the repository to PacArcadeComp, update it and publish release v1.1.0, then check the page in a private window."], status="AWAITING USER TEST"),
+  user=["Play one game in each mode (ORIGINAL, READABLE, one example mod) with the new exe.","Follow the update guide click by click (docs/GITHUB_UPLOAD_GUIDE.md, the Update guide at the top) to rename the repository to PacArcadeComp, update it and publish release v1.1.0, then check the page in a private window."], status="VERIFIED"),
 ]
 _iT2 = [i for i, s in enumerate(STEPS) if s["id"] == "T01f"][0]
 STEPS[_iT2 + 1:_iT2 + 1] = T02_STEPS
 
 # ---- Track D (user request 2026-10-15, Option A): the game without the emulator. Ids N01..: assigned in order below.
 _NDONT = ["The game you play must stay identical: every step is proved frame by frame against the original ROM run, including the exact cycle count of every frame.",
-          "The Z80 stays until the removal step: ROM routines that are not replaced yet keep running. Hooks are off unless the readable rules are switched on; Purist mode always runs the original ROM routines (until the removal step).",
+          "The Z80 question: while the game was being converted (N01 to N49b) the Z80 kept running every routine that was not replaced yet, and the default state (RULES: ORIGINAL) ran the original ROM routines. Since N49c the program has no Z80 at all: it exists only as the reference in tests/oracle, and RULES: ORIGINAL runs the native translation of the original routines with the original numbers.",
           "Never put ROM bytes into the source: tables come from the player's ROM at run time (src/data/), tools/export_github.sh must stay clean.",
           "If a step would take longer than about 20 minutes, stop and split it (a, b) in the plan; do not squeeze it in."]
 _NV = ["Isolated proof: each replaced routine, called with the real entry states collected from the coverage runs and with random states, gives the same memory writes, the same registers the callers use and exactly the same cycle count as the ROM routine (tools: the cycle meter and tests/lockstep.h)",
@@ -488,8 +524,8 @@ _NMILE = ["Full regression: sh tests/run_all.sh and every test script of the tou
 _NSTART = "The earlier N steps are VERIFIED."
 _NS = []   # (key, name, deps_keys, obj, why, read, touch, do, verify, ok, ev, user, milestone)
 def _n(key, name, deps, obj, why, do, ev, read="docs/notes/rom_routines.md (from step N01), the step's evidence files", touch="src/game/ (new native code), src/rules/, src/data/, tests/test_native_*, tests/lockstep.h",
-       verify=None, ok="Zero differences; the progress meter goes down.", user=None, mile=False, fixed_touch=False):
-    _NS.append(dict(key=key, name=name, deps=deps, obj=obj, why=why, do=do, ev=ev, read=read, touch=touch, verify=verify or _NV, ok=ok, user=user, mile=mile))
+       verify=None, ok="Zero differences; the progress meter goes down.", user=None, mile=False, fixed_touch=False, sid=None):
+    _NS.append(dict(sid=sid, key=key, name=name, deps=deps, obj=obj, why=why, do=do, ev=ev, read=read, touch=touch, verify=verify or _NV, ok=ok, user=user, mile=mile))
 
 # ---- Preparation: no change to the game
 _n("map","Routine map: what the original program consists of",["T02a"],
@@ -652,27 +688,64 @@ _n("snd2","Sound: the second group and the tunes",["snd1"],
 _n("sched","The task queue and RST 28/30 scheduling as a native scheduler",["snd2"],
    "Replace the task queue (the 32 task ids with parameters, the read and write pointers) and the scheduling calls with a native scheduler that keeps the same order and the same cost, so that the frames in which tasks spill over are identical.",
    "Last of the 'around the game' systems.",["Native scheduler with exact cycle accounting; hooks at the scheduling calls."],"docs/evidence/N45_scheduler.txt"),
-_n("loop","The main loop and the interrupt entry as a native frame driver",["sched"],
+_NLOOPDEP = None
+# ---- N45a to N45k: the ROM groups that no step of N43 to N47 covered (found by the N45 measurement of 2026-10-19; split approved by the user)
+_NG = "Native version of these ROM routines (hooks, the instruction runner of src/game/attract.h, new instruction kinds where needed); the same test as N28 to N45 (isolated random cases, real states, lockstep, five wrong versions, progress meter). Names of the routines are confirmed from the disassembly at the start of the step; a step that would take longer than about 20 minutes is split."
+def _g(key, dep, name, rom, n, ev, why, mile=False, user=None):
+    _n(key, name, [dep], "Replace %s (about %d ROM instruction addresses still executed in the coverage runs) by native code with exactly the same effects, registers and cycle count." % (rom, n), why, [_NG], ev, sid=ev.split("/")[-1].split("_")[0], mile=mile, user=user)
+_g("g45a","sched","Per-frame game update, part 1","ROM 0AC3, 0BD6, 0C0D, 0E23",201,"docs/evidence/N45a_frame_update_a.txt","Called from the per-frame update 08CD / 051C; no native version exists yet.")
+_g("g45b","g45a","Per-frame game update: the big routine 0C42 and its helpers","ROM 0C42 and the helpers 1F2E, 1F55, 1F7C",234,"docs/evidence/N45b_frame_update_b.txt","The largest routine of the per-frame update.")
+_g("g45c","g45b","Siren selection, ghost turn-around, power-dot hook","ROM 0E6C, 1EFE, 1F25, 1F4C, 1F73 and the rest of 1A70",82,"docs/evidence/N45c_siren_reverse.txt","Small routines that set the siren and turn the ghosts round.")
+_g("g45d","g45c","Ghost state tables","ROM 1094-11FC (the four jump tables 1098, 10A2, 10AC, 10B8 and their entries)",175,"docs/evidence/N45d_ghost_states.txt","The ghost state dispatch.")
+_g("g45e","g45d","Ghost movement helpers","ROM 1BD8-1E9C, 1ED0, 20D7",202,"docs/evidence/N45e_ghost_helpers.txt","The pieces that every ghost mover uses.")
+_g("g45f","g45e","The four ghost movers, finished","ROM 1B36, 1C4B, 1D22, 1DF9 (the parts that still run in the ROM)",133,"docs/evidence/N45f_ghost_movers.txt","Completes the readable-rules ghost movers so that no part falls back to the ROM.")
+_g("g45g","g45f","The Pac-Man mover, finished","ROM 1806 and 24D7 (the parts that still run in the ROM)",121,"docs/evidence/N45g_pacman_mover.txt","Completes the Pac-Man mover; all movement code is native after this step.",mile=True)
+_g("g45h","g45g","Ghost targeting and direction, add score","ROM 2730, 2966, 29EA, 2A12, 2A5A",121,"docs/evidence/N45h_ghost_targets.txt","The ghost target choice and the score routine.")
+_g("g45i","g45h","Direction and demo-game tasks","ROM 283B, 2865, 288F, 28B9, 28E3, 291E",167,"docs/evidence/N45i_direction_tasks.txt","The task routines that choose directions.")
+_g("g45j","g45i","The task-table entries","ROM 240D, 2419, 2448, 23ED, 253D",169,"docs/evidence/N45j_task_entries.txt","The entries of the jump table 23A8.")
+_g("g45k","g45j","Text printer and dip-switch reader","ROM 2C5E and 26D0",95,"docs/evidence/N45k_text_dips.txt","The last game routines outside the frame driver and the boot.",mile=True)
+_n("loop","The main loop and the interrupt entry as a native frame driver",["g45k"],
    "Replace the main loop (polling the task queue) and the interrupt entry and exit with a native frame driver: one function per frame that does what the interrupt does and then runs queued tasks until the frame's cycles are used. From here no game routine runs in the ROM.",
    "The point where the game loop is native.",["Native frame driver; lockstep over all coverage runs."],"docs/evidence/N46_frame_driver.txt"),
 _n("boot","Boot: power-on self test and the first screen",["loop"],
    "Decide and implement how the native game starts: replicate the power-on self test frame for frame, or start at the state in which the original is when the self test ends (the screen is blank during the test; the clocks then start at a known offset). The decision is recorded.",
    "The only code the game runs once, at power-on; the choice changes what 'frame 1' means in the tests.",["Native start; lockstep from frame 0 or from the documented start state."],"docs/evidence/N47_boot.txt"),
-_n("zero","Proof: no ROM instruction is executed any more",["boot"],
+_n("boot2","Boot: the power-on self test",["boot"],
+   "Implement (or, as decided in N47, deliberately replace) the power-on self test: ROM 3000-30F8 (RAM and ROM tests, the error screen), the delay 32ED and 3AF4 (what this code is must be confirmed first), about 154 ROM instruction addresses.",
+   "Part of the boot; the decision of N47 says whether it is replicated frame for frame.",["Native version or the documented replacement; lockstep from frame 0 or from the documented start state."],"docs/evidence/N47a_selftest.txt",sid="N47a"),
+_n("boot3","Boot: the service-switch test screen",["boot2"],
+   "Implement the test-mode screen that the service switch starts: ROM 3174-32F8, about 177 ROM instruction addresses (or record the decision of step N05 for it).",
+   "The last boot-related code that the coverage players reach.",["Native version; lockstep with the service switch pressed."],"docs/evidence/N47b_testscreen.txt",sid="N47b"),
+_n("zero","Proof: no ROM instruction is executed any more",["boot3"],
    "Run all coverage players, the replay test and 3,000,000 frames of the T01a player with an instruction-fetch counter on the program ROM: it must be zero for everything except the instructions that the unreached-code decision (step N05) left out. Full regression.",
    "The central claim of Option A, measured.",["tests/test_no_rom_code.sh; the counter and the full regression."],"docs/evidence/N48_zero_rom_code.txt",
    verify=["The ROM-instruction counter is 0 in all coverage runs and in 3,000,000 frames","Full regression passes","All replay and Purist hashes identical"],ok="Zero ROM instructions executed; everything identical.",
    mile=True, user=_NMILE),
 # ---- Removal of the emulator
-_n("remove","Remove the Z80 from the game",["zero"],
-   "Build the game without the Z80 core and without the instruction loop: the native frame driver writes the board outputs directly. The memory arrays stay (they are the game state). The old machine moves out of the program build.",
-   "The point of Option A.",["Program build without src/core/z80.h; every replay and Purist hash identical; the window program and its tests pass."],"docs/evidence/N49_remove_z80.txt",
-   touch="src/game/, src/board/, src/app/main.cpp, tools/build_*.sh, tools/package.sh, tests/",
-   verify=["Replay and Purist hashes identical to the Python prototype with the native-only program","The program binary no longer contains the Z80 core (symbol check)","Full regression"],ok="Native-only program passes everything.",mile=True,user=_NMILE),
-_n("oracle","The emulator becomes a test tool",["remove"],
+_n("remove","Remove the Z80: the native code no longer needs the Z80 header",["zero"],
+   "SPLIT (the whole removal is far more than 20 minutes): this first part moves the flag and cycle helpers that the native code uses (z80::f_*, Cost, rrca, kFlagsAfterXorA, the index-register kind) out of tests/oracle/z80.h into a small header of their own (src/game/zflags.h), so that src/game, src/rules and src/logic compile without tests/oracle/z80.h. Nothing changes in the game.",
+   "The first of four parts (N49, N49a, N49b, N49c) of the removal: the native code must stand on its own before the CPU object can go.",["src/game/zflags.h with the same functions (copied bodies, same results); src/rules, src/game and src/logic include it instead of z80.h; a compile test that the native code builds with the Z80 header made unavailable."],"docs/evidence/N49_remove_z80.txt",
+   touch="src/game/, src/rules/, src/logic/, tests/",
+   verify=["The native code compiles with tests/oracle/z80.h hidden (tests/test_no_z80_header.sh)","Every replay and Purist hash identical; the fast regression passes"],ok="Native code independent of the Z80 header; everything identical."),
+_n("remove_a","Remove the Z80: the native register file and machine",["remove"],
+   "Add a plain register file (AF BC DE HL IX IY SP PC I R, shadow registers, IFF, halt, WZ, index-register kind) with the same on_get/on_set functions the hooks use, and a build mode of the machine (macro PAC_NO_Z80) that runs one frame by stepping only through the native hook table (every address has an entry, N48 proved this) and delivers the interrupt natively. The Z80 build stays for the tests as the reference.",
+   "The second part: the machine itself without the CPU.",["PAC_NO_Z80 machine; lockstep against the Z80 machine over the replay, the coverage players and 1,000,000 T01a frames: memory, I/O writes, cycles of every frame and registers identical."],"docs/evidence/N49a_native_machine.txt",
+   touch="src/board/, src/game/, src/rules/, tests/",
+   verify=["Lockstep against the Z80 machine: memory, I/O writes, frame cycle count and registers identical","A deliberately wrong version is caught"],ok="The native machine equals the Z80 machine frame by frame.",sid="N49a"),
+_n("remove_b","Remove the Z80: the window program without the Z80",["remove_a"],
+   "Build the window program (src/app) with the native machine only: RULES: ORIGINAL runs the native table with the standard tuning (proved identical to the ROM), the other rules use the same table with the user's tuning. Symbol check: the program binary contains no Z80 core.",
+   "The third part: the program you play no longer has a Z80.",["tools/build_app.sh and build_windows.sh use -DPAC_NO_Z80 and no longer compile tests/oracle; tests/test_no_z80_symbols.sh checks the binary; replay and Purist hashes identical with the native-only program."],"docs/evidence/N49b_app_without_z80.txt",
+   touch="src/app/, src/board/, tools/build_*.sh, tests/",
+   verify=["Replay and Purist hashes identical to the Python prototype with the native-only program","The program binary no longer contains the Z80 core (symbol check)","The window program tests pass"],ok="The program has no Z80 and plays identically.",sid="N49b"),
+_n("remove_c","Remove the Z80: packaging, the old machine as a test reference, milestone",["remove_b"],
+   "Move the Z80 core and the old machine out of the program build for good (tests/oracle, used only by tests and tools), update tools/package.sh and the test package, README and notes. Full regression and the play test.",
+   "The last part: the point of Option A is reached and checked by you.",["Packaging without the Z80; the test package PLAY-ORIGINAL / PLAY-READABLE; the full regression."],"docs/evidence/N49c_remove_z80_final.txt",
+   touch="src/board/, tests/oracle/, tools/package*.sh, tests/, README.md, docs/",
+   verify=["Full regression passes","All replay and Purist hashes identical","The shipped program has no Z80 core"],ok="Native-only program passes everything. (Fix after your first test: the INVINCIBLE ghost-eating crash; now all 5,439 instructions of the original program run natively, each proved against the Z80 on 5.4 million random states.)",mile=True,user=_NMILE,sid="N49c"),
+_n("oracle","The emulator becomes a test tool",["remove_c"],
    "Move the Z80 core, the old machine and the hook code to tests/oracle/ (used only by the tests as the reference); the program no longer compiles or links them. Update the build scripts, the export script and the scan.",
    "The reference stays for every future change; the shipped program is native.",["Folder move; build scripts; export script excludes nothing new; scan clean."],"docs/evidence/N50_oracle_in_tests.txt",
-   touch="src/core/, src/board/, tests/oracle/, tools/*.sh, ARCHITECTURE.md (only the file map)",verify=["All build scripts work from a fresh copy of the export","Scan clean"],ok="Fresh copy builds; scan clean."),
+   touch="tests/oracle/, src/board/, tests/oracle/, tools/*.sh, ARCHITECTURE.md (only the file map)",verify=["All build scripts work from a fresh copy of the export","Scan clean"],ok="Fresh copy builds; scan clean."),
 # ---- Readable names
 _n("names1","Named game state: the actors and the maze",["oracle"],
    "Replace raw memory addresses in the native code by a struct with named fields for Pac-Man, the ghosts and the maze (positions, directions, modes). A view maps the struct to the old memory layout for the tests.",
@@ -694,14 +767,19 @@ _n("rel","Release 2.0.0 and GitHub update",["docs"],
    touch="tools/package.sh, dist/, CHANGELOG.md, README.md, docs/GITHUB_UPLOAD_GUIDE.md",verify=["FULL regression passes","Export scan clean; a fresh copy of the export builds and its ROM-free tests pass"],ok="All pass; release ready.",
    user=["Play one game with the new exe, then follow the update guide click by click to publish release v2.0.0."]),
 # build the Step objects with ids N01... (key -> id), plus the parent N00
-_NID = {k["key"]: "N%02d" % (i + 1) for i, k in enumerate(_NS)}
+_NID = {}
+_cnt = 0
+for k in _NS:   # the steps inserted later (sid="N45a" ...) keep the numbers of all other steps
+    if k["sid"]: _NID[k["key"]] = k["sid"]
+    else:
+        _cnt += 1; _NID[k["key"]] = "N%02d" % _cnt
 _NID["T02a"] = "T02a"; _NID["T02k"] = "T02k"
 def _mk(k):
     deps = [_NID.get(d, d) for d in k["deps"]]
     user = k["user"] or _NUSER
     mile = " (milestone: full regression and your play test)" if k["mile"] else ""
     return S(_NID[k["key"]], "NATIVE", k["name"] + mile, "NOT STARTED", deps, k["obj"], k["why"], _NSTART, k["read"], k["touch"], k["do"], _NDONT, k["verify"], k["ok"], user=user, evidence=k["ev"])
-N_STEPS = [S("N00","NATIVE","The game without the emulator (Track D, Option A)","NOT STARTED",["T02k"],
+N_STEPS = [S("N00","NATIVE","The game without the emulator (Track D, Option A)","VERIFIED",["T02k"],
   "Turn the program into a native PC game: no Z80 emulation, no ROM code executed. The game still reads its maze, text, graphics and sound data from the player's own pacman.zip at run time (Option A); nothing of the ROM is shipped. The result must be 1:1 with the emulated port: identical video RAM, colour RAM, sprite registers, sound registers and cycle-exact frame timing in every frame of every test situation.",
   "User request (2026-10-15): remove the emulation layer; Option A (assets from the player's ROM); 1:1 with the arcade as the port now shows it; many small steps of 10 to 20 minutes.",
   "T02a VERIFIED (the hook mechanism exists).","docs/notes/gameplay_routines.md, docs/notes/boot_flow.md, docs/notes/ram_map.md","see the sub-steps",
@@ -712,6 +790,9 @@ N_STEPS = [S("N00","NATIVE","The game without the emulator (Track D, Option A)",
   ["The ROM-instruction counter is 0 in all test situations; every replay, coverage and Purist hash identical to the original run; full regression passes."],"Native game identical to the emulated port.",
   user=["Follow the milestone steps (N27, N42, N44, N48, N49): play the test package and tell me OK."],evidence="docs/evidence/N*_*.txt")]
 N_STEPS += [_mk(k) for k in _NS]
+_NDONE = {"N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08", "N09", "N10", "N11", "N12", "N13", "N14", "N15", "N16", "N17", "N18", "N19", "N20", "N21", "N22", "N23", "N24", "N25", "N26", "N27", "N28", "N29", "N30", "N31", "N32", "N33", "N34", "N35", "N36", "N37", "N38", "N39", "N40", "N41", "N42", "N43", "N44", "N45", "N45a", "N45b", "N45c", "N45d", "N45e", "N45f", "N45g", "N45h", "N45i", "N45j", "N45k", "N46", "N47", "N47a", "N47b", "N48", "N49", "N49a", "N49b", "N49c", "N50", "N51", "N52", "N53", "N54", "N55"}   # steps finished and verified by their tests (no user action needed)
+for _x in N_STEPS:
+    if _x["id"] in _NDONE: _x["status"] = "VERIFIED"
 
 _iK=[i for i,x in enumerate(STEPS) if x["id"]=="T02k"][0]
 STEPS[_iK+1:_iK+1]=N_STEPS
@@ -720,7 +801,7 @@ OLD_MAP = [
  ("0 Folders","S01"),("1 ROM verified","S02"),("2 Toolchain proof","S03"),
  ("3 Study the machine","S05 to S13"),("4 Z80 processor","S14, S15"),("5 Video","S16 to S22"),
  ("6 Controls, playable","S23, S24"),("7 Sound","S25, S26"),("8 Accuracy proof","S27 to S30, S30A"),
- ("9 Modern features","S31 to S34, S33A, S34A to S34C, S34V"),("9b Round-two extras (offline)","X01 to X12, X22, X24 to X29, X40 to X48 (X57 cheat page removed 2026-10-14, X13 to X21, X23, X30 to X39 removed by the user)"),("10 Package","S35"),("11 Release testing","S36"),("11a Publish on GitHub","S37"),("11b Online (after release)","none: X49 to X56 all removed by the user (2026-10-15)"),("12 Optional rewrite","T01, T01a to T01f"),("13 Modding: the game runs the readable rules","T02, T02a to T02k"),("14 The game without the emulator (Option A)","N00, N01 to N55"),
+ ("9 Modern features","S31 to S34, S33A, S34A to S34E, S34V"),("9b Round-two extras (offline)","X01 to X12, X22, X24 to X29, X40 to X48 (X57 and X13 to X21, X23, X30 to X39 were removed by the user: see Scrapped steps)"),("10 Package","S35"),("11 Release testing","S36"),("11a Publish on GitHub","S37"),("11b Online (after release)","none: X49 to X56 all removed by the user (2026-10-15)"),("12 Optional rewrite","T01, T01a to T01f"),("13 Modding: the game runs the readable rules","T02, T02a to T02k"),("14 The game without the emulator (Option A)","N00, N01 to N55 (with N45a to N45k, N47a, N47b and N49a to N49c split out of the first plan)"),
 ]
 
 QUIRKS = [
@@ -742,8 +823,96 @@ QUIRKS = [
 ]
 
 SOURCES = [
- ("The Pac-Man Dossier (Jamey Pittman)", "https://pacman.holenet.info/", "Rules, ghost AI, tables. Read through a fetch tool that stops at 100,000 of 132,739 characters (S12 continues)."),
+ ("The Pac-Man Dossier (Jamey Pittman)", "https://pacman.holenet.info/", "Rules, ghost AI, tables. Every table in the ROM was compared with it in S12 (all matched); the rest of its text was used for the behaviour tests S28 to S30A."),
  ("Pac-Man Emulation Guide (Chris Lomont)", "https://www.lomont.org/software/games/pacman/PacmanEmulation.pdf", "Hardware, memory map, sound, sprites."),
  ("MAME ROM listings: pacman and puckman", "https://mdk.cab/game/pacman", "Used to verify your ROM files (S02). MAME's pacman.cpp driver is the second hardware source (S07)."),
- ("Pac-Man Memory Map (euro-arcade)", "http://www.euro-arcade.de/files/pacman_mm/pacman_mm.htm", "Lead for the RAM map (S10). Not yet examined."),
+ ("Pac-Man Memory Map (euro-arcade)", "http://www.euro-arcade.de/files/pacman_mm/pacman_mm.htm", "A second source for the names of the RAM map (S10); the project's own RAM map (docs/notes/ram_map.md) was built mostly from experiments on the player's ROM."),
+]
+
+
+# ---- N54 (2026-10-23): the plan for the finished version -----------------------------------------------------------------------------
+# What the project is (shown at the top of the plan page and in docs/PLAN.md)
+SUMMARY = [
+ "A Windows player for the 1980 arcade maze game that plays exactly like the arcade board: every ghost rule, speed, quirk and bug, frame for frame, including level 256. It needs your own copy of the arcade ROM (pacman.zip); nothing from it is in the project.",
+ "Release 1.0 (S36) was an emulator: the arcade program ran on a Z80 core. Release 1.1.0 added the readable rules and modding. Release 2.0.0 (N55) is native: the program has no Z80 inside; the game is C++ proved identical to the original, frame by frame and cycle by cycle. Your ROM is only read for data tables (maze, text, levels, graphics, sound).",
+ "Around the game there are modern extras you can turn off or reset: menus, pads, save states, rewind, records, achievements, CRT looks, stats, a Cheats page (invincibility; using it switches records and achievements off).",
+ "Honest limit: 24 of the original routines (random numbers, scoring, dots, ghost targeting, movement, timers, ghost house) are readable C++ you can edit (src/logic). Most of the rest of the game is an exact generated translation (src/game/attract_prog.h): correct and proved, but not written as readable rules.",
+]
+
+# The story, in order. (phase, dates, steps, what happened, result)
+HISTORY = [
+ ("Foundation and study", "before 2026-10-06 to 2026-10-08", "S01 to S13",
+  "ROM identified (standard Midway set), toolchain proved on your Windows 11 PC, a Python prototype of the machine locked in as the reference, hardware facts from public sources, the program disassembled and labelled, the RAM mapped, every ROM table compared with the Pac-Man Dossier (all matched). On 2026-10-06 the first big plan was re-audited and rewritten into small steps (plan v2).",
+  "Everything is known and written down (MACHINE_NOTES.md). No game code yet."),
+ ("The emulator in C++", "2026-10-08 to 2026-10-09", "S14 to S26",
+  "Z80 core, ROM loader, memory map, frame loop with interrupts, graphics decode, tile and sprite renderers, window, inputs, DIP switches, sound chip and live audio, each compared with the prototype.",
+  "First playable build on 2026-10-09 (you played it with keyboard and a PS4 pad); sound verified by listening."),
+ ("Proving it is the arcade game", "2026-10-09 to 2026-10-12", "S27 to S30A",
+  "Replay recorder (deterministic), behaviour tests for timing, speeds, fruit, ghosts, scoring and lives, the F3 debug overlay, level 256 tested as a permanent test.",
+  "Recorded games replay identically and match the prototype; the level 256 screen matches MAME pixel for pixel."),
+ ("Front end", "2026-10-12 to 2026-10-13 (reset buttons 2026-10-21)", "S31 to S34E, S34V",
+  "Display options and smooth pacing, remappable keys and pads, pause, save states, rewind, saved high score, a design review with your list of changes, the Esc menu, controls screen, pad buttons, vibration, controller pictures. Late in the project (2026-10-21) the Purist mode switch was replaced by two Reset to defaults buttons.",
+  "All verified by your play tests."),
+ ("Round-two extras", "2026-10-13 to 2026-10-15", "X01 to X57",
+  "Your list of 17 features became 56 small steps: lightbar, mouse in the menus, auto-pause, button pictures, slot picker, statistics, records, achievements, CRT looks, cabinet look, ultrawide. You then removed about half of the planned extras (see Scrapped steps).",
+  "The kept extras are verified; the rest was removed on purpose."),
+ ("Release 1.0 and GitHub", "2026-10-15", "S35 to S37",
+  "Windows package with a first-run ROM picker, release testing on your PC, a clean GitHub copy that is checked for ROM bytes.",
+  "Version 1.0.1 published; GitHub page checked by you."),
+ ("Readable rules and modding (release 1.1.0)", "2026-10-15 to 2026-10-16", "T01 to T02k",
+  "The main rules (random numbers, scoring, dots, ghost targeting, movement, timers, ghost house) rewritten as readable C++ and proved identical to the ROM routines; the game can run them (RULES READABLE), a rules.cfg file changes the numbers, MODDING.md explains it.",
+  "24 ROM routines replaced; frame hashes identical over millions of frames."),
+ ("The game without the emulator (release 2.0.0)", "2026-10-15 to 2026-10-23", "N00 to N55",
+  "Track D, Option A: native C++ replaced the original program routine by routine, each step proved against the Z80 (memory, I/O writes, registers and the exact cycle count of every frame). Tools and test players first (N01 to N11), then helpers, drawing, the interrupt handler, game flow, intermissions, sound, scheduler and boot (N12 to N47b), proof that no ROM instruction runs (N48, 3.1 million frames), removal of the Z80 from the program (N49 to N49c), the emulator turned into a test tool (N50), names for the game state and output (N51 to N53), documentation (N54). A crash with the invincibility cheat found in your N49b test was fixed in N49c.",
+  "The program you play contains no Z80. Release 2.0.0 (N55) was built, scanned and tested on 2026-10-23; what remains is your one-game play test and publishing it on GitHub."),
+]
+
+# Steps that were planned and then removed by the user (or replaced). (ids, name, kind, when, why / what became of it)
+SCRAPPED = [
+ ("X13", "Save slots: thumbnails", "removed", "2026-10-14", "Removed with the other extras you did not want. Save slots (S33, X12) stay without thumbnails."),
+ ("X14", "Resume where you left off", "removed", "2026-10-14", "Removed at your request."),
+ ("X15", "Start at any level: how the ROM does it (research)", "removed", "2026-10-14", "Removed at your request."),
+ ("X16", "Start at any level (practice)", "removed", "2026-10-14", "Removed at your request."),
+ ("X17", "Slow motion", "removed", "2026-10-14", "Removed at your request."),
+ ("X18", "Frame advance", "removed", "2026-10-14", "Removed at your request."),
+ ("X19", "Trainers: how to set up a ghost chain and fruit (research)", "removed", "2026-10-14", "Removed at your request."),
+ ("X20", "Ghost-chain trainer", "removed", "2026-10-14", "Removed at your request."),
+ ("X21", "Fruit trainer", "removed", "2026-10-14", "Removed at your request."),
+ ("X23", "Statistics history and totals screen", "removed", "2026-10-14", "Removed at your request. Per-game statistics (X22) and personal bests (X24) stay."),
+ ("X30", "Replays: record every game", "removed", "2026-10-14", "Removed at your request. The replay recorder of S27 stays as a test tool (--replay), but players get no replay feature."),
+ ("X31", "Replays: list and play back in the window", "removed", "2026-10-14", "Removed at your request."),
+ ("X32", "Replays: share (export, import, drag and drop)", "removed", "2026-10-14", "Removed at your request."),
+ ("X33", "Replays: verifier command", "removed", "2026-10-14", "Removed at your request."),
+ ("X34", "Ghost race: a second machine runs your best game", "removed", "2026-10-14", "Removed at your request."),
+ ("X35", "Ghost race: draw the ghost Pac-Man and the score gap", "removed", "2026-10-14", "Removed at your request."),
+ ("X36", "Daily challenge: what can vary (research)", "removed", "2026-10-14", "Removed at your request."),
+ ("X37", "Daily challenge: pick by date", "removed", "2026-10-14", "Removed at your request."),
+ ("X38", "Daily challenge: play and complete", "removed", "2026-10-14", "Removed at your request."),
+ ("X39", "Daily challenge: history and streak", "removed", "2026-10-14", "Removed at your request."),
+ ("X50", "Leaderboards: score file and local test server", "removed", "2026-10-14", "Removed at your request (online features)."),
+ ("X51", "Leaderboards: send my score and see the board", "removed", "2026-10-14", "Removed at your request (online features)."),
+ ("X52", "Leaderboards: daily challenge board", "removed", "2026-10-14", "Removed at your request (online features)."),
+ ("X55", "Online: watch a friend play", "removed", "2026-10-14", "Removed at your request (online features)."),
+ ("X56", "Online: live race", "removed", "2026-10-14", "Removed at your request (online features)."),
+ ("X49", "Online: design and decisions", "removed", "2026-10-15", "Removed at your request. With X53 and X54 this ended the whole online lane: the game has no online features."),
+ ("X53", "Two players online: connection", "removed", "2026-10-15", "Removed at your request (online features)."),
+ ("X54", "Two players online: turn-based game", "removed", "2026-10-15", "Removed at your request (online features)."),
+ ("X57", "Cheat page: ghosts stay blue", "removed", "2026-10-14", "Built and verified, then removed at your request (\"You can remove the cheats\"). A different cheat, INVINCIBLE, was added back on 2026-10-21 outside the plan, and on 2026-10-23 given its own CHEATS page (not in Game Options); it switches records and achievements off. The ghosts-stay-blue cheat did not come back."),
+ ("S34 (Purist item)", "PURIST MODE switch in the menu", "replaced", "2026-10-21", "Replaced by S34D and S34E: no Purist item anywhere; DISPLAY and GAME OPTIONS each have a RESET TO DEFAULTS button. The tests that prove the plain-machine behaviour (test_purist.sh) stay."),
+ ("X47 (HDR)", "HDR output", "researched, not built", "2026-10-14", "The research step is verified: HDR is not possible with SDL2 (docs/notes/hdr.md). A later move to SDL3 would be a separate large step. Nothing was built."),
+]
+
+# Other changes of plan that did NOT remove anything (steps added, split or reordered)
+PLAN_CHANGES = [
+ ("2026-10-06", "Plan v2: the first plan (13 phases) was replaced by small steps S01 to S37, each with one objective, one test and one checkpoint."),
+ ("2026-10-11", "S30A added (level 256 and high-level tests)."),
+ ("2026-10-12", "S33A added (design review: your list of changes before the menus) and S34A to S34C, S34V added after S34 for the controls screen, pad buttons, controller pictures and vibration."),
+ ("2026-10-13", "Your 17 requested features became the 56 small steps X01 to X56; X57 was added the next day."),
+ ("2026-10-14", "About half of the X steps were removed (see above); ids of the kept steps stayed fixed, so the X numbers have gaps on purpose."),
+ ("2026-10-15", "Track B (T01a to T01f) and then Track C (T02, T02a to T02k, modding, release 1.1.0) were added after the GitHub release; Track D (N00 to N55) was added the same day (Option A: the game without the emulator)."),
+ ("2026-10-19", "N45a to N45k inserted before N46: the measurement in N45 showed 11 groups of ROM routines that no step covered (per-frame update, ghost movers, Pac-Man mover, targeting, text printer and so on)."),
+ ("2026-10-21", "S34D and S34E added (Purist switch replaced by two Reset buttons)."),
+ ("2026-10-19", "N47 (boot) was split into N47a (power-on self test) and N47b (service-switch test screen) because it was more than 20 minutes."),
+ ("2026-10-22", "The removal of the Z80 (N49) was split into N49, N49a, N49b and N49c because it was far more than 20 minutes."),
+ ("2026-10-23", "N51 named the actors and N52 the rest of the work RAM (including the dot arrays); N53 named the screen, sprites, sound registers and latches. The maze picture is part of the named screen (N53). The INVINCIBLE cheat moved to its own CHEATS page (user request, outside the numbered plan)."),
 ]

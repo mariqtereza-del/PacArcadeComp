@@ -1,0 +1,52 @@
+N17 evidence: native routines that the interrupt can cut in the middle (src/game/sliced.h; adapters src/rules/rules.h: namespace clear and the fill 0008; hooks in rules::table()): the screen clears 23F3 / 2400 / 240D, their pass loops 23FB / 2408 / 2414 and the block fill 0008
+Date: 2026-10-16
+Command: sh tests/test_native_sliced.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated cases per routine, 75,000 cut cases per routine)
+How the mechanism works: the native routine runs only whole loop rounds that end before the 50,688-cycle limit, leaves the machine exactly where the ROM would be (pc at the loop head 0008, registers, the RST's return address on the stack, flags, R, WZ) and the ROM runs the last instructions up to the limit itself, so the interrupt arrives at the same instruction as in the original; after the interrupt the hook at the loop head takes the routine over again.
+Part 3b is the cut test: the routine is started so that the frame ends at a random place inside it (real entry states in part 2, random states in part 3b), the original and the native machine run 3 frames with the interrupt and are compared after each frame. 'cases ... (a cut)' shows how many of them were really cut natively.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 23F3 0, 23FB 0, 2400 0, 2408 0, 240D 0, 2414 0, 0008 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 23F3 240214 of 300000, 23FB 240387 of 300000, 2400 240019 of 300000, 2408 240437 of 300000, 240D 240497 of 300000, 2414 240411 of 300000, 0008 246321 of 300000
+part 3b: cut test from random states, 75000 cases of each routine, the frame ends at a random place inside it, 3 frames compared (memory, I/O writes, registers, cycles): differences 23F3 0, 23FB 0, 2400 0, 2408 0, 240D 0, 2414 0, 0008 0
+  cases in which the native routine really ran up to the end of the frame and left the rest to the ROM (a cut): 293085 of 525000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  23F3: 12 / 12 / 0
+  23FB: 48 / 48 / 0
+  2400: 176 / 176 / 0
+  2408: 704 / 704 / 0
+  240D: 60 / 60 / 0
+  2414: 240 / 240 / 0
+  0008: 738743 / 18469 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3134
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 4 variant(s)
+VARIANT A: native clears and the cut fill only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native clears and the cut fill only (calls counted): routines replaced 4 of 282 in the map (instructions 24 of 5439 = 0.44 percent); entered in this run 4; calls 2306077
+VARIANT B: all readable rules + N12 to N17 helpers: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N17 helpers: routines replaced 59 of 282 in the map (instructions 1420 of 5439 = 26.11 percent); entered in this run 59; calls 62913350
+VARIANT C: only the pass loops 23FB, 2408, 2414 (the starts run in the ROM), calls counted: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS C: only the pass loops 23FB, 2408, 2414 (the starts run in the ROM), calls counted: routines replaced 3 of 282 in the map (instructions 0 of 5439 = 0.00 percent); entered in this run 3; calls 4320
+VARIANT D: only the fill 0008 (cut in the middle), calls counted: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS D: only the fill 0008 (cut in the middle), calls counted: routines replaced 1 of 282 in the map (instructions 3 of 5439 = 0.06 percent); entered in this run 1; calls 2304997
+REFERENCE distinct ROM instruction addresses run: 5643
+  23F3: original machine entered it 14 times; native version (A, C or D) ran 14 times  (equal)
+  23FB: original machine entered it 56 times; native version (A, C or D) ran 14 times  (not compared: see above)
+  2400: original machine entered it 1004 times; native version (A, C or D) ran 1004 times  (equal)
+  2408: original machine entered it 4016 times; native version (A, C or D) ran 1004 times  (not compared: see above)
+  240D: original machine entered it 62 times; native version (A, C or D) ran 62 times  (equal)
+  2414: original machine entered it 248 times; native version (A, C or D) ran 117 times  (not compared: see above)
+  0008: original machine entered it 2304997 times; native version (A, C or D) ran 15079 times  (not compared: see above)
+  screen clears and the cut fill in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "23F3 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "23FB B one too high after a cut": caught (2335 of 3000 isolated cases differ)
+part 4: wrong version "2400 the RST's return address wrong": caught (2990 of 3000 isolated cases differ)
+part 4: wrong version "2408 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "240D one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2414 HL one too far after a cut": caught (1029 of 3000 isolated cases differ)
+part 4: wrong version "0008 one cycle too slow after a cut": caught (328 of 3000 isolated cases differ)
+part 4: lockstep with the fill (one cycle too slow after a cut): caught at frame 292
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed): original ROM 5638; readable rules + N12 to N16 (before N17) 4461; with the N17 sliced routines 4447
+PASS test_native_sliced

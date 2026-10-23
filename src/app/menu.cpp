@@ -1,5 +1,6 @@
 // menu.cpp: drawing and handling of the pause menu declared in menu.h (compiled as part of the program in main.cpp). It only returns commands.
 #include "menu.h"
+#include <filesystem>
 #include "crt.h" // X43: the CRT look presets
 #include <algorithm>
 #include <cstdio>
@@ -19,11 +20,13 @@ struct Item {
 };
 static const Item kMain[] = {{"RESUME", Cmd::Resume, -1},        {"SAVE STATE F2", Cmd::SaveState, 4}, {"LOAD STATE F4", Cmd::LoadState, 5},
                              {"GAME OPTIONS", Cmd::None, 1},     {"CONTROLS", Cmd::None, 2},           {"DISPLAY", Cmd::None, 3},
-                             {"RECORDS", Cmd::None, 6},          {"ACHIEVEMENTS", Cmd::None, 7},       {"PURIST MODE", Cmd::Purist, -1},
+                             {"RECORDS", Cmd::None, 6},          {"ACHIEVEMENTS", Cmd::None, 7},
+                             {"CHEATS", Cmd::None, 8},
                              {"RESTART GAME", Cmd::Restart, -1}, {"QUIT GAME", Cmd::Quit, -1}};
 static const Item kGame[] = {{"LIVES", Cmd::Lives, -1},       {"BONUS LIFE", Cmd::Bonus, -1},        {"DIFFICULTY", Cmd::Difficulty, -1},
                              {"GHOST NAMES", Cmd::Names, -1}, {"APPLY - RESTART", Cmd::Restart, -1}, {"RULES", Cmd::Rules, -1},
-                             {"WRITE RULES FILE", Cmd::WriteRules, -1}, {"BACK", Cmd::None, -1}};
+                             {"WRITE RULES FILE", Cmd::WriteRules, -1}, {"RESET TO DEFAULTS", Cmd::ResetGame, -1}, {"BACK", Cmd::None, -1}};
+static const Item kCheats[] = {{"INVINCIBLE", Cmd::CheatInvincible, -1}, {"BACK", Cmd::None, -1}};   // page 8: cheats (not part of the game options; session only)
 static const Item kControls[] = {{"BINDINGS", Cmd::Bindings, -1},
                                  {"CHANGE KEYS F9", Cmd::Keys, -1},
                                  {"CHANGE PAD F10", Cmd::Pad, -1},
@@ -48,6 +51,7 @@ static const Item kDisplay[] = {{"OVERLAY F3", Cmd::Overlay, -1},
                                 {"GLOW", Cmd::Glow, -1},
                                 {"CURVE", Cmd::Curve, -1},
                                 {"SURROUND", Cmd::Surround, -1},
+                                {"RESET TO DEFAULTS", Cmd::ResetDisplay, -1},
                                 {"BACK", Cmd::None, -1}};
 static const Item kSaveSlots[] = {{"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -1},
                                   {"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -1}, {"BACK", Cmd::None, -1}};
@@ -69,6 +73,7 @@ static const Item *items_of(int page, int *n) {
     switch (page) {
     case 6: *n = 1; return kRecords;
     case 7: return ach_items(n);
+    case 8: *n = (int)(sizeof kCheats / sizeof *kCheats); return kCheats;
     case 4: *n = (int)(sizeof kSaveSlots / sizeof *kSaveSlots); return kSaveSlots;
     case 5: *n = (int)(sizeof kLoadSlots / sizeof *kLoadSlots); return kLoadSlots;
     case 1: *n = (int)(sizeof kGame / sizeof *kGame); return kGame;
@@ -77,16 +82,16 @@ static const Item *items_of(int page, int *n) {
     default: *n = (int)(sizeof kMain / sizeof *kMain); return kMain;
     }
 }
-static const char *kPageTitle[] = {"PAUSED", "GAME OPTIONS", "CONTROLS", "DISPLAY", "SAVE STATE", "LOAD STATE", "RECORDS", "ACHIEVEMENTS"};
+static const char *kPageTitle[] = {"PAUSED", "GAME OPTIONS", "CONTROLS", "DISPLAY", "SAVE STATE", "LOAD STATE", "RECORDS", "ACHIEVEMENTS", "CHEATS"};
 
 bool locked(Cmd c, const Model &m) {
     if (!m.purist) return false;
     return c == Cmd::SaveState || c == Cmd::LoadState || c == Cmd::SaveSlot || c == Cmd::LoadSlot || c == Cmd::OneButton || c == Cmd::Vibration || c == Cmd::FocusPause ||
            c == Cmd::Hints || c == Cmd::Lightbar || c == Cmd::RunSummary || c == Cmd::CrtMask || c == Cmd::Glow || c == Cmd::Curve || c == Cmd::CrtLook ||
-           c == Cmd::Surround || c == Cmd::Overlay || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Scaling || c == Cmd::Rules;
+           c == Cmd::Surround || c == Cmd::Overlay || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Scaling || c == Cmd::Rules || c == Cmd::CheatInvincible;
 }
 std::string label_of(Cmd c) {
-    for (int p = 0; p < 8; ++p) {
+    for (int p = 0; p < 9; ++p) {
         int n;
         const Item *it = items_of(p, &n);
         for (int i = 0; i < n; ++i)
@@ -102,6 +107,7 @@ std::string value_text(Cmd c, const Model &m) {
     case Cmd::Bonus: return bonus[m.bonus & 3];
     case Cmd::Difficulty: return m.diff_normal ? "NORMAL" : "HARD";
     case Cmd::Names: return m.names_normal ? "NORMAL" : "ALTERNATE";
+    case Cmd::CheatInvincible: return onoff(m.cheat_invincible && !m.purist);
     case Cmd::Rules: return m.purist ? "ORIGINAL" : m.rules_file ? "FILE" : m.rules_readable ? "READABLE" : "ORIGINAL";
     case Cmd::OneButton: return onoff(m.one_button && !m.purist);
     case Cmd::PadSymbols: return m.pad_symbols == 1 ? "XBOX" : m.pad_symbols == 2 ? "PS4" : m.pad_symbols == 3 ? "PS5" : "AUTO";
@@ -122,7 +128,6 @@ std::string value_text(Cmd c, const Model &m) {
     case Cmd::Scaling: return (m.fill && !m.purist) ? "FILL" : "WHOLE";
     case Cmd::FullScreen: return onoff(m.fullscreen);
     case Cmd::HelpPin: return onoff(m.help_pin);
-    case Cmd::Purist: return onoff(m.purist);
     case Cmd::Resume: return m.pad_name[0];
     case Cmd::SaveState: return m.pad_name[2];
     case Cmd::LoadState: return m.pad_name[3];
@@ -134,9 +139,10 @@ static bool is_choice(Cmd c) {
     return c == Cmd::Lives || c == Cmd::Bonus || c == Cmd::Difficulty || c == Cmd::Names || c == Cmd::OneButton || c == Cmd::Vibration || c == Cmd::PadSymbols ||
            c == Cmd::FocusPause || c == Cmd::Hints || c == Cmd::Lightbar || c == Cmd::RunSummary || c == Cmd::CrtMask || c == Cmd::Glow || c == Cmd::Curve ||
            c == Cmd::CrtLook || c == Cmd::Surround || c == Cmd::Overlay || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Frame || c == Cmd::Scaling ||
-           c == Cmd::FullScreen || c == Cmd::HelpPin || c == Cmd::Purist || c == Cmd::Rules;
+           c == Cmd::FullScreen || c == Cmd::HelpPin || c == Cmd::Rules || c == Cmd::CheatInvincible;
 }
 // The menu box as Menu::draw() puts it (keep these numbers in step with draw()).
+static int row_h(int n) { return n > 14 ? 13 : 14; }   // S34E: the DISPLAY page has 15 rows; they get one pixel less so that the box fits the 288-line picture
 static const int kRowH = 14, kBoxW = 208, kBoxX = 8, kBoxY = 20, kRow0 = 28;
 
 int Menu::item_at(int px, int py, bool *right_half) const {
@@ -145,9 +151,10 @@ int Menu::item_at(int px, int py, bool *right_half) const {
     items_of(page_, &n);
     if (px < kBoxX + 4 || px >= kBoxX + kBoxW - 4) return -1;
     int rel = py - (kBoxY + kRow0 - 2); // the highlight bar of row i starts 2 pixels above its text
-    if (rel < 0 || rel >= n * kRowH) return -1;
+    const int rh = row_h(n);
+    if (rel < 0 || rel >= n * rh) return -1;
     if (right_half) *right_half = px >= kBoxX + kBoxW / 2;
-    return rel / kRowH;
+    return rel / rh;
 }
 bool Menu::hover(int px, int py) {
     int i = item_at(px, py);
@@ -334,12 +341,12 @@ void Menu::draw(const Gfx &g, uint32_t *out, const Model &m) const {
     }
     int n;
     const Item *it = items_of(page_, &n);
-    const int rowh = kRowH, boxw = kBoxW, boxh = 40 + n * rowh + 26, bx = kBoxX, by = kBoxY;
+    const int rowh = row_h(n), boxw = kBoxW, boxh = 40 + n * rowh + 26, bx = kBoxX, by = kBoxY;
     rect(out, bx, by, boxw, boxh, 0x000028);
     frame_box(out, bx, by, boxw, boxh, 0xFFFF00);
     text(g, out, bx + 8, by + 8, kPageTitle[page_], 0xFFFFFF);
     if (m.pad_type != PadType::None) draw_pad_icon(out, bx + boxw - 8 - 16, by + 7, m.pad_type); // S34C: the controller in use
-    if (m.purist) text(g, out, bx + boxw - 8 - 16 - 4 - 8 * 6, by + 8, "PURIST", 0x00FF00);
+    if (m.purist) text(g, out, bx + boxw - 8 - 16 - 4 - 8 * 6, by + 8, "TEST", 0x00FF00);
     std::vector<std::string> lines = visible_lines(m);
     for (int i = 0; i < n; ++i) {
         int y = by + kRow0 + i * rowh;
@@ -350,8 +357,9 @@ void Menu::draw(const Gfx &g, uint32_t *out, const Model &m) const {
     }
     int fy = by + boxh - 24;
     if (!note.empty()) text(g, out, bx + 8, fy, note.c_str(), 0x00FFFF);
-    else if (page_ == 1 && m.pending) text(g, out, bx + 8, fy, "RESTART NEEDED", 0xFF8040);
+    else if (page_ == 1 && m.pending) text(g, out, bx + 8, fy, "APPLIES NEXT GAME", 0xFF8040);
     else if (!m.assist.empty()) text(g, out, bx + 8, fy, ("ASSISTED " + m.assist).substr(0, 24).c_str(), 0xFF8040); // X03
+    else if (m.ach_blocked) text(g, out, bx + 8, fy, "NO ACHIEVEMENTS: OPTIONS", 0xFF8040); // S34E
     else text(g, out, bx + 8, fy, page_ == 0 ? "ESC RESUMES" : "ESC GOES BACK", 0x909090);
     if (hints_are_pad(m)) { // X08: the hints follow the hand: pad pictures ...
         int hx = bx + 8;
@@ -534,7 +542,7 @@ void draw_help(const Gfx &g, uint32_t *out, const Model &m) {
     }
     y += 6;
     if (m.purist) {
-        text(g, out, x, y, "PURIST ON", 0x00FF00);
+        text(g, out, x, y, "TEST MODE", 0x00FF00);
         y += 11;
         text(g, out, x, y, "GREY KEYS", 0x808080);
         y += 11;
@@ -792,7 +800,7 @@ bool load_settings(const std::string &path, Settings &s, std::string *problems) 
         std::istringstream ss(line);
         std::string k, v;
         ss >> k >> v;
-        if (k == "purist") s.purist = b(v);
+        if (k == "purist") { if (problems) *problems += "  ignored: " + line + "   (there is no Purist setting any more: use RESET TO DEFAULTS on the DISPLAY or GAME OPTIONS page)\n"; }
         else if (k == "overlay") s.overlay = b(v);
         else if (k == "scanlines") s.scanlines = b(v);
         else if (k == "fill") s.fill = b(v);
@@ -830,16 +838,20 @@ bool save_settings(const std::string &path, const Settings &s, std::string *erro
     static const int lv[] = {1, 2, 3, 5};
     static const char *bn[] = {"10000", "15000", "20000", "none"};
     std::string tmp = path + ".tmp";
+    {   // N49: the settings folder (settings-readable next to the program) may not exist yet when the first setting is saved: create it
+        std::error_code ec;
+        std::filesystem::create_directories(std::filesystem::path(path).parent_path(), ec);
+    }
     FILE *f = std::fopen(tmp.c_str(), "wb");
     if (!f) {
         if (error) *error = "cannot write " + tmp;
         return false;
     }
     std::fprintf(f,
-                 "# Pac-Man port settings (the menu writes this file; you may also edit it with Notepad)\npurist %s\noverlay %s\nscanlines %s\nfill %s\nsmooth "
+                 "# Pac-Man port settings (the menu writes this file; you may also edit it with Notepad)\noverlay %s\nscanlines %s\nfill %s\nsmooth "
                  "%s\nwindow_frame %s\nhelp_panel %s\n"
                  "lives %d\nbonus %s\ndifficulty %s\nghost_names %s\nvibration %s\npad_symbols %s\npause_on_focus_loss %s\nhints %s\nlightbar %s\nrun_summary %s\n",
-                 s.purist ? "on" : "off", s.overlay ? "on" : "off", s.scanlines ? "on" : "off", s.fill ? "on" : "off", s.smooth ? "on" : "off", s.frame ? "on" : "off",
+                 s.overlay ? "on" : "off", s.scanlines ? "on" : "off", s.fill ? "on" : "off", s.smooth ? "on" : "off", s.frame ? "on" : "off",
                  s.help_pin ? "on" : "off", lv[s.lives & 3], bn[s.bonus & 3], s.diff_normal ? "normal" : "hard", s.names_normal ? "normal" : "alternate",
                  s.vibration == 0   ? "off"
                  : s.vibration == 1 ? "light"

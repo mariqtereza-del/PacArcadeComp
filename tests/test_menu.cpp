@@ -57,6 +57,21 @@ int main(int argc, char **argv) {
     expect(mn.key(Key::Enter, m).cmd == Cmd::Restart, "fifth item restarts the game");
     expect(mn.key(Key::Back, m).cmd == Cmd::None && mn.page() == 0, "Back returns to the main page");
     expect(mn.key(Key::Back, m).cmd == Cmd::Resume, "Back on the main page resumes");
+    {   // the cheats have their own page (main page item CHEATS), and are not in GAME OPTIONS any more
+        Menu c; c.open();
+        int at = -1; for (int i = 0; i < 11; ++i) { if (c.visible_lines(m)[c.cursor()] == "CHEATS") { at = i; break; } c.key(Key::Down, m); }
+        expect(at >= 0, "the main page has a CHEATS item");
+        expect(c.key(Key::Enter, m).cmd == Cmd::None && c.page() == 8, "Enter on CHEATS opens page 8");
+        expect(c.visible_lines(m)[0] == "INVINCIBLE        OFF" || c.visible_lines(m)[0].rfind("INVINCIBLE", 0) == 0, "the CHEATS page starts with INVINCIBLE");
+        expect(c.key(Key::Enter, m).cmd == Cmd::CheatInvincible, "Enter on INVINCIBLE gives the cheat command");
+        c.key(Key::Down, m);
+        expect(c.key(Key::Enter, m).cmd == Cmd::None && c.page() == 0, "BACK on the CHEATS page returns to the main page");
+        Menu g2; g2.open(); for (int i = 0; i < 3; ++i) g2.key(Key::Down, m); g2.key(Key::Enter, m);
+        bool inv = false; for (const std::string &l : g2.visible_lines(m)) if (l.rfind("INVINCIBLE", 0) == 0) inv = true;
+        expect(!inv, "GAME OPTIONS has no INVINCIBLE item");
+        Model pm = m; pm.purist = true; Menu p2; p2.open(); for (int i = 0; i < at; ++i) p2.key(Key::Down, pm); p2.key(Key::Enter, pm);
+        expect(p2.key(Key::Enter, pm).cmd == Cmd::Locked, "INVINCIBLE is locked in Purist mode");
+    }
     // every function key has a menu item whose label names it
     struct FK {
         Cmd c;
@@ -73,11 +88,29 @@ int main(int argc, char **argv) {
                value_text(Cmd::Names, m) == "ALTERNATE",
            "DIP values are shown in words");
     m = Model();
+    {   // S34E: no Purist item anywhere; the two RESET TO DEFAULTS items sit on their own pages
+        bool any = false;
+        for (int c = 0; c <= (int)Cmd::Locked; ++c) if (label_of((Cmd)c).find("PURIST") != std::string::npos) any = true;
+        expect(!any, "S34E: no menu item is called PURIST");
+        expect(label_of(Cmd::ResetDisplay) == "RESET TO DEFAULTS" && label_of(Cmd::ResetGame) == "RESET TO DEFAULTS", "S34E: both reset items are labelled RESET TO DEFAULTS");
+        Menu a; a.open(); m.purist = false;
+        while (a.page() != 3) { a.key(Key::Down, m); if (a.cursor() == 5 && a.page() == 0) { a.key(Key::Enter, m); } if (a.page() == 0 && a.cursor() > 9) break; }
+        expect(a.page() == 3, "S34E: the DISPLAY page opens");
+        bool found = false;
+        for (int i = 0; i < 20 && !found; ++i) { if (a.visible_lines(m)[a.cursor()] == "RESET TO DEFAULTS") found = true; else a.key(Key::Down, m); }
+        expect(found && a.key(Key::Enter, m).cmd == Cmd::ResetDisplay, "S34E: DISPLAY has RESET TO DEFAULTS and Enter on it gives the display reset");
+        Menu g; g.open();
+        for (int i = 0; i < 3; ++i) g.key(Key::Down, m);
+        g.key(Key::Enter, m);
+        bool fg = false;
+        for (int i = 0; i < 20 && !fg; ++i) { if (g.visible_lines(m)[g.cursor()] == "RESET TO DEFAULTS") fg = true; else g.key(Key::Down, m); }
+        expect(g.page() == 1 && fg && g.key(Key::Enter, m).cmd == Cmd::ResetGame, "S34E: GAME OPTIONS has RESET TO DEFAULTS and Enter on it gives the game reset");
+    }
     // Purist: the additions are locked, the arcade's own options and the pause are not
     m.purist = true;
     Cmd locks[] = {Cmd::SaveState, Cmd::LoadState, Cmd::OneButton, Cmd::Vibration, Cmd::Overlay, Cmd::Scanlines, Cmd::Pacing, Cmd::Scaling};
     for (Cmd c : locks) expect(locked(c, m), "locked in Purist: " + label_of(c));
-    Cmd frees[] = {Cmd::Resume, Cmd::Lives, Cmd::Bonus, Cmd::Difficulty, Cmd::Names, Cmd::Restart, Cmd::Keys, Cmd::Frame, Cmd::FullScreen, Cmd::Purist, Cmd::Quit};
+    Cmd frees[] = {Cmd::Resume, Cmd::Lives, Cmd::Bonus, Cmd::Difficulty, Cmd::Names, Cmd::Restart, Cmd::Keys, Cmd::Frame, Cmd::FullScreen, Cmd::ResetDisplay, Cmd::ResetGame, Cmd::Quit};
     for (Cmd c : frees) expect(!locked(c, m), "still free in Purist: " + label_of(c));
     m.overlay = true;
     m.scanlines = true;
@@ -223,6 +256,11 @@ int main(int argc, char **argv) {
         cs.crt_mask = 2;
         std::string cp = "build/s34/crt_settings_test.cfg", ce;
         expect(save_settings(cp, cs, &ce), "X40: settings saved");
+        {   // N49: the settings folder does not exist yet (the first run of a new test folder): it is created
+            std::string np = "build/s34/new_folder_n49/inner/settings.cfg", ne;
+            std::remove(np.c_str());
+            expect(save_settings(np, cs, &ne), "N49: settings saved into a folder that did not exist yet");
+        }
         Settings ct;
         load_settings(cp, ct, nullptr);
         expect(ct.crt_mask == 2, "X40: crt_mask round trip (strong)");
@@ -348,9 +386,26 @@ int main(int argc, char **argv) {
     Settings t;
     std::string pr;
     expect(load_settings(path, t, &pr) && pr.empty(), "settings loaded without problems");
-    expect(t.purist && t.overlay && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal && t.help_pin && !t.frame && t.fill && t.smooth && t.scanlines &&
+    expect(!t.purist && t.overlay && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal && t.help_pin && !t.frame && t.fill && t.smooth && t.scanlines &&
                t.vibration == 1 && t.pad_symbols == 1,
            "settings round trip");
+    {   // S34D: Purist is not a saved setting any more: a line "purist on" from an old file is reported and ignored, and nothing is written for it
+        FILE *f = std::fopen(path.c_str(), "ab");
+        std::fputs("purist on\n", f);
+        std::fclose(f);
+        Settings o;
+        std::string pr2;
+        expect(load_settings(path, o, &pr2) && !o.purist && pr2.find("purist on") != std::string::npos && pr2.find("Reset to defaults") == std::string::npos && pr2.find("RESET TO DEFAULTS") != std::string::npos, "S34D: an old 'purist on' line is reported and ignored");
+        std::string e2;
+        expect(save_settings(path, o, &e2), "S34D: saved again");
+        FILE *g2 = std::fopen(path.c_str(), "rb");
+        std::string all;
+        char buf[256];
+        size_t n2;
+        while ((n2 = std::fread(buf, 1, sizeof buf, g2)) > 0) all.append(buf, n2);
+        std::fclose(g2);
+        expect(all.find("purist") == std::string::npos, "S34D: the settings file has no purist line any more");
+    }
     Settings d;
     expect(!load_settings("build/s34/does_not_exist.cfg", d, nullptr), "missing file reported as missing");
     {

@@ -1,0 +1,94 @@
+N45j evidence: the task-table entries, native: ROM 23ED (the task dispatch), 2415 (the end of the colour clear), 2419-2447 (draw the maze tiles) and 2448-2486 (place the dots), 7 entry addresses.
+Scope notes (honest): (1) Names come from reading the code, not from the project's label list. (2) Only the readable-rules mode uses the native code; original-rules and Purist modes still run the ROM. (3) 253D lies inside the N45g range and was done there; the boot code 230B-23A7 is left for N47. (4) New in this step: the instruction runner can now stop exactly where the frame ends inside a loop (the ROM is cut by the interrupt there), including the case that the frame ends right after a DD/FD prefix byte, where the core does not deliver the interrupt; the older maze and dot loops hand their last instructions over to it instead of the ROM. New cut test (part 1b). (5) Small fix in the shared push routine: the high byte is written first, as the Z80 does (visible only when the stack lies in the I/O area). (6) Progress meter (20,000 frames, true figures): 578 -> 526 unhooked ROM addresses.
+Date: 2026-10-20
+Command: sh tests/test_native_f45j.sh 1000000 20000 100000
+Fast regression (this step): 48 PASS, no FAIL:
+PASS tests/test_native_attract.sh 30000 10000 2000
+PASS tests/test_native_demo.sh 30000 10000 2000
+PASS tests/test_native_game.sh 30000 10000 2000
+PASS tests/test_native_level.sh 30000 10000 2000
+PASS tests/test_native_frame.sh 30000 10000 2000
+PASS tests/test_native_meet.sh 30000 10000 2000
+PASS tests/test_native_eaten.sh 30000 10000 2000
+PASS tests/test_native_death.sh 30000 10000 2000
+PASS tests/test_native_clear.sh 30000 10000 2000
+PASS tests/test_native_fruit.sh 30000 10000 2000
+PASS tests/test_native_over.sh 30000 10000 2000
+PASS tests/test_native_inter1.sh 30000 10000 2000
+PASS tests/test_native_inter2.sh 30000 10000 2000
+PASS tests/test_native_inter3.sh 30000 10000 2000
+PASS tests/test_native_snd.sh 30000 10000 2000
+PASS tests/test_native_tune.sh 30000 10000 2000
+PASS tests/test_native_sched.sh 30000 10000 2000
+PASS tests/test_native_f45a.sh 30000 10000 2000
+PASS tests/test_native_f45b.sh 30000 10000 2000
+PASS tests/test_native_f45c.sh 30000 10000 2000
+PASS tests/test_native_f45d.sh 30000 10000 2000
+PASS tests/test_native_f45e.sh 30000 10000 2000
+PASS tests/test_native_f45f.sh 30000 10000 2000
+PASS tests/test_native_f45g.sh 30000 10000 2000
+PASS tests/test_native_f45h.sh 30000 10000 2000
+PASS tests/test_native_f45i.sh 30000 10000 2000
+PASS tests/test_native_f45j.sh 30000 10000 2000
+PASS tests/test_native_players.sh 30000 10000
+PASS tests/test_native_helpers.sh 30000 10000 20000
+PASS tests/test_native_screen.sh 30000 10000 20000
+PASS tests/test_native_numbers.sh 30000 10000 20000
+PASS tests/test_native_text.sh 30000 10000 20000
+PASS tests/test_native_status.sh 30000 10000 20000
+PASS tests/test_native_sliced.sh 30000 10000 20000
+PASS tests/test_native_maze.sh 30000 10000 20000
+PASS tests/test_native_scan.sh 30000 10000 20000
+PASS tests/test_native_sprites.sh 30000 10000 20000
+PASS tests/test_native_pics.sh 30000 10000 20000
+PASS tests/test_native_clocks.sh 30000 10000 20000
+PASS tests/test_native_mode.sh 20000 5000 10000
+PASS tests/test_native_events.sh 20000 5000 10000
+PASS tests/test_native_handler.sh 20000 5000 10000
+PASS tests/test_native_labels.sh 20000 5000 10000
+PASS tests/test_native_coins.sh 20000 5000 10000
+PASS tests/test_rules_all.sh 100000
+PASS tests/test_rules_file.sh 20000
+PASS tests/test_purist.sh
+PASS tests/test_replay.sh
+
+Test report:
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 245C 0, 2448 0, 242C 0, 241F 0, 2419 0, 2415 0, 23ED 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 245C 100000 of 100000, 2448 100000 of 100000, 242C 100000 of 100000, 241F 100000 of 100000, 2419 100000 of 100000, 2415 100000 of 100000, 23ED 100000 of 100000
+part 1b: cut test (started 0 to 800 cycles before the end of the frame, then the interrupt and 2 more frames), 10000 cases per routine: differences 245C 0, 2448 0, 242C 0, 241F 0, 2419 0, 2415 0, 23ED 0
+  cut cases run 70000
+part 2: real entry states from the coverage players A, B, C, D (20000 frames each, D a fifth): entries / compared / differences
+  245C: 15840 / 2263 / 0
+  2448: 66 / 10 / 0
+  242C: 19668 / 2810 / 0
+  241F: 19734 / 2820 / 0
+  2419: 66 / 10 / 0
+  2415: 160 / 23 / 0
+  23ED: 122 / 18 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 2674
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (20000 frames each) and D (a fifth): 1064000 frames compared
+LOCKSTEP 1064000 frames compared; 2 variant(s)
+VARIANT A: native frame-update code only (calls counted): IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native frame-update code only (calls counted): routines replaced 7 of 282 in the map (instructions 62 of 5439 = 1.14 percent); entered in this run 7; calls 540597
+VARIANT B: all readable rules + N12 to N45j: IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N45j: routines replaced 781 of 282 in the map (instructions 5298 of 5439 = 97.41 percent); entered in this run 762; calls 249146641
+REFERENCE distinct ROM instruction addresses run: 5640
+  245C: original machine entered it 154320 times; native version (A or C) ran 154320 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2448: original machine entered it 643 times; native version (A or C) ran 643 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  242C: original machine entered it 191614 times; native version (A or C) ran 191614 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  241F: original machine entered it 192257 times; native version (A or C) ran 192257 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2419: original machine entered it 643 times; native version (A or C) ran 643 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2415: original machine entered it 168 times; native version (A or C) ran 168 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  23ED: original machine entered it 952 times; native version (A or C) ran 952 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  frame-update code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "2415 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "242C an undocumented flag bit wrong": caught (2959 of 3000 isolated cases differ)
+part 4: wrong version "2419 a tile byte wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "23ED the stack pointer wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2448 register BC wrong": caught (2975 of 3000 isolated cases differ)
+part 4: lockstep with the maze task 2419 (one cycle too slow): caught at frame 422
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N45j (before N45j) 534; with the N45j frame-update code 526
+PASS test_native_f45j
+PASS test_native_f45j.sh (report in build/n45j/report.txt)

@@ -1,0 +1,50 @@
+N07: Cycle meter: the exact time a ROM routine takes  (2026-10-16)
+Tools: tests/cycle_meter.h (the meter and the formula finder), tests/test_cycle_meter.cpp/.sh (in tests/run_all.sh).
+Result of sh tests/test_cycle_meter.sh: PASS. The VERIFY targets: the random-number routine 2A23 takes 111 cycles and 13 instructions in all its calls; the fill routine 0008 is found as the exact formula cycles = 5 + 26 * B(0=256), instructions = 1 + 3 * B(0=256) (B 0 counts as 256 turns of the loop). Also checked: the meter does not change the game (frame hashes of player A equal with and without it); the formula finder on made-up numbers (constant, one number, two numbers, none; one wrong call is caught); a routine that ends with a jump is reported as never returned; watch_to measures up to a chosen address.
+A call is measured from its first instruction to its RET, callees included. Calls cut by the end of a frame are counted separately and left out.
+Not run in this step: the full regression (the game program is unchanged; only test code was added).
+
+Report format used by later steps (run: player A 100000 frames, B and C 60000 frames each):
+
+METER 0008 fill bytes (RST 08h)
+  calls measured 7875; interrupted by the end of a frame 425; left without RET 0
+  cycles: least 109, most 6661, mean 4803.933; instructions: least 13, most 769
+  distinct (cycles/instructions) pairs: 9: 6661/769 x4625 3333/385 x1486 1669/193 x1105 109/13 x176 785/91 x176 239/28 x111 187/22 x97 213/25 x52 291/34 x47
+  FORMULA cycles = 5 + 26 * B(0=256)  [exact for all 7875 calls]
+  FORMULA instructions = 1 + 3 * B(0=256)  [exact for all 7875 calls]
+METER 0010 read table byte (RST 10h)
+  calls measured 1913240; interrupted by the end of a frame 0; left without RET 0
+  cycles: least 40, most 40, mean 40.000; instructions: least 7, most 7
+  distinct (cycles/instructions) pairs: 1: 40/7 x1913240
+  FORMULA cycles = 40 (constant)  [exact for all 1913240 calls]
+  FORMULA instructions = 7 (constant)  [exact for all 1913240 calls]
+METER 0028 queue task inline (RST 28h; ends with a jump, so it never returns)
+  calls measured 0; interrupted by the end of a frame 0; left without RET 37827
+  no complete call was seen
+METER 0042 task queue push, up to its RET at 0050 (the RET itself is not counted)
+  calls measured 42785; interrupted by the end of a frame 0; left without RET 0
+  cycles: least 66, most 68, mean 66.062; instructions: least 7, most 8
+  distinct (cycles/instructions) pairs: 2: 66/7 x41452 68/8 x1333
+  FORMULA cycles: none with at most two numbers  [not exact for all 42785 calls]
+  FORMULA instructions: none with at most two numbers  [not exact for all 42785 calls]
+METER 2A23 random number (2A23)
+  calls measured 2184; interrupted by the end of a frame 0; left without RET 0
+  cycles: least 111, most 111, mean 111.000; instructions: least 13, most 13
+  distinct (cycles/instructions) pairs: 1: 111/13 x2184
+  FORMULA cycles = 111 (constant)  [exact for all 2184 calls]
+  FORMULA instructions = 13 (constant)  [exact for all 2184 calls]
+
+Test output:
+ok: formula finder: a constant
+ok: formula finder: 5 + 26 * B
+ok: formula finder: 9 + 26 * B + 3 * C
+ok: formula finder: no formula for made-up numbers that have none
+ok: formula finder: one wrong call is caught
+ok: the meter does not change the game (player A frame hashes equal with and without the meter)
+ok: the random number routine was called often enough to measure
+ok: 2A23: every call takes exactly 111 cycles and 13 instructions
+ok: 0008: every call takes 5 + 26 * B cycles and 1 + 3 * B instructions (B = 0 counts as 256)
+ok: 0028 ends with a jump: reported as never returned, no numbers invented
+ok: the queue push and the table reader were measured
+ok: watch_to: 0042 measured up to 0050 gives 66/7 or 68/8, which is 76/8 or 78/9 less the RET
+all checks passed

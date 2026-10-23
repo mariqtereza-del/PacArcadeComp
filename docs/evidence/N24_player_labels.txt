@@ -1,0 +1,40 @@
+N24 evidence: native player label writers and the bonus sprite positions: src/game/labels.h; adapters src/rules/rules.h namespace pics; 5 hooks in rules::table() (readable rules only): 0369 (writes the 1UP label bytes through IX), 0376 (2UP label bytes through IY), 0383 (blank 1UP label), 0390 (blank 2UP label) and 039D (from level 5 on: the sprite position bytes 4D02..4D07 and the copies 4DD2 / 4DD3 from the position word 4D08).
+Note: the blink routine 02FD that calls the four label writers was made native in N22 (it writes the same bytes inline); here the four writers are also native entries, for when the ROM calls them (for example when 02FD hands over to the ROM near the end of a frame). The other small display pieces of the handler that are called from 008D are sound routines (2D0C, 2CC1; step N43) or later steps (0221 timed events N26, 03C8 mode dispatch N27); nothing else of the "ready" and "lives" display lives in the handler's own small routines.
+Date: 2026-10-17
+Command: sh tests/test_native_labels.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated random cases per entry; the isolated cases randomise the level number around 5 and all registers)
+How it works: every routine is written instruction by instruction (T-states, opcode fetches, flags incl. the undocumented ones, WZ). No ROM bytes in the source.
+Honest notes: (1) no cut test: the code runs inside the interrupt handler. (2) In the isolated label-writer cases IX / IY are chosen so that the three bytes do not overwrite the return address on the stack (otherwise the routine returns into garbage and the test cannot stop both machines at the same place); with the return address overwritten the first run showed 3 of 3000 differences that came only from that test limit. (3) Progress meter rule as in N19; comparable only from N19 on.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 0369 0, 0376 0, 0383 0, 0390 0, 039D 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 0369 240306 of 300000, 0376 240113 of 300000, 0383 240181 of 300000, 0390 239311 of 300000, 039D 239782 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  0369: 46783 / 6684 / 0
+  0376: 12825 / 1833 / 0
+  0383: 36345 / 5193 / 0
+  0390: 66771 / 9539 / 0
+  039D: 90111 / 12873 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3652
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native label and bonus routines only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native label and bonus routines only (calls counted): routines replaced 5 of 282 in the map (instructions 36 of 5439 = 0.66 percent); entered in this run 5; calls 3251929
+VARIANT B: all readable rules + N12 to N24: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N24: routines replaced 112 of 282 in the map (instructions 2137 of 5439 = 39.29 percent); entered in this run 108; calls 92993525
+REFERENCE distinct ROM instruction addresses run: 5643
+  0369: original machine entered it 810565 times; native version (A or C) ran 810565 times  (equal)
+  0376: original machine entered it 537823 times; native version (A or C) ran 537823 times  (equal)
+  0383: original machine entered it 272261 times; native version (A or C) ran 272261 times  (equal)
+  0390: original machine entered it 541471 times; native version (A or C) ran 541471 times  (equal)
+  039D: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  labels and bonus positions in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "0369 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "039D one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0369 HL changed": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "039D a position byte wrong": caught (2537 of 3000 isolated cases differ)
+part 4: wrong version "039D an undocumented flag bit wrong": caught (2377 of 3000 isolated cases differ)
+part 4: lockstep with the bonus positions 039D (one cycle too slow): caught at frame 297
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N24 (before N24) 3696; with the N24 label and bonus routines 3676
+PASS test_native_labels
+Fast checks run after this step (all PASS): tests/test_rules_all.sh 100000, test_native_coins / clocks / pics / sprites / scan / maze / helpers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).

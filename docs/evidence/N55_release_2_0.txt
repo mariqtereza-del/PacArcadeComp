@@ -1,0 +1,9 @@
+N55 Release 2.0.0  (2026-10-23)
+ - Version 2.0.0 in tools/package.sh (VER), dist/res/app.rc (FILEVERSION and strings; the exe carries 2.0.0), dist/README-PACKAGE.txt (now describes the native game, Reset buttons and the Cheats page),
+   README.md and BUILDING.md (download name PacArcadeComp-2.0.0-win64.zip), CHANGELOG.md (section 2.0.0), docs/GITHUB_UPLOAD_GUIDE.md (new "Update guide (version 2.0.0)": no rename steps, replace files, commit, About text,
+   release v2.0.0 with release notes; first-time guide updated to 2.0.0).
+ - Windows package built by tools/package.sh (it refuses to build if the program source contains the Z80 core): dist/PacArcadeComp-2.0.0-win64.zip, 11 entries (exe, README.txt, MODDING.txt, mods, licences, REPORT-A-PROBLEM.bat), no ROM.
+ - Export (tools/export_github.sh): "Scan clean", 912 files, release zip scanned clean. A fresh copy of the export builds (tools/build_app.sh) and its ROM-free tests pass (ROM-FREE TESTS PASSED);
+   check_links (128) and check_docs (34 paths) pass inside the export.
+ - Full regression (sh tests/run_all.sh): ALL TESTS PASSED (zero ROM instructions, native machine = Z80 machine, no Z80 in the program, replay and Purist hashes, names, cheats, achievements, links).
+ - The exe itself was built here (Linux cross-compiler) and has not been run on Windows by Claude: the user's play test of one game is the last check.

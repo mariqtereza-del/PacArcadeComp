@@ -1,12 +1,13 @@
-# src/logic: the game's rules as readable C++ (Track B, optional step T01)
+# src/logic: the game's rules as readable C++ (Track B, steps T01 and T02)
 
-The program ROM of the arcade machine is a Z80 program. The port runs that program, so the game is exactly right by construction. This folder
-holds the same rules written the way a person would write them, one small piece at a time, so the code can be read, studied and edited.
+The arcade machine's program was a Z80 program. This port now runs a native C++ translation of it (`src/game/`, see [ARCHITECTURE.md](../../ARCHITECTURE.md)), proved identical frame by frame.
+This folder holds the most important rules written the way a person would write them, one small piece at a time, so the code can be read, studied and edited.
+The pieces are the only part of the game that is written as readable rules; the rest of `src/game/` is an exact translation (an instruction list), not yet readable.
 
 Rules of this folder:
 - A piece is added only after a test has shown that it does exactly what the ROM routine does (see "Proof" below). The game uses these pieces
   only with RULES READABLE (Esc > GAME OPTIONS > RULES, or `--rules readable`): the adapters in `src/rules/` run them in place of the ROM routines
-  (T02a to T02h), again proved identical frame for frame (`tests/test_rules_all.sh`). With RULES ORIGINAL (the standard) and in Purist mode the ROM runs.
+  (T02a to T02h), again proved identical frame for frame (`tests/test_rules_all.sh`). With RULES ORIGINAL (the standard) and in Purist mode the native translation of the original routines runs.
   To change the rules, change a piece here: see [MODDING.md](../../MODDING.md) (a worked example is in it). The numbers can also be changed without
   programming with a `rules.cfg` file (`src/rules/rules_file.h`, examples in `mods/`).
 - Every piece names the ROM address it copies, and the RAM addresses it reads or writes (docs/notes/ram_map.md, docs/notes/gameplay_routines.md).
@@ -26,4 +27,4 @@ byte the routine writes. Any difference stops the run and prints the frame, the 
 | Mode timers: scatter/chase timer, frightened timer, turn-round flags, level settings (T01f) | mode_timers.h | 0E36, 1376, 070E (tables 0796, 0843-0873, 330F) | tests/test_logic_timers.sh, docs/evidence/T01f_mode_timers.txt |
 | Ghost house release: eaten ghost waiting, Pinky/Inky/Clyde leave the house (dot counters, common counter after a death), inactivity timer (T02g) | ghost_house.h | 1066, 2069, 208C, 20AF, 13DD | tests/test_logic_house.sh, docs/evidence/T02g_ghost_house.txt |
 
-Not copied (left to the ROM): redrawing the score, the high score and the little Pac-Man pictures in video RAM (T01b); Pac-Man eating the fruit, ROM 19A1-19C4 (T01c); the drawing of the level's fruits, ROM 2BEA (T01f). The proof of T01b compares all work RAM (4C00-4FEF) after every call; the proof of T01c also compares the video RAM (the maze, where the dots are) and the colour RAM.
+Not copied (left to the native translation in `src/game/`): redrawing the score, the high score and the little Pac-Man pictures in video RAM (T01b); Pac-Man eating the fruit, ROM 19A1-19C4 (T01c); the drawing of the level's fruits, ROM 2BEA (T01f). The proof of T01b compares all work RAM (4C00-4FEF) after every call; the proof of T01c also compares the video RAM (the maze, where the dots are) and the colour RAM.

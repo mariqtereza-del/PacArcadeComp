@@ -1,0 +1,9 @@
+part 1: frame end between the prefix byte and the opcode (hook_prefix): 326 addresses, 326000 random cases, differences 0
+part 1: wrong version (one cycle too slow) caught in 326000 of 326000 cases
+replay: 7273 frames run
+scripted player (T01a): 3000000 frames run
+coverage players A, B, C: 60000 frames each, D: 12000 frames
+TOTAL FRAMES RUN: 3199273
+ROM instructions executed by the Z80 core (not handled by native code): 0 of 3496587302 instruction starts below 4000 seen (0.000000 percent)
+distinct ROM addresses executed: 0
+PASS test_no_rom_code (zero ROM instructions)

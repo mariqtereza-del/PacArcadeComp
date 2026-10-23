@@ -1,0 +1,45 @@
+N13 evidence: native screen address helpers 2000, 2018, 0065, 2052, 200F, 205A (src/game/screen.h; adapters src/rules/rules.h namespace screen; hooks in rules::table())
+Date: 2026-10-16
+Command: sh tests/test_native_screen.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated cases per routine; about 9 minutes)
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2000 0, 2018 0, 0065 0, 2052 0, 200F 0, 205A 0
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  2000: 276725 / 55345 / 0
+  2018: 136590 / 136590 / 0
+  0065: 320116 / 64024 / 0
+  2052: 193693 / 193693 / 0
+  200F: 53030 / 53030 / 0
+  205A: 182900 / 182900 / 0
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native screen helpers only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native screen helpers only (calls counted): routines replaced 6 of 282 in the map (instructions 64 of 5439 = 1.18 percent); entered in this run 6; calls 18559219
+VARIANT B: all readable rules + N12 and N13 helpers: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 and N13 helpers: routines replaced 37 of 282 in the map (instructions 1082 of 5439 = 19.89 percent); entered in this run 37; calls 61696477
+REFERENCE distinct ROM instruction addresses run: 5643
+  2000: original machine entered it 4041204 times; native version A ran 3481225 times  (not compared: see above)
+  2018: original machine entered it 2193589 times; native version A ran 2193589 times  (equal)
+  0065: original machine entered it 5087913 times; native version A ran 1120159 times  (not compared: see above)
+  2052: original machine entered it 3407775 times; native version A ran 139016 times  (not compared: see above)
+  200F: original machine entered it 559979 times; native version A ran 559979 times  (equal)
+  205A: original machine entered it 3268759 times; native version A ran 3268759 times  (equal)
+  screen helpers in lockstep: identical on every frame, both variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "2000 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2018 H one too big": caught (2965 of 3000 isolated cases differ)
+part 4: wrong version "0065 wrong row bit": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2052 carry flag wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "200F a stack leftover wrong": caught (2861 of 3000 isolated cases differ)
+part 4: wrong version "205A A wrong": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the wrong 2000 (one cycle too slow): caught at frame 679
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed): original ROM 5638; readable rules + N12 helpers (before N13) 4746; with the N13 screen helpers 4686
+PASS test_native_screen
+
+Other tests run in this step (fast check): sh tests/test_rules_all.sh 100000 PASS (all readable rules together, now including the N12 and N13 helpers); sh tests/test_native_helpers.sh 30000 10000 20000 PASS (N12 helpers still equal); sh tests/test_rules_file.sh 20000 PASS; sh tests/test_purist.sh PASS (Purist unchanged, 7273 frame hashes equal the prototype); sh tests/test_replay.sh PASS (7273 frame hashes identical).
+Not run: the full sh tests/run_all.sh and the other test_rules_*.sh (fast-check policy). The original-rules game is unchanged; the readable-rules mode now also uses the native screen helpers.
+
+Notes
+- Replaced: 2000 (add two positions), 2018 (pixel to tile), 0065 (tile position to video RAM address; the ROM routine is a JP to 202D), 2052 (colour RAM address), 200F (tile code at a position), 205A (colour test). The map lists 2018 as 37 instructions because it counts on into 202D; the replaced routine ends at its RET (13 instructions).
+- Like N12, the stack bytes the ROM leaves (return addresses of the CALLs inside, PUSH AF / PUSH BC) are written in the ROM's order; the random-state test checks them, and a wrong stack leftover is caught.
+- The native versions do not call each other, so the entry counts of 2000 (inside 200F), 0065 (inside 2052 and 200F) and 2052 (inside 205A) differ from the ROM's by design; 2018, 200F and 205A are compared one to one (equal).

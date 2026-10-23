@@ -1,0 +1,188 @@
+N45e evidence: ghost movement helpers, native: ROM 1BD8-1C4A, 1CAF-1D21, 1D86-1DF8, 1E5D-1EFD (the per-ghost mover helpers that check the tile centre, ask the tile test 1ED0 and the pen / fruit state, queue the RST 28h tasks and turn the ghost), the tile test 1ED0 and the dot-count release test 20D7-2107.
+Scope notes (honest): (1) Names come from reading the code, not from the project's label list. (2) The per-ghost speed parts 1B36, 1C4B, 1D22, 1DF9 are left for N45f (the step file listed 1BD8-1E9C as one range, but those four entries sit inside it). (3) Only the readable-rules mode uses the native code; Purist mode and original-rules mode always run the ROM. (4) Four new instruction kinds: JP NC, RET C, SCF and (from N45d) OR (IX+d). (5) The lines "ISOLATED MISMATCH" in the raw report belong to the deliberately wrong versions of part 4. (6) The full run_all.sh was NOT run (not a milestone; next one is N45g).
+Date: 2026-10-20
+Command: sh tests/test_native_f45e.sh 1000000 20000 100000
+Fast regression (this step): 43 PASS, no FAIL:
+PASS tests/test_native_attract.sh 30000 10000 2000
+PASS tests/test_native_demo.sh 30000 10000 2000
+PASS tests/test_native_game.sh 30000 10000 2000
+PASS tests/test_native_level.sh 30000 10000 2000
+PASS tests/test_native_frame.sh 30000 10000 2000
+PASS tests/test_native_meet.sh 30000 10000 2000
+PASS tests/test_native_eaten.sh 30000 10000 2000
+PASS tests/test_native_death.sh 30000 10000 2000
+PASS tests/test_native_clear.sh 30000 10000 2000
+PASS tests/test_native_fruit.sh 30000 10000 2000
+PASS tests/test_native_over.sh 30000 10000 2000
+PASS tests/test_native_inter1.sh 30000 10000 2000
+PASS tests/test_native_inter2.sh 30000 10000 2000
+PASS tests/test_native_inter3.sh 30000 10000 2000
+PASS tests/test_native_snd.sh 30000 10000 2000
+PASS tests/test_native_tune.sh 30000 10000 2000
+PASS tests/test_native_sched.sh 30000 10000 2000
+PASS tests/test_native_f45a.sh 30000 10000 2000
+PASS tests/test_native_f45b.sh 30000 10000 2000
+PASS tests/test_native_f45c.sh 30000 10000 2000
+PASS tests/test_native_f45d.sh 30000 10000 2000
+PASS tests/test_native_f45e.sh 30000 10000 2000
+PASS tests/test_native_players.sh 30000 10000
+PASS tests/test_native_helpers.sh 30000 10000 20000
+PASS tests/test_native_screen.sh 30000 10000 20000
+PASS tests/test_native_numbers.sh 30000 10000 20000
+PASS tests/test_native_text.sh 30000 10000 20000
+PASS tests/test_native_status.sh 30000 10000 20000
+PASS tests/test_native_sliced.sh 30000 10000 20000
+PASS tests/test_native_maze.sh 30000 10000 20000
+PASS tests/test_native_scan.sh 30000 10000 20000
+PASS tests/test_native_sprites.sh 30000 10000 20000
+PASS tests/test_native_pics.sh 30000 10000 20000
+PASS tests/test_native_clocks.sh 30000 10000 20000
+PASS tests/test_native_mode.sh 20000 5000 10000
+PASS tests/test_native_events.sh 20000 5000 10000
+PASS tests/test_native_handler.sh 20000 5000 10000
+PASS tests/test_native_labels.sh 20000 5000 10000
+PASS tests/test_native_coins.sh 20000 5000 10000
+PASS tests/test_rules_all.sh 100000
+PASS tests/test_rules_file.sh 20000
+PASS tests/test_purist.sh
+PASS tests/test_replay.sh
+
+Test report (build/n45e/report.txt):
+part 1: 2000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 20F4 0, 20D7 0, 1EFC 0, 1EED 0, 1EE3 0, 1ED0 0, 1ECC 0, 1EC6 0, 1EBB 0, 1EAC 0, 1EA1 0, 1E9E 0, 1E96 0, 1E90 0, 1E8D 0, 1E81 0, 1E7C 0, 1E72 0, 1E5D 0, 1DF5 0, 1DEF 0, 1DE4 0, 1DD5 0, 1DCA 0, 1DC7 0, 1DBF 0, 1DB9 0, 1DB6 0, 1DAA 0, 1DA5 0, 1D9B 0, 1D86 0, 1D1E 0, 1D18 0, 1D0D 0, 1CFE 0, 1CF3 0, 1CF0 0, 1CE8 0, 1CE2 0, 1CDF 0, 1CD3 0, 1CCE 0, 1CC4 0, 1CAF 0, 1C47 0, 1C41 0, 1C36 0, 1C27 0, 1C1C 0, 1C19 0, 1C11 0, 1C0B 0, 1C08 0, 1BFC 0, 1BF7 0, 1BED 0, 1BD8 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 20F4 1608 of 2000, 20D7 1612 of 2000, 1EFC 1613 of 2000, 1EED 1584 of 2000, 1EE3 1602 of 2000, 1ED0 1593 of 2000, 1ECC 1611 of 2000, 1EC6 1637 of 2000, 1EBB 1593 of 2000, 1EAC 1602 of 2000, 1EA1 1578 of 2000, 1E9E 1610 of 2000, 1E96 1594 of 2000, 1E90 1578 of 2000, 1E8D 1576 of 2000, 1E81 1572 of 2000, 1E7C 1596 of 2000, 1E72 1610 of 2000, 1E5D 1578 of 2000, 1DF5 1631 of 2000, 1DEF 1606 of 2000, 1DE4 1606 of 2000, 1DD5 1582 of 2000, 1DCA 1628 of 2000, 1DC7 1584 of 2000, 1DBF 1597 of 2000, 1DB9 1586 of 2000, 1DB6 1583 of 2000, 1DAA 1613 of 2000, 1DA5 1606 of 2000, 1D9B 1586 of 2000, 1D86 1603 of 2000, 1D1E 1603 of 2000, 1D18 1615 of 2000, 1D0D 1568 of 2000, 1CFE 1602 of 2000, 1CF3 1582 of 2000, 1CF0 1634 of 2000, 1CE8 1579 of 2000, 1CE2 1625 of 2000, 1CDF 1605 of 2000, 1CD3 1575 of 2000, 1CCE 1593 of 2000, 1CC4 1604 of 2000, 1CAF 1619 of 2000, 1C47 1610 of 2000, 1C41 1615 of 2000, 1C36 1573 of 2000, 1C27 1603 of 2000, 1C1C 1621 of 2000, 1C19 1593 of 2000, 1C11 1601 of 2000, 1C0B 1625 of 2000, 1C08 1613 of 2000, 1BFC 1609 of 2000, 1BF7 1581 of 2000, 1BED 1622 of 2000, 1BD8 1579 of 2000
+part 2: real entry states from the coverage players A, B, C, D (10000 frames each, D a fifth): entries / compared / differences
+  20F4: 2419 / 346 / 0
+  20D7: 26900 / 3843 / 0
+  1EFC: 169 / 25 / 0
+  1EED: 5792 / 828 / 0
+  1EE3: 5803 / 829 / 0
+  1ED0: 5816 / 831 / 0
+  1ECC: 2903 / 415 / 0
+  1EC6: 2903 / 415 / 0
+  1EBB: 2903 / 415 / 0
+  1EAC: 362 / 52 / 0
+  1EA1: 362 / 52 / 0
+  1E9E: 362 / 52 / 0
+  1E96: 328 / 47 / 0
+  1E90: 328 / 47 / 0
+  1E8D: 31 / 5 / 0
+  1E81: 362 / 52 / 0
+  1E7C: 362 / 52 / 0
+  1E72: 1527 / 219 / 0
+  1E5D: 2903 / 415 / 0
+  1DF5: 5566 / 796 / 0
+  1DEF: 5566 / 796 / 0
+  1DE4: 5566 / 796 / 0
+  1DD5: 694 / 100 / 0
+  1DCA: 694 / 100 / 0
+  1DC7: 694 / 100 / 0
+  1DBF: 550 / 79 / 0
+  1DB9: 550 / 79 / 0
+  1DB6: 134 / 20 / 0
+  1DAA: 694 / 100 / 0
+  1DA5: 694 / 100 / 0
+  1D9B: 3442 / 492 / 0
+  1D86: 5566 / 796 / 0
+  1D1E: 10014 / 1431 / 0
+  1D18: 10014 / 1431 / 0
+  1D0D: 10014 / 1431 / 0
+  1CFE: 1508 / 216 / 0
+  1CF3: 1508 / 216 / 0
+  1CF0: 1508 / 216 / 0
+  1CE8: 966 / 138 / 0
+  1CE2: 966 / 138 / 0
+  1CDF: 527 / 76 / 0
+  1CD3: 1508 / 216 / 0
+  1CCE: 1508 / 216 / 0
+  1CC4: 4575 / 654 / 0
+  1CAF: 10014 / 1431 / 0
+  1C47: 16295 / 2328 / 0
+  1C41: 16295 / 2328 / 0
+  1C36: 16295 / 2328 / 0
+  1C27: 2777 / 397 / 0
+  1C1C: 2777 / 397 / 0
+  1C19: 2777 / 397 / 0
+  1C11: 1492 / 214 / 0
+  1C0B: 1492 / 214 / 0
+  1C08: 1203 / 172 / 0
+  1BFC: 2777 / 397 / 0
+  1BF7: 2777 / 397 / 0
+  1BED: 10996 / 1571 / 0
+  1BD8: 16295 / 2328 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 301
+part 3: lockstep, scripted player 30000 frames, then the coverage players A, B, C (10000 frames each) and D (a fifth): 62000 frames compared
+LOCKSTEP 62000 frames compared; 2 variant(s)
+VARIANT A: native frame-update code only (calls counted): IDENTICAL on every frame (62000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native frame-update code only (calls counted): routines replaced 58 of 282 in the map (instructions 224 of 5439 = 4.12 percent); entered in this run 58; calls 545351
+VARIANT B: all readable rules + N12 to N45e: IDENTICAL on every frame (62000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N45e: routines replaced 624 of 282 in the map (instructions 5038 of 5439 = 92.63 percent); entered in this run 596; calls 11399074
+REFERENCE distinct ROM instruction addresses run: 5538
+  20F4: original machine entered it 2419 times; native version (A or C) ran 2419 times  (equal)
+  20D7: original machine entered it 63027 times; native version (A or C) ran 63027 times  (equal)
+  1EFC: original machine entered it 379 times; native version (A or C) ran 379 times  (equal)
+  1EED: original machine entered it 12283 times; native version (A or C) ran 12283 times  (equal)
+  1EE3: original machine entered it 12301 times; native version (A or C) ran 12301 times  (equal)
+  1ED0: original machine entered it 12333 times; native version (A or C) ran 12333 times  (equal)
+  1ECC: original machine entered it 6817 times; native version (A or C) ran 6817 times  (equal)
+  1EC6: original machine entered it 6817 times; native version (A or C) ran 6817 times  (equal)
+  1EBB: original machine entered it 6817 times; native version (A or C) ran 6817 times  (equal)
+  1EAC: original machine entered it 850 times; native version (A or C) ran 850 times  (equal)
+  1EA1: original machine entered it 850 times; native version (A or C) ran 850 times  (equal)
+  1E9E: original machine entered it 850 times; native version (A or C) ran 850 times  (equal)
+  1E96: original machine entered it 690 times; native version (A or C) ran 690 times  (equal)
+  1E90: original machine entered it 690 times; native version (A or C) ran 690 times  (equal)
+  1E8D: original machine entered it 145 times; native version (A or C) ran 145 times  (equal)
+  1E81: original machine entered it 850 times; native version (A or C) ran 850 times  (equal)
+  1E7C: original machine entered it 850 times; native version (A or C) ran 850 times  (equal)
+  1E72: original machine entered it 4417 times; native version (A or C) ran 4417 times  (equal)
+  1E5D: original machine entered it 6817 times; native version (A or C) ran 6817 times  (equal)
+  1DF5: original machine entered it 13903 times; native version (A or C) ran 13903 times  (equal)
+  1DEF: original machine entered it 13903 times; native version (A or C) ran 13903 times  (equal)
+  1DE4: original machine entered it 13903 times; native version (A or C) ran 13903 times  (equal)
+  1DD5: original machine entered it 1736 times; native version (A or C) ran 1736 times  (equal)
+  1DCA: original machine entered it 1736 times; native version (A or C) ran 1736 times  (equal)
+  1DC7: original machine entered it 1736 times; native version (A or C) ran 1736 times  (equal)
+  1DBF: original machine entered it 1218 times; native version (A or C) ran 1218 times  (equal)
+  1DB9: original machine entered it 1218 times; native version (A or C) ran 1218 times  (equal)
+  1DB6: original machine entered it 472 times; native version (A or C) ran 472 times  (equal)
+  1DAA: original machine entered it 1736 times; native version (A or C) ran 1736 times  (equal)
+  1DA5: original machine entered it 1736 times; native version (A or C) ran 1736 times  (equal)
+  1D9B: original machine entered it 9268 times; native version (A or C) ran 9268 times  (equal)
+  1D86: original machine entered it 13903 times; native version (A or C) ran 13903 times  (equal)
+  1D1E: original machine entered it 24603 times; native version (A or C) ran 24603 times  (equal)
+  1D18: original machine entered it 24603 times; native version (A or C) ran 24603 times  (equal)
+  1D0D: original machine entered it 24603 times; native version (A or C) ran 24603 times  (equal)
+  1CFE: original machine entered it 3331 times; native version (A or C) ran 3331 times  (equal)
+  1CF3: original machine entered it 3331 times; native version (A or C) ran 3331 times  (equal)
+  1CF0: original machine entered it 3331 times; native version (A or C) ran 3331 times  (equal)
+  1CE8: original machine entered it 2285 times; native version (A or C) ran 2285 times  (equal)
+  1CE2: original machine entered it 2285 times; native version (A or C) ran 2285 times  (equal)
+  1CDF: original machine entered it 971 times; native version (A or C) ran 971 times  (equal)
+  1CD3: original machine entered it 3331 times; native version (A or C) ran 3331 times  (equal)
+  1CCE: original machine entered it 3331 times; native version (A or C) ran 3331 times  (equal)
+  1CC4: original machine entered it 12944 times; native version (A or C) ran 12944 times  (equal)
+  1CAF: original machine entered it 24603 times; native version (A or C) ran 24603 times  (equal)
+  1C47: original machine entered it 34688 times; native version (A or C) ran 34688 times  (equal)
+  1C41: original machine entered it 34688 times; native version (A or C) ran 34688 times  (equal)
+  1C36: original machine entered it 34688 times; native version (A or C) ran 34688 times  (equal)
+  1C27: original machine entered it 5077 times; native version (A or C) ran 5077 times  (equal)
+  1C1C: original machine entered it 5077 times; native version (A or C) ran 5077 times  (equal)
+  1C19: original machine entered it 5077 times; native version (A or C) ran 5077 times  (equal)
+  1C11: original machine entered it 3251 times; native version (A or C) ran 3251 times  (equal)
+  1C0B: original machine entered it 3251 times; native version (A or C) ran 3251 times  (equal)
+  1C08: original machine entered it 1662 times; native version (A or C) ran 1662 times  (equal)
+  1BFC: original machine entered it 5077 times; native version (A or C) ran 5077 times  (equal)
+  1BF7: original machine entered it 5077 times; native version (A or C) ran 5077 times  (equal)
+  1BED: original machine entered it 22828 times; native version (A or C) ran 22828 times  (equal)
+  1BD8: original machine entered it 34688 times; native version (A or C) ran 34688 times  (equal)
+  frame-update code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 30000 frames)
+part 4: wrong version "1BD8 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1BD8 an undocumented flag bit wrong": caught (2429 of 3000 isolated cases differ)
+part 4: wrong version "1BD8 the byte 4D14 wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1CAF the return address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1ED0 register BC wrong": caught (2379 of 3000 isolated cases differ)
+part 4: lockstep with the ghost mover helper 1BD8 (one cycle too slow): caught at frame 679
+part 5: progress meter (coverage players A, B, C of 10000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5536; readable rules + N12 to N45e (before N45e) 1355; with the N45e frame-update code 1163
+PASS test_native_f45e

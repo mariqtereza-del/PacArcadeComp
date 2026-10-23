@@ -1,0 +1,25 @@
+N49c FIX: the crash with INVINCIBLE after a power pellet (reported by the user, no log was written)
+===========================================================================================
+Report: "I was using the invincibility option, all was normal until I got a power pellet. I tried to eat a ghost and the game crashed. No logs were generated."
+
+CAUSE
+ The program without the Z80 runs the original game code only as native code. The native instruction list had been built from the code the test players
+ reached ("coverage"), so rare paths were missing. Eating a ghost with INVINCIBLE on went through code (the cheat's shortcut at 1763 handing over to 177A, then
+ 27F1 ...) that no test player had run with the cheat on, and the program stopped ("no native routine at address ...") without writing anything.
+
+FIX
+ 1. src/game/attract.h: the cheat shortcut at 1763 continues with the instruction list at 177A (it handed over to a ROM routine that the program no longer has).
+ 2. tools/gen_attract.py: new range rng49 = EVERY remaining code instruction of the listing (3,537 bytes in 23 pieces); the list now holds 5,439 instructions
+    (before: 3,952) = all the code of the original program. 24 new instruction forms: JP (HL), INC E/C/D, RLA, RLC B, RL B, SLA H, ADD A,E/D, CCF, LD C,H / D,H / E,L / L,E / H,D / B,H,
+    LD (BC),A, CALL NZ, SET 6/7,E, RL (IX+d), LD A,(IY+d), LD (IX+d),D, BIT n,D.
+ 3. src/rules/rules.h (install_resume): every instruction of the list is a hook (the program has no ROM to fall back to).
+ 4. src/board/machine.h + src/app/main.cpp: should an internal error ever stop the program again, the message is written to the log file (--report FILE, else crash-report.txt).
+
+PROOF
+ - tests/test_native_ops.sh (NEW): every one of the 5,439 listed instructions is run from 1,000 random states (all registers, flags, alternates, WZ, R, memory) by the Z80 on the ROM
+   instruction and by the native code; registers, flags, WZ, R, memory, I/O writes and cycles must be equal: 5,439,000 cases, 0 differences.
+   (First run: 2 instructions differed, 1535 BIT 7,D and 1542 BIT 6,D, which the generator had read as BIT on A. Fixed; the old test_native_pics random-state check had caught the same bug.)
+ - tests/test_cheat_invincible.sh now also runs the cheat test in the program without the Z80 (tests/scenario.h gives the machine the native table): 12 checks, 0 failed, including
+   the whole chain of four blue ghosts eaten with INVINCIBLE on, and no death while ghosts sit on Pac-Man.
+ - tests/test_native_machine.sh: frame fingerprints still identical (replay, scripted player, coverage players); tests/test_no_rom_code.sh: 0 ROM instructions.
+ - Full regression: see PROJECT_STATUS.md.

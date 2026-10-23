@@ -54,7 +54,7 @@ THE SOFTWARE.
 
 ------------------------------------------------------------------------------
 3. z80 (Z80 processor emulator, single header), https://github.com/kosarev/z80  - MIT licence
-   The file src/core/z80.h is compiled into the program, unchanged.
+   The file tests/oracle/z80.h is compiled into the program, unchanged.
 ------------------------------------------------------------------------------
 MIT License
 

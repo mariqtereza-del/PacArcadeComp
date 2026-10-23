@@ -1,0 +1,20 @@
+N10 evidence: ROM data map
+Date: 2026-10-16
+Command: sh tests/test_rom_data_map.sh   (full run: players A,B,C 300000 frames, D 54000 frames, about 5 minutes)
+
+== 1. Totals
+Z80 steps in the ROM 5316346535; instruction-fetch reads 10131310331; DATA reads 28824865 (from 85 reading instructions); reads made outside a step (interrupt vector lookup) 1859730
+distinct ROM addresses read as data (or by the interrupt): 14545
+self-checks: steps whose length differs from the instruction length table 0; steps whose first reads are not the instruction's own bytes 0; jump/call/return steps that also made a data read 0; steps with fewer reads than their length 0 (all must be 0)
+
+Negative check: with the maze row T13 removed from docs/notes/rom_data_tables.md the test FAILED (NOT LISTED 3435-35B1 ...); with the row restored it PASSED.
+Not run: the full sh tests/run_all.sh (fast-check policy; only the new test and the doc/export checks were run). The game itself is unchanged (the new code is test-only).
+
+== 3. Reads of the other kinds (not part of the game tables)
+ROM checksum loop of the power-on test (reading instruction 300A): 626688 reads, 12288 distinct addresses, ranges: 0000-2FFF 
+ROM bytes used as random numbers (reading instruction 2A30): 9651 reads, 153 distinct addresses, ranges: 0001-0001 0006-0006 001F-001F 009B-009C 00BE-00BE 013D-013D 016F-016F 0179-0179 01C6-01C6 01E7-
+interrupt vector lookup when the interrupt is delivered: 1859730 reads, 4 distinct addresses, ranges: 3FFA-3FFD 
+
+== 4. Reading instructions (address : data reads : lowest-highest address read)
+
+Per-run table list: docs/notes/rom_data_tables.md; per-address report: docs/evidence/N10_data_map_full.txt

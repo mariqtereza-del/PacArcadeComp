@@ -1,4 +1,4 @@
-// S34: the pause menu (Esc), the key-help panel and the saved settings, plus the rules of Purist mode.
+// S34: the pause menu (Esc), the key-help panel and the saved settings, plus the --purist test flag's locks (the menu itself has no Purist item since S34E).
 // The menu only decides WHAT the player asked for (it returns a command); the program (main.cpp) carries it out. Nothing here can touch the machine.
 // Every setting that has a function key is also in the menu, and the help panel lists every key, so the two always agree.
 // Drawing uses the debug overlay's helpers (overlay.cpp must be included before menu.cpp) and the game's own tile font: capital letters, digits, '-'.
@@ -36,7 +36,8 @@ enum class Cmd {
     Scaling,
     FullScreen,
     HelpPin,
-    Purist,
+    ResetDisplay,
+    ResetGame,
     Quit,
     Vibration,
     PadSymbols,
@@ -52,6 +53,7 @@ enum class Cmd {
     SaveSlot,
     LoadSlot,
     Rules,      // T02i: RULES ORIGINAL / READABLE
+    CheatInvincible, // the INVINCIBLE test cheat (an assist; Esc > CHEATS)
     WriteRules, // T02i: write the standard rules.cfg for modders
     Locked
 };
@@ -83,12 +85,14 @@ struct Model {
     bool diff_normal = true, names_normal = true;
     bool rules_readable = false;                // T02i: RULES READABLE chosen (the proved readable rules run instead of the ROM routines)
     bool rules_file = false;                    // T02i: a rules file with changed values is in use (the game is MODDED and uses the readable rules)
+    bool ach_blocked = false;                   // S34E: a game setting is not at its standard value: no achievement can unlock
     std::string assist;                         // X03: label of the first reason this game is assisted ("" = the game counts)
     bool pending = false;                       // game options changed that need a restart of the machine
     PadType pad_type = PadType::None;           // S34C
     int pad_btn[5] = {-1, -1, -1, -1, -1};      // S34C: the same buttons as pad_name (SDL button numbers, -1 = none), for the pictures
     std::string pad_name[5];                    // S34B: pad button for MENU, PAUSE, SAVE, LOAD, REWIND ("" = none), from binding_lines()
     int ach_have[24] = {0}, ach_need[24] = {0}; // X29: progress of the achievements that have a count (need 0 = none), in the game that is running
+    bool cheat_invincible = false;              // the INVINCIBLE test cheat is on (session only)
     unsigned long long ach_mask = 0;            // X25: which achievements are unlocked (bit = achievements::Id)
     std::string rec_line[21];                   // X24: the Records page (records::line for levels 1 to 21)
     std::string slot_line[8];                   // X12: the eight save slots as the pickers show them (state::slot_line), "" = not filled in
@@ -149,7 +153,7 @@ public:
 private:
     bool open_ = false;
     int page_ = 0;
-    int cur_[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // one cursor per page (0-7)
+    int cur_[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0}; // one cursor per page (0-8)
 };
 
 // X04: where a window pixel falls in the picture. dest = the rectangle (in window pixels) the content_w x content_h image is drawn into (display::Layout::dest).

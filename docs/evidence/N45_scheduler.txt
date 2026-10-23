@@ -1,0 +1,85 @@
+N45 evidence: the last scheduling glue in the ROM, native: 000C (a RET used as the "do nothing" entry of the jump tables), 000D (JP 070E, the table entry that starts the Pac-Man mover), 0263 (the timed-event entry that queues a task with RST 28h), 100B-1016 (the timed-event entry that queues two tasks, with the check of the game state 4E00) and 0792-0795 (the tail CALL 2BEA / RET of the ghost-direction routine). Together with the earlier steps the whole scheduler is native: the RST vectors 0008, 0010, 0018, 0020, 0028, 0030 and the queue push 0042 (N12), the timed-event loop 0221 and its handlers (N26), the interrupt handler (N25) and now these entries.
+Scope notes (honest): (1) The RST helpers 0008/0010/0018/0020/0028/0030/0042 still fall back to the ROM instructions near the end of a frame (they keep the exact cycle count by running the original instruction); that is why 0008-000A and 0018-001F still appear in the progress meter. These can only go with the native frame driver (N46), which owns the cycle budget of the frame. (2) The reset code 0000-0005 runs once at power-on and belongs to the boot step N47. (3) 100B, 0263 and 0792 are reached only a few times per coverage run; the late states are proved mostly by the random cases and the lockstep. (4) The progress meter still shows large ROM groups outside the scheduler (ghost and Pac-Man movement 0AC3-0E35, 10C0-1232, 1806-1F99, 24E8-2A22, the text printer 2C5E, the DIP reader 26D0, the data-driven routines 3000-32F8): these are not part of N45; the plan for N46 to N48 assumes they are native by then, so they need their own steps (reported to the user).
+Date: 2026-10-19
+Command: sh tests/test_native_sched.sh 1000000 20000 100000
+Fast regression (this step; the full run_all.sh is for milestones and was NOT run): 38 PASS, no FAIL:
+PASS tests/test_native_attract.sh 30000 10000 2000
+PASS tests/test_native_demo.sh 30000 10000 2000
+PASS tests/test_native_game.sh 30000 10000 2000
+PASS tests/test_native_level.sh 30000 10000 2000
+PASS tests/test_native_frame.sh 30000 10000 2000
+PASS tests/test_native_meet.sh 30000 10000 2000
+PASS tests/test_native_eaten.sh 30000 10000 2000
+PASS tests/test_native_death.sh 30000 10000 2000
+PASS tests/test_native_clear.sh 30000 10000 2000
+PASS tests/test_native_fruit.sh 30000 10000 2000
+PASS tests/test_native_over.sh 30000 10000 2000
+PASS tests/test_native_inter1.sh 30000 10000 2000
+PASS tests/test_native_inter2.sh 30000 10000 2000
+PASS tests/test_native_inter3.sh 30000 10000 2000
+PASS tests/test_native_snd.sh 30000 10000 2000
+PASS tests/test_native_tune.sh 30000 10000 2000
+PASS tests/test_native_sched.sh 30000 10000 2000
+PASS tests/test_native_players.sh 30000 10000
+PASS tests/test_native_helpers.sh 30000 10000 20000
+PASS tests/test_native_screen.sh 30000 10000 20000
+PASS tests/test_native_numbers.sh 30000 10000 20000
+PASS tests/test_native_text.sh 30000 10000 20000
+PASS tests/test_native_status.sh 30000 10000 20000
+PASS tests/test_native_sliced.sh 30000 10000 20000
+PASS tests/test_native_maze.sh 30000 10000 20000
+PASS tests/test_native_scan.sh 30000 10000 20000
+PASS tests/test_native_sprites.sh 30000 10000 20000
+PASS tests/test_native_pics.sh 30000 10000 20000
+PASS tests/test_native_clocks.sh 30000 10000 20000
+PASS tests/test_native_mode.sh 20000 5000 10000
+PASS tests/test_native_events.sh 20000 5000 10000
+PASS tests/test_native_handler.sh 20000 5000 10000
+PASS tests/test_native_labels.sh 20000 5000 10000
+PASS tests/test_native_coins.sh 20000 5000 10000
+PASS tests/test_rules_all.sh 100000
+PASS tests/test_rules_file.sh 20000
+PASS tests/test_purist.sh
+PASS tests/test_replay.sh
+
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 1016 0, 100E 0, 100B 0, 0795 0, 0792 0, 0266 0, 0263 0, 000D 0, 000C 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 1016 80029 of 100000, 100E 80026 of 100000, 100B 79970 of 100000, 0795 80011 of 100000, 0792 80011 of 100000, 0266 79998 of 100000, 0263 80011 of 100000, 000D 79998 of 100000, 000C 79976 of 100000
+part 2: real entry states from the coverage players A, B, C, D (20000 frames each, D a fifth): entries / compared / differences
+  1016: 5 / 1 / 0
+  100E: 5 / 1 / 0
+  100B: 5 / 1 / 0
+  0795: 102 / 15 / 0
+  0792: 102 / 15 / 0
+  0266: 64 / 10 / 0
+  0263: 64 / 10 / 0
+  000D: 102 / 15 / 0
+  000C: 258879 / 36983 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3409
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (20000 frames each) and D (a fifth): 1064000 frames compared
+LOCKSTEP 1064000 frames compared; 2 variant(s)
+VARIANT A: native scheduling-glue code only (calls counted): IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native scheduling-glue code only (calls counted): routines replaced 9 of 282 in the map (instructions 10 of 5439 = 0.18 percent); entered in this run 9; calls 7080452
+VARIANT B: all readable rules + N12 to N45: IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N45: routines replaced 492 of 282 in the map (instructions 4200 of 5439 = 77.22 percent); entered in this run 473; calls 183152976
+REFERENCE distinct ROM instruction addresses run: 5640
+  1016: original machine entered it 5 times; native version (A or C) ran 5 times  (equal)
+  100E: original machine entered it 5 times; native version (A or C) ran 5 times  (equal)
+  100B: original machine entered it 5 times; native version (A or C) ran 5 times  (equal)
+  0795: original machine entered it 844 times; native version (A or C) ran 844 times  (equal)
+  0792: original machine entered it 844 times; native version (A or C) ran 844 times  (equal)
+  0266: original machine entered it 483 times; native version (A or C) ran 483 times  (equal)
+  0263: original machine entered it 483 times; native version (A or C) ran 483 times  (equal)
+  000D: original machine entered it 844 times; native version (A or C) ran 844 times  (equal)
+  000C: original machine entered it 7076939 times; native version (A or C) ran 7076939 times  (equal)
+  scheduling-glue code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "0263 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "100B an undocumented flag bit wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0792 the sound register byte 4E91 wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "000C the return address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "100E register BC wrong": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the timed-event entry 0263 (one cycle too slow): caught at frame 678
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N45 (before N45) 2101; with the N45 scheduling-glue code 2089
+PASS test_native_sched
+PASS test_native_sched.sh (report in build/n45/report.txt)

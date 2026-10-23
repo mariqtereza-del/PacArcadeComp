@@ -1,0 +1,18 @@
+N49a evidence (2026-10-22): the machine without the Z80 core against the Z80 machine.
+Z80 machine = src/core/z80.h running the ORIGINAL ROM (no hooks). Native machine = src/board/cpuregs.h (plain register file) + the native routine table, built with -DPAC_NO_Z80.
+Per frame a fingerprint of: all memory and latches, the I/O writes of the frame, the cycle count of the frame, the CPU registers (AF BC DE HL IX IY SP PC IR IFF1 IFF2 mode halt int-disabled, shadow BC DE HL).
+
+Z80 core in the native build: 0 lines after the preprocessor, 0 symbols (the Z80 build has 23 symbols)
+machine: the Z80 core running the original ROM
+replay: 7273 frames
+scripted player: 1000000 frames
+coverage players A, B, C: 60000 frames each, D: 12000 frames
+machine: the register file only (no Z80 core), native routine table
+replay: 7273 frames
+scripted player: 1000000 frames
+coverage players A, B, C: 60000 frames each, D: 12000 frames
+frame fingerprints (memory, I/O writes, cycles, registers) identical on all 1199273 frames
+wrong version caught: 1 frame lines differ (first: > scripted 1001 mem 61b8212def)
+PASS test_native_machine.sh (1199273 frames)
+
+Files: build/n49a/z80.txt and nz80.txt (one line per frame).

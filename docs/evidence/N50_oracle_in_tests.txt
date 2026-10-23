@@ -1,0 +1,18 @@
+N50: the emulator becomes a test tool
+=====================================
+What moved
+ - src/oracle/ -> tests/oracle/ (z80.h, z80_test.cpp, LICENSE-z80, CREDITS.md, README.md).
+ - src/board/boot_test.cpp (a test program that uses the Z80 core) -> tests/oracle/boot_test.cpp.
+ - All scripts, includes and notes updated (tests/*.sh, tools/build_native.sh, build_windows.sh, ARCHITECTURE.md, README.md, THIRD-PARTY-LICENSES.txt, .clang-format).
+ - src/board/machine.h keeps its test-reference branch (the Z80 machine, used when -DPAC_NO_Z80 is NOT given); it includes ../../tests/oracle/z80.h. The program build never
+   defines/compiles that branch. (Splitting that branch into its own file under tests/oracle is NOT done here; it would touch every test's include of board/machine.h.)
+ - New: tests/test_oracle_location.sh (in run_all): no src/oracle, no Z80 core code under src/ except the reference branch of machine.h, nothing under src/ reaches into tests/,
+   the program's build lines have no tests/oracle include path.
+ - tests/test_no_z80_symbols.sh: the control build no longer needs a ROM (so it also works in a fresh export).
+Checks (this step, fast set; all PASS): z80 core test, test_cpu_parity (20000 instructions vs prototype), test_no_z80_header, test_no_z80_symbols (0 lines/0 symbols/0 names;
+ control 23), test_oracle_location, test_native_machine 20000/10000 (59,273 frames identical, wrong version caught), test_native_ops 100 (0 differences),
+ test_no_rom_code (0 ROM instructions), test_cheat_invincible (12+12 checks), test_purist, test_replay (7273 hashes), test_mods, test_rules_all (200,000 frames).
+Fresh copy of the export (sh tools/export_github.sh): "Scan clean", release zip clean; from that copy: build_app.sh builds the program, build_native.sh passes the Z80 core
+ test, a test program (test_native_ops) builds, test_oracle_location, test_no_z80_header and test_no_z80_symbols pass.
+Full regression: ALL TESTS PASSED.
+Full regression after the move: ALL TESTS PASSED (2026-10-23).

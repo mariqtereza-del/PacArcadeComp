@@ -1,0 +1,32 @@
+N39 evidence: two players, turn changes and per-player state. AUDIT STEP, NO NEW NATIVE ROUTINE: the code of this step's objective was already made native in earlier steps (the turn change 0961-0971 which toggles the player number 4E09, the per-player level start state 0879-09B6 and 0A94-0ABF, the game-over reset 0972-0987, the saved-dots save and clear 2487/24C9, the lives and score area of the player in play 1423/2AAF) by N24 (player labels), N31 (level start, per-player saved state) and the T-series; none of these addresses is executed by the ROM any more in the coverage runs (table at the end: 0 addresses). So there was nothing left in the ROM to replace for this step, and no source file under src/ was changed.
+What this step adds is the proof on two-player play (tests/test_native_players.cpp / .sh, also added to tests/run_all.sh): lockstep of the original machine against the machine with all readable rules on the scripted player and the coverage players (B plays two-player games, the cocktail and DIP variants too), 13 real turn changes (0961/0964) and 174 returns to one player (0972) and 47 swaps of the per-player counters (0A94) in the original machine during the run; and a deliberately wrong turn change (the player number flipped wrong) as a third variant, which is caught.
+Honest notes: (1) The success criterion "the progress meter goes down" is NOT met by this step: it stays 2,691 (no routine added). Judged as: the step's content was delivered earlier; this step is the two-player proof. (2) Still executed by the ROM in the coverage runs, belonging to this topic: 17 addresses of the saved-dots loop 2457-246D (the native version 2448/245C falls back to the ROM when the loop does not fit in the rest of the frame; a design property of the earlier step, to be removed in the fallback-removal steps before N48) and 2 addresses at 184D inside Pac-Man's movement 1806 (the cocktail player-2 controls; the movement hook falls back near the end of a frame). (3) The wrong turn change was caught at frame 1,032,460, i.e. in the coverage players' two-player games (the scripted one-player part has no turn change). (4) The other tests re-run: test_native_over, test_rules_all 100000, test_purist, test_replay (all pass); the full tests/run_all.sh was not run. Nothing in src/ changed since N38, so the earlier native tests are unaffected.
+Date: 2026-10-19
+Command: sh tests/test_native_players.sh 1000000 30000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000)
+note: no hook starts at 0961 (the address is inside a longer hooked routine)
+note: no hook starts at 0A94 (the address is inside a longer hooked routine)
+part 1: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each, B and the cocktail and DIP variants play two-player games) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: all readable rules: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: all readable rules: routines replaced 393 of 282 in the map (instructions 3238 of 5439 = 59.53 percent); entered in this run 388; calls 158152150
+VARIANT W: the turn change 0964 wrong (must be caught): DIFFERENT at frame 1032460 in work RAM
+  registers at the end of every frame: identical too
+PROGRESS W: the turn change 0964 wrong (must be caught): routines replaced 1 of 282 in the map (instructions 0 of 5439 = 0.00 percent); entered in this run 1; calls 13
+REFERENCE distinct ROM instruction addresses run: 5643
+  entries seen in the original machine: turn change 0961 13, 0964 13, level swap 0972 174, 0A94 47
+part 1: all readable rules vs the original machine: identical on every frame
+part 2: wrong turn change (0964 flips the player number): caught at frame 1032460
+part 3: progress meter (as in the earlier steps; coverage players of 20000 frames): original ROM 5638; readable rules + N12 to N38 2691 (no routine is added by this step, so no drop is expected)
+  ROM 0961-0972 the turn change (toggles the player number 4E09): 0 ROM instruction addresses still executed
+  ROM 0972-0988 back to one player at game over: 0 ROM instruction addresses still executed
+  ROM 0879-0961 the level start: per-player level numbers, dot counters, lives: 0 ROM instruction addresses still executed
+  ROM 0A94-0ABF the per-player counters swapped at the turn change: 0 ROM instruction addresses still executed
+  ROM 2448-2487 restoring the saved dots of the maze: 17 ROM instruction addresses still executed
+  ROM 2487-24C9 saving the dots of the maze: 0 ROM instruction addresses still executed
+  ROM 24C9-24D7 clearing the saved dots: 0 ROM instruction addresses still executed
+  ROM 2AAF-2B17 the score area of the player in play: 0 ROM instruction addresses still executed
+  ROM 1423-14A0 the player in play: lives and flip: 0 ROM instruction addresses still executed
+  ROM 184D-1851 the controls of player 2 (cocktail), inside Pac-Man's movement 1806: 2 ROM instruction addresses still executed
+PASS test_native_players
+PASS test_native_players.sh (report in build/n39/report.txt)

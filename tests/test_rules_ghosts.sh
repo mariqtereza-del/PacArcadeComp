@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.." || exit 2
 N=${1:-200000}; ISO=${2:-100000}
 [ -f build/rom/prog.bin ] || python3 tools/check_rom.py >/dev/null || { echo "FAIL: no ROM (put pacman.zip in roms/)"; exit 2; }
 D=build/t02; mkdir -p $D
-g++ -O2 -std=c++17 -Wall -Wextra -Isrc/core tests/test_rules_ghosts.cpp src/board/machine.cpp src/board/bus.cpp -o $D/test_rules_ghosts || { echo "FAIL: build"; exit 1; }
+g++ -O2 -std=c++17 -Wall -Wextra -Itests/oracle tests/test_rules_ghosts.cpp src/board/machine.cpp src/board/bus.cpp -o $D/test_rules_ghosts || { echo "FAIL: build"; exit 1; }
 g++ -O2 -std=c++17 -Wall -Wextra -DREPLAY_MAIN src/app/replay.cpp src/board/machine.cpp src/board/bus.cpp -o $D/replay_tool || { echo "FAIL: build replay tool"; exit 1; }
 python3 tools/analysis/oracle_replay.py --make $D/script.replay 7273 >/dev/null || { echo "FAIL: replay script"; exit 1; }
 $D/replay_tool build/rom/prog.bin $D/script.replay $D/original.log > /dev/null || { echo "FAIL: replay (original)"; exit 1; }

@@ -4,6 +4,8 @@ Two ways to get a program you can run:
 - **Just play:** download the Windows release (see [README.md](README.md)). No building needed.
 - **Build it yourself** (this page): to change the program, or to run it on Linux.
 
+What gets built: the window program is **native C++ with no processor emulator inside** (`tools/build_app.sh` passes `-DPAC_NO_Z80`). The tests also build a second machine that has the reference Z80 emulator (`tests/oracle/z80.h`) and compare the two; that is why `pip install z80` and the original ROM matter for the tests but not for playing.
+
 In every case **you need your own `pacman.zip`** (the ROM set) to *play*. You do **not** need it to *build* the program or to run the ROM-free tests.
 
 Words you will meet: a **terminal** is the window where you type commands (copy each line exactly, press Enter after it). The **project folder** is the folder that contains `README.md`, `src` and `tools`.
@@ -37,7 +39,7 @@ Works on Ubuntu or Debian (and similar). Open a terminal.
    ```
    sh tests/run_rom_free.sh
    ```
-   It takes under a minute and prints `ROM-FREE TESTS PASSED` at the end. It checks that the Z80 core and the window program build and run, and runs the controls, vibration, records and achievement tests plus the documentation checks. Some of these tests have a second part that plays the game; without the ROM it prints `needs build/rom/prog.bin` and skips that part (the first part still ran). Everything that plays the game needs the ROM: step 7.
+   It takes under a minute and prints `ROM-FREE TESTS PASSED` at the end. It checks that the reference Z80 test program and the window program build and run, and runs the controls, vibration, records and achievement tests plus the documentation checks. Some of these tests have a second part that plays the game; without the ROM it prints `needs build/rom/prog.bin` and skips that part (the first part still ran). Everything that plays the game needs the ROM: step 7.
 7. **Run everything (needs your ROM in `roms/pacman.zip`):** first install the Python helpers once:
    ```
    sudo apt-get install -y xvfb xdotool
@@ -47,7 +49,7 @@ Works on Ubuntu or Debian (and similar). Open a terminal.
    ```
    sh tests/run_all.sh
    ```
-   This takes about **90 minutes** and ends with `ALL TESTS PASSED`. Two quicker checks that prove the machine still behaves exactly like the original: `sh tests/test_purist.sh` and `sh tests/test_replay.sh`.
+   This takes about **45 minutes** and ends with `ALL TESTS PASSED`. Two quicker checks that prove the machine still behaves exactly like the original: `sh tests/test_purist.sh` and `sh tests/test_replay.sh`.
 
 (Two tests, `tests/test_rom_tables.py` and its data, belong to the original project and are not in the GitHub copy; `tests/run_all.sh` therefore skips them if they are missing.)
 
@@ -86,7 +88,7 @@ This is how the downloadable release is made: Linux builds a Windows program wit
    ```
    sh tools/package.sh
    ```
-   The result is the folder `dist/PacArcadeComp` and the file `dist/PacArcadeComp-1.1.0-win64.zip` (program, README, licences, REPORT-A-PROBLEM.bat; never a ROM).
+   The result is the folder `dist/PacArcadeComp` and the file `dist/PacArcadeComp-2.0.0-win64.zip` (program, README, licences, REPORT-A-PROBLEM.bat; never a ROM).
 4. Only the exe is built here: to test it you need a Windows PC.
 
 ## D. Making the clean copy for GitHub

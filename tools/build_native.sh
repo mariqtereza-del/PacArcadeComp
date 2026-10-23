@@ -3,5 +3,5 @@
 set -e
 cd "$(dirname "$0")/.."
 mkdir -p build
-g++ -O2 -std=c++17 -Wall -Wextra -Isrc/core src/core/z80_test.cpp -o build/z80_test_native
+g++ -O2 -std=c++17 -Wall -Wextra -Itests/oracle tests/oracle/z80_test.cpp -o build/z80_test_native
 ./build/z80_test_native

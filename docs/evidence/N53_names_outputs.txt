@@ -1,0 +1,11 @@
+N53 Named output state: screen, sprites and sound  (2026-10-23)
+ - New src/game/output.h (handwritten, no ROM bytes): structs Screen (tile codes 4000-43FF, tile colours 4400-47FF), SpriteList / SpriteSlot (4FF0, 8 x {shape, palette}),
+   SpriteCoords / SpriteCoord (5060, 8 x {y, x}), SoundRegs (5040-505F: waveform, volume, frequency and accumulator nibbles by name), Latches (5000-5007: sound_enable, flip_screen ...).
+   output_view(bus) gives all of them as the same bytes as the machine's arrays. Helpers: sprite_picture (number, flips, palette, x, y), sound_frequency / volume / waveform,
+   output_to_old_layout (names -> old separate arrays). Layout is checked at compile time (static_assert sizes and offsets).
+ - The app (src/app/main.cpp) now hands the renderer the named screen and sprite structs and the sound chip the named sound registers and sound-enable latch (same bytes, same pixels, same samples).
+ - tests/lockstep.h compares video RAM, colour RAM, sprites, coordinates and sound registers through the named structs mapped back to the old layout.
+ - tests/test_names_output.sh (in run_all): on the S27 replay (7,273 frames) the named structs equal the memory in every frame; sprite pictures decoded from the names equal the renderer formula;
+   frequency / volume / waveform from the names equal the sound chip's values; the old layout rebuilt from the names equals the machine; shifted sprite and sound views are caught.
+ - Deviation noted: the step file's MAY TOUCH list has no src/app; main.cpp was changed in three lines (call sites only) because the objective says the renderer and chip are adapted. src/video and src/audio are unchanged (their pointer signatures stay).
+ - The game is unchanged: full regression ALL TESTS PASSED (lockstep with the new comparison, coverage, native-vs-ROM, Purist, replay hashes, 0 ROM instructions).

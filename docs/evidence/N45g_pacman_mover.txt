@@ -1,0 +1,232 @@
+N45g evidence (MILESTONE): the Pac-Man mover finished and the board start-up, native: ROM 1806-1984 and 19CD-1A69 (the Pac-Man mover: wait counter, speed counters, joystick, turn, move, the tail that eats the dot; 1985-19CC is the fruit code of N37) and 24D7-2674 (the game board start-up, a jump-table entry: fills the colour and tile rows after RST 08).
+Scope notes (honest): (1) Names come from reading the code, not from the project's label list. (2) The entry 1806 already had a readable-rules hook from step T02e (src/logic/movement.h) that runs the whole routine in almost every call; the ROM addresses still executed were its rare hand-overs to the ROM. This step makes the hand-over go to the native instruction runner (one line in pacman_1806, src/rules/rules.h). The entries inside the mover are therefore reached only after a hand-over; the test checks the runner at every entry against the ROM (random states, and real states from the ROM runs in part 2); in the lockstep the entries 1806 and 24D7 are compared one to one with the ROM, the others must not run more often than the ROM entered them. (3) First attempt: the range also covered the fruit code of N37 (1985-19CC); the full regression caught it (test_native_fruit failed because new entry points inside its routine stopped its runs early). The range was changed to leave out 1985-19CC; the earlier start tables are byte for byte unchanged; test_native_fruit and the whole regression then passed. (4) The progress meter line printed by the test ("before 1279") removes the older T02e hooks at the entries for its "before" figure; the true figure before this step is 1,064 (end of N45f), after 828 (same meter without removing them). (5) Only the readable-rules mode uses the native code; Purist mode and original-rules mode always run the ROM. (6) New instruction kinds: SRL A, SRL C, DEC C, DEC H, INC H, LD E,B, INC (IX+d).
+Date: 2026-10-20
+Command: sh tests/test_native_f45g.sh 3000000 20000 100000 (3,000,000 frames, milestone)
+Full regression: sh tests/run_all.sh: ALL TESTS PASSED (122 PASS lines, no FAIL; lines below).
+PASS prototype: deterministic, golden frames 700 and 1500 reproduced, IM2 vector 0xFA at boot then 0xFC at frame 1500, VBLANK enabled
+PASS S06: every fact line cited; 3 inconsistencies listed
+PASS S07: 51 fact rows have a status, 3 UNRESOLVED each with an experiment, 3 inconsistencies settled
+PASS S08: pacman.asm re-assembles to the identical 16384-byte ROM; every executed byte is traced code; 0 unclassified
+PASS S09: 27 labels well formed, all in boot_flow.md, prototype trace identical to the recorded evidence
+PASS S11: 8 gameplay labels well formed and cited, trace identical to the recorded evidence
+PASS test_rom_tables
+PASS test_logic_random: 2977 calls compared, 0 differences
+PASS test_logic_scoring: 3176 live calls and 380000 isolated calls compared, 0 differences
+PASS test_logic_timers: 180425 live calls and 626888 isolated calls compared, 0 differences
+PASS test_logic_house: 546838 live calls and 2464416 isolated calls compared, 0 differences
+PASS test_logic_movement: 623895 live calls and 4851360 isolated calls compared, 0 differences
+PASS test_logic_ghosts: 33617 live calls and 4930428 isolated calls compared, 0 differences
+PASS test_logic_dots: 122326 live calls and 222816 isolated calls compared, 0 differences
+PASS test_rules_random: 100000 frames, 2977 calls of the readable rule, 0 differences required
+PASS test_rules_scoring: 100000 isolated calls, 100000 frames, 2911 calls of the readable scoring, 0 differences required
+PASS test_rules_dots: 100000 isolated calls per routine, 100000 frames, 0 differences required
+PASS test_rules_ghosts: 100000 isolated calls per routine, 100000 frames, 0 differences required
+PASS test_rules_movement: 100000 isolated calls per routine, 100000 frames, 0 differences required
+PASS test_rules_timers: 100000 isolated calls per routine, 100000 frames, 0 differences required
+PASS test_rules_house: 100000 isolated calls per routine, 100000 frames, 0 differences required
+PASS test_rules_all: 100000 frames, 0 differences required
+PASS test_rules_all: 100000 frames, 0 differences required
+PASS test_rules_file: 270 checks, 0 failed
+PASS test_rules_file: reader and numbers checked; original, readable and the standard file give the prototype's 7273 frame hashes; the slow-ghost mod differs from frame 561 and is marked MODDED (no high score saved); Purist ignores the file; wrong lines are reported
+PASS test_mods (game part): 19 checks, 0 failed
+PASS test_mods: all example mods load and change what they say; the Pinky example moves the target from 104 to 106; the documents' links and paths exist
+PASS test_rom_map: map complete (every code block once), coverage consistent, repeatable, no ROM bytes
+PASS test_coverage_a: deterministic complete games; report in build/n02/report_a.txt (copy kept in docs/evidence/N02_coverage_a.txt)
+PASS test_coverage_b: deterministic; report in build/n03/report_ab.txt (copy kept in docs/evidence/N03_coverage_b.txt)
+PASS test_coverage_c: deterministic; levels up to 256; all three intermissions; report in build/n04/report_abc.txt (copy kept in docs/evidence/N04_coverage_c.txt)
+PASS test_coverage_d: deterministic; the service test screens ran
+PASS test_rom_unreached: every instruction is executed or listed with a reason and a decision
+PASS test_timing_study: the interrupt places, the frame length, the handler cost and the queue depth are measured; numbers recorded in docs/notes/native_timing.md
+PASS test_cycle_meter: 2A23 = 111 cycles / 13 instructions; 0008 = 5 + 26 * B cycles; report in build/n07/report.txt
+PASS test_rules_random: 100000 frames, 2977 calls of the readable rule, 0 differences required
+PASS test_lockstep: the T02a result on the shared harness, a wrong routine caught, the coverage players in lockstep; report in build/n08/lockstep_report.txt
+PASS test_rom_data_map: every data read of the coverage runs lies inside a listed table (report in build/n10/data_map.txt)
+PASS test_rom_reader (0)
+PASS test_rom_reader.sh
+PASS test_native_helpers
+PASS test_native_helpers.sh (report in build/n12/report.txt)
+PASS test_native_screen
+PASS test_native_screen.sh (report in build/n13/report.txt)
+PASS test_native_numbers
+PASS test_native_numbers.sh (report in build/n14/report.txt)
+PASS test_native_text
+PASS test_native_text.sh (report in build/n15/report.txt)
+PASS test_native_status
+PASS test_native_status.sh (report in build/n16/report.txt)
+PASS test_native_sliced
+PASS test_native_sliced.sh (report in build/n17/report.txt)
+PASS test_native_maze
+PASS test_native_maze.sh (report in build/n18/report.txt)
+PASS test_native_scan
+PASS test_native_scan.sh (report in build/n19/report.txt)
+PASS test_native_sprites
+PASS test_native_sprites.sh (report in build/n20/report.txt)
+PASS test_native_pics
+PASS test_native_pics.sh (report in build/n21/report.txt)
+PASS test_native_clocks
+PASS test_native_clocks.sh (report in build/n22/report.txt)
+PASS test_native_coins
+PASS test_native_coins.sh (report in build/n23/report.txt)
+PASS test_native_labels
+PASS test_native_labels.sh (report in build/n24/report.txt)
+PASS test_native_handler
+PASS test_native_handler.sh (report in build/n25/report.txt)
+PASS test_native_events
+PASS test_native_events.sh (report in build/n26/report.txt)
+PASS test_native_mode
+PASS test_native_mode.sh (report in build/n27/report.txt)
+PASS test_native_attract
+PASS test_native_attract.sh (report in build/n28/report.txt)
+PASS test_native_demo
+PASS test_native_demo.sh (report in build/n29/report.txt)
+PASS test_native_game
+PASS test_native_game.sh (report in build/n30/report.txt)
+PASS test_native_level
+PASS test_native_level.sh (report in build/n31/report.txt)
+PASS test_native_frame
+PASS test_native_frame.sh (report in build/n32/report.txt)
+PASS test_native_meet
+PASS test_native_meet.sh (report in build/n33/report.txt)
+PASS test_native_eaten
+PASS test_native_eaten.sh (report in build/n34/report.txt)
+PASS test_native_death
+PASS test_native_death.sh (report in build/n35/report.txt)
+PASS test_native_clear
+PASS test_native_clear.sh (report in build/n36/report.txt)
+PASS test_native_fruit
+PASS test_native_fruit.sh (report in build/n37/report.txt)
+PASS test_native_over
+PASS test_native_over.sh (report in build/n38/report.txt)
+PASS test_native_players
+PASS test_native_players.sh (report in build/n39/report.txt)
+PASS test_native_inter1
+PASS test_native_inter1.sh (report in build/n40/report.txt)
+PASS test_native_inter2
+PASS test_native_inter2.sh (report in build/n41/report.txt)
+PASS test_native_inter3
+PASS test_native_inter3.sh (report in build/n42/report.txt)
+PASS test_native_snd
+PASS test_native_snd.sh (report in build/n43/report.txt)
+PASS test_native_tune
+PASS test_native_tune.sh (report in build/n44/report.txt)
+PASS test_native_sched
+PASS test_native_sched.sh (report in build/n45/report.txt)
+PASS test_native_f45a
+PASS test_native_f45a.sh (report in build/n45a/report.txt)
+PASS test_native_f45b
+PASS test_native_f45b.sh (report in build/n45b/report.txt)
+PASS test_native_f45c
+PASS test_native_f45c.sh (report in build/n45c/report.txt)
+PASS test_native_f45d
+PASS test_native_f45d.sh (report in build/n45d/report.txt)
+PASS test_native_f45e
+PASS test_native_f45e.sh (report in build/n45e/report.txt)
+PASS test_native_f45f
+PASS test_native_f45f.sh (report in build/n45f/report.txt)
+PASS test_native_f45g
+PASS test_native_f45g.sh (report in build/n45g/report.txt)
+
+Test report (build/n45g/report.txt):
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2662 0, 260F 0, 253D 0, 24F3 0, 24E8 0, 24D7 0, 1A67 0, 1A5C 0, 1A4D 0, 1A42 0, 1A3D 0, 1A38 0, 1A2E 0, 1A19 0, 1A06 0, 1A03 0, 19FD 0, 19F6 0, 19D8 0, 19CD 0, 1984 0, 1975 0, 1971 0, 195B 0, 1950 0, 1940 0, 1935 0, 191D 0, 1916 0, 190B 0, 18EF 0, 18E4 0, 18C8 0, 18AB 0, 1899 0, 1886 0, 1843 0, 182F 0, 1811 0, 1806 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 2662 80193 of 100000, 260F 80195 of 100000, 253D 80181 of 100000, 24F3 80213 of 100000, 24E8 79971 of 100000, 24D7 79992 of 100000, 1A67 79863 of 100000, 1A5C 80001 of 100000, 1A4D 79903 of 100000, 1A42 79883 of 100000, 1A3D 80102 of 100000, 1A38 79900 of 100000, 1A2E 80047 of 100000, 1A19 80174 of 100000, 1A06 80195 of 100000, 1A03 80177 of 100000, 19FD 80238 of 100000, 19F6 79981 of 100000, 19D8 79997 of 100000, 19CD 79845 of 100000, 1984 80005 of 100000, 1975 79937 of 100000, 1971 79840 of 100000, 195B 80045 of 100000, 1950 79943 of 100000, 1940 80031 of 100000, 1935 80192 of 100000, 191D 80182 of 100000, 1916 80210 of 100000, 190B 80262 of 100000, 18EF 79950 of 100000, 18E4 79977 of 100000, 18C8 79857 of 100000, 18AB 79973 of 100000, 1899 79946 of 100000, 1886 79857 of 100000, 1843 80074 of 100000, 182F 79943 of 100000, 1811 79993 of 100000, 1806 80223 of 100000
+part 2: real entry states from the coverage players A, B, C, D (20000 frames each, D a fifth): entries / compared / differences
+  2662: 36 / 6 / 0
+  260F: 36 / 6 / 0
+  253D: 113 / 17 / 0
+  24F3: 341 / 49 / 0
+  24E8: 1367 / 196 / 0
+  24D7: 342 / 49 / 0
+  1A67: 6404 / 915 / 0
+  1A5C: 6404 / 915 / 0
+  1A4D: 800 / 115 / 0
+  1A42: 800 / 115 / 0
+  1A3D: 800 / 115 / 0
+  1A38: 800 / 115 / 0
+  1A2E: 5916 / 846 / 0
+  1A19: 6404 / 915 / 0
+  1A06: 1023 / 147 / 0
+  1A03: 1023 / 147 / 0
+  19FD: 1023 / 147 / 0
+  19F6: 1023 / 147 / 0
+  19D8: 20930 / 2990 / 0
+  19CD: 20930 / 2990 / 0
+  1984: 217 / 31 / 0
+  1975: 5792 / 828 / 0
+  1971: 89 / 13 / 0
+  195B: 15676 / 2240 / 0
+  1950: 15676 / 2240 / 0
+  1940: 11952 / 1708 / 0
+  1935: 3974 / 568 / 0
+  191D: 8633 / 1234 / 0
+  1916: 8633 / 1234 / 0
+  190B: 2299 / 329 / 0
+  18EF: 22964 / 3281 / 0
+  18E4: 22964 / 3281 / 0
+  18C8: 22964 / 3281 / 0
+  18AB: 28390 / 4056 / 0
+  1899: 127 / 19 / 0
+  1886: 172 / 25 / 0
+  1843: 29540 / 4220 / 0
+  182F: 43428 / 6204 / 0
+  1811: 51891 / 7413 / 0
+  1806: 54022 / 7718 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 9347
+part 3: lockstep, scripted player 3000000 frames, then the coverage players A, B, C (20000 frames each) and D (a fifth): 3064000 frames compared
+LOCKSTEP 3064000 frames compared; 2 variant(s)
+VARIANT A: native frame-update code only (calls counted): IDENTICAL on every frame (3064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native frame-update code only (calls counted): routines replaced 40 of 282 in the map (instructions 409 of 5439 = 7.52 percent); entered in this run 40; calls 27144546
+VARIANT B: all readable rules + N12 to N45g: IDENTICAL on every frame (3064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N45g: routines replaced 676 of 282 in the map (instructions 5142 of 5439 = 94.54 percent); entered in this run 657; calls 669411336
+REFERENCE distinct ROM instruction addresses run: 5640
+  2662: original machine entered it 535 times; native version (A or C) ran 535 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  260F: original machine entered it 535 times; native version (A or C) ran 535 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  253D: original machine entered it 2845 times; native version (A or C) ran 2845 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  24F3: original machine entered it 2824 times; native version (A or C) ran 2824 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  24E8: original machine entered it 11299 times; native version (A or C) ran 11299 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  24D7: original machine entered it 2825 times; native version (A or C) ran 2825 times  (equal)
+  1A67: original machine entered it 931438 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A5C: original machine entered it 931438 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A4D: original machine entered it 116361 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A42: original machine entered it 116361 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A3D: original machine entered it 116361 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A38: original machine entered it 116361 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A2E: original machine entered it 647116 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A19: original machine entered it 931438 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A06: original machine entered it 77604 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1A03: original machine entered it 77604 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  19FD: original machine entered it 77604 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  19F6: original machine entered it 77604 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  19D8: original machine entered it 1571730 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  19CD: original machine entered it 1571730 times; native version (A or C) ran 1571730 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1984: original machine entered it 8238 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1975: original machine entered it 259868 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1971: original machine entered it 4429 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  195B: original machine entered it 671206 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1950: original machine entered it 671206 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1940: original machine entered it 496636 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1935: original machine entered it 174443 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  191D: original machine entered it 430878 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1916: original machine entered it 430878 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  190B: original machine entered it 2299 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  18EF: original machine entered it 929893 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  18E4: original machine entered it 929893 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  18C8: original machine entered it 929893 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  18AB: original machine entered it 1840158 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1899: original machine entered it 7010 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1886: original machine entered it 9741 times; native version (A or C) ran 0 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1843: original machine entered it 1871072 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  182F: original machine entered it 2719944 times; native version (A or C) ran 6 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1811: original machine entered it 3604692 times; native version (A or C) ran 7 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1806: original machine entered it 3770556 times; native version (A or C) ran 3770556 times  (equal)
+  frame-update code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 3000000 frames)
+part 4: wrong version "1806 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1806 an undocumented flag bit wrong": caught (2919 of 3000 isolated cases differ)
+part 4: wrong version "1806 the byte 4D08 wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1950 the return address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "24D7 register BC wrong": caught (2368 of 3000 isolated cases differ)
+part 4: lockstep with the Pac-Man mover 1806 (one cycle too slow): caught at frame 678
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N45g (before N45g) 1279; with the N45g frame-update code 828
+PASS test_native_f45g
+PASS test_native_f45g.sh (report in build/n45g/report.txt)

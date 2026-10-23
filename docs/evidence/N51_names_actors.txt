@@ -1,0 +1,13 @@
+N51: Named game state: the actors
+=================================
+ - tools/gen_names.py writes src/game/state.h: struct Actors (the actors block 4D00-4DD6 of the work RAM, 215 bytes, 112 named fields: positions, tiles, steps, vectors, directions,
+   speed patterns, ghost-house and frightened flags, Elroy, phase, fruit ...) and the constants game::ram::<name> (= 4D00 + offsetof). Names come from docs/notes/ram_map.md and the
+   comments of src/logic/*.h; byte_4Dxx = used by the code, meaning not established (4DC0, 4DD1, 4DD6). actors_view(work_ram) gives the struct over the machine's bytes (the view for tests).
+ - tools/gen_names.py --replace rewrote 139 code lines in src/game (attract, clocks, events, labels, sprite_pics, sprites) and src/rules (rules.h, z80sim.h): every raw 0x4Dxx address in
+   code is now a name (comments untouched). Nothing else changed in them. src/logic keeps its own address tables (the readable rules, T-steps).
+ - NEW tests/test_names.sh (in run_all): anchors from ram_map.md at compile time; on the S27 replay (7,273 frames) the struct view equals memory (all 215 bytes) in every frame, the named
+   fields read the ROM's addresses, tile = (pixel>>3)+32 holds, Pac-Man moved in 1,293 frames and ghosts were blue in 952; a view shifted by one byte is caught; no raw 0x4Dxx in the code; state.h is
+   exactly what the generator writes.
+ - Proof that the game is unchanged: the replacement only turns constants into equal constants; full regression ALL TESTS PASSED (all lockstep, coverage, native-vs-ROM, Purist, replay hashes,
+   progress meter unchanged: 0 ROM instructions executed).
+Not in this step: the maze (the tile map is video RAM 4000-43FF, and the dot arrays are game flow state) is named in N52 (dot arrays, flow, scores, settings).

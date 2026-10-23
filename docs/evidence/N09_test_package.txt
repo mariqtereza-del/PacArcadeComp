@@ -1,0 +1,15 @@
+N09: Test package for you: PLAY-ORIGINAL.bat and PLAY-READABLE.bat  (2026-10-16)
+Tools: tools/package_test.sh (usage: sh tools/package_test.sh N09), dist/README-TEST.txt (one page, @LABEL@ is replaced by the step id).
+Built: dist/PacArcadeCompTest-N09/ and dist/PacArcadeCompTest-N09-win64.zip (1.3 MB). Contents (5 files): PacArcadeComp.exe, PLAY-ORIGINAL.bat, PLAY-READABLE.bat, README-TEST.txt, THIRD-PARTY-LICENSES.txt. Never the ROM.
+The two .bat files: PLAY-ORIGINAL starts PacArcadeComp.exe --rules original, PLAY-READABLE starts it with --rules readable. Each uses its own settings folder (settings-original / settings-readable next to the exe, via --config) so a rules choice saved earlier cannot mix them, and writes log-original.txt / log-readable.txt (via --report). A missing pacman.zip gives a plain message and a pause.
+
+VERIFY 1, ROM scan of the finished zip (same rule as tools/export_github.sh: no run of 16 bytes taken from any ROM file; built into tools/package_test.sh, it deletes the zip if it finds any):
+  result: test zip: 5 files scanned, no run of 16 ROM bytes (clean)
+  the scan is proved to work: a zip with 40 ROM bytes added is caught (ROM BYTES FOUND, exit 1).
+VERIFY 2, the exe starts and logs which rules are on, checked here in a virtual display (the Windows exe of the package run with Wine on Xvfb, 900 frames, pacman.zip copied in for this check only):
+  --rules original  -> log line 3: Game rules: original ROM routines
+  --rules readable  -> log line 3: Game rules: READABLE (the proved readable rules in src/logic run instead of the ROM routines)
+  both exited with code 0.
+  The missing-ROM branch of the .bat (run with Wine cmd): 'pacman.zip is not next to PacArcadeComp.exe. Copy your pacman.zip ...' and a pause.
+Not run in this step: the full regression (the game program is unchanged; only a packaging script and a README were added).
+Note: the loose test folder dist/PacArcadeCompTest-N09 is small (exe and zip are excluded from the GitHub export, the .bat and text files are not); delete it if you do not want it in the repository.

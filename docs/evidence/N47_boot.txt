@@ -1,0 +1,57 @@
+N47 evidence: the reset and the boot, native: ROM 0000-0007 (reset: interrupts off, register I, jump) and 230B-238C (clear of the work RAM, video and colour memory, interrupt mode 2 with the vector byte, enabling the interrupt, waiting for the first frame with HALT, set-up of the task queue, enabling the game), 12 entry addresses.
+DECISION (recorded): the native boot REPLICATES the power-on boot frame for frame (same cycles, same I/O writes, same CPU interrupt state), it does not start from a stored state. Reason: the boot is short straight-line code (the clear takes about 47,500 cycles, inside frame 0) and replicating it keeps 'frame 1' identical to the original, so the lockstep starts at frame 0 with no special start state. The self test (3000-30F8) and the test screen (3174-32F8) are not part of the normal boot (they run only in test mode) and stay for N47a / N47b.
+Scope notes (honest): (1) Only the readable-rules mode uses the native code; original-rules and Purist modes still run the ROM. (2) New instruction forms DI, EI, HALT, LD I,A, IM 2, OUT (0),A, LD SP,nn in the native runner; a halted CPU takes its idle steps as before. (3) tests/lockstep.h now also compares interrupt mode, IFF2, the halted flag and the interrupt-delay flag (stricter than before; all earlier tests still pass). (4) The 230B clear is tested with 1/50 of the random cases (each case runs about 15,000 instructions).
+Date: 2026-10-21
+Command: sh tests/test_native_f47.sh 1000000 20000 100000 (1,064,000 frames compared, from frame 0)
+Fast regression (per-step check, not a milestone): 52 PASS lines (f45k, f46, f47 and test_cheat_invincible included), no FAIL.
+Progress meter (20,000 frames): 404 -> 335 unhooked ROM addresses, 0 ROM-instruction fallbacks.
+
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2387 0, 2376 0, 236E 0, 2368 0, 2362 0, 2361 0, 2360 0, 235F 0, 2359 0, 234B 0, 230B 0, 0000 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 2387 100000 of 100000, 2376 100000 of 100000, 236E 100000 of 100000, 2368 100000 of 100000, 2362 100000 of 100000, 2361 100000 of 100000, 2360 100000 of 100000, 235F 100000 of 100000, 2359 100000 of 100000, 234B 100000 of 100000, 230B 2000 of 2000, 0000 100000 of 100000
+part 1b: cut test (started 0 to 800 cycles before the end of the frame, then the interrupt and 2 more frames), 10000 cases per routine: differences 2387 0, 2376 0, 236E 0, 2368 0, 2362 0, 2361 0, 2360 0, 235F 0, 2359 0, 234B 0, 230B 0, 0000 0
+  cut cases run 111000
+part 2: real entry states from the coverage players A, B, C, D (20000 frames each, D a fifth): entries / compared / differences
+  2387: 4 / 1 / 0
+  2376: 4 / 1 / 0
+  236E: 4 / 1 / 0
+  2368: 4 / 1 / 0
+  2362: 4 / 1 / 0
+  2361: 4 / 1 / 0
+  2360: 4 / 1 / 0
+  235F: 4 / 1 / 0
+  2359: 4 / 1 / 0
+  234B: 3614 / 517 / 0
+  230B: 5 / 1 / 0
+  0000: 5 / 1 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 1759
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (20000 frames each) and D (a fifth): 1064000 frames compared
+LOCKSTEP 1064000 frames compared; 2 variant(s)
+VARIANT A: native frame-update code only (calls counted): IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native frame-update code only (calls counted): routines replaced 12 of 282 in the map (instructions 4 of 5439 = 0.07 percent); entered in this run 12; calls 4394
+VARIANT B: all readable rules + N12 to N47: IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N47: routines replaced 978 of 282 in the map (instructions 5355 of 5439 = 98.46 percent); entered in this run 959; calls 4318810798
+REFERENCE distinct ROM instruction addresses run: 5640
+  2387: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2376: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  236E: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2368: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2362: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2361: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2360: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  235F: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  2359: original machine entered it 5 times; native version (A or C) ran 5 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  234B: original machine entered it 4337 times; native version (A or C) ran 4337 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  230B: original machine entered it 6 times; native version (A or C) ran 6 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  0000: original machine entered it 6 times; native version (A or C) ran 6 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  frame-update code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "230B one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2387 an undocumented flag bit wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "230B a tile byte wrong": caught (2899 of 3000 isolated cases differ)
+part 4: wrong version "2359 the stack pointer wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "234B register BC wrong": caught (2986 of 3000 isolated cases differ)
+part 4: lockstep with the boot 230B (one cycle too slow): caught at frame 0
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N47 (before N47) 350; with the N47 frame-update code 335
+PASS test_native_f47
+PASS test_native_f47.sh (report in build/n47/report.txt)

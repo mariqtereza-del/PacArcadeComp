@@ -1,0 +1,34 @@
+N22 evidence: native frame counters, clocks, random-number refresh bytes and the 1UP blink: src/game/clocks.h; adapters src/rules/rules.h namespace clocks area; 2 hooks in rules::table() (readable rules only): 01DC (frame counters, seconds and minutes clocks with the limit table, refresh bytes of 0204) and 02FD (the 1UP blink counter 4DCE, the 5004/5005 writes and the calls to the letter writers).
+Note: the coin-timer routines 0267 and 02AD are not part of this step's objective and stay in the ROM.
+Date: 2026-10-17
+Command: sh tests/test_native_clocks.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated random cases per entry)
+How it works: both routines are written instruction by instruction (T-states, opcode fetches, flags incl. the undocumented ones, WZ, the bytes the CALLs leave on the stack); the limit table is read from the ROM image at run time (no ROM bytes in the source).
+Honest notes: (1) no cut test: the code runs inside the interrupt handler at the start of a frame; when the machine is so late in the frame that a routine might not fit (only in the tests) the hook hands over to the ROM instruction by instruction. (2) Progress meter rule as in N19 (an address handled by a native hook counts only if the hook ran the ROM instruction); the numbers are comparable only from N19 on.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 01DC 0, 02FD 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 01DC 239572 of 300000, 02FD 239844 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  01DC: 90165 / 12881 / 0
+  02FD: 90111 / 12873 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3652
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native clocks and blink only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native clocks and blink only (calls counted): routines replaced 2 of 282 in the map (instructions 97 of 5439 = 1.78 percent); entered in this run 2; calls 2179674
+VARIANT B: all readable rules + N12 to N22: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N22: routines replaced 105 of 282 in the map (instructions 2041 of 5439 = 37.53 percent); entered in this run 101; calls 87561978
+REFERENCE distinct ROM instruction addresses run: 5643
+  01DC: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  02FD: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  clocks and blink in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "01DC one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "02FD one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "01DC a refresh byte wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "02FD a letter tile wrong": caught (2642 of 3000 isolated cases differ)
+part 4: wrong version "02FD the CALL's return address wrong": caught (2388 of 3000 isolated cases differ)
+part 4: lockstep with the counters (one cycle too slow): caught at frame 295
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N22 (before N22) 3881; with the N22 clocks and blink 3754
+PASS test_native_clocks
+Fast checks run after this step (all PASS): tests/test_rules_all.sh 100000, test_native_pics / sprites / scan / maze / helpers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).

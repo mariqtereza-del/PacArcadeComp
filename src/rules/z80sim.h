@@ -5,6 +5,7 @@
 // memory the routine would read) and only keeps track of those leftovers; it never decides what happens in the game.
 // It writes to its own copy of the work RAM; the real RAM gets the result of the readable rules.
 #pragma once
+#include "../game/state.h"
 #include <cstdint>
 #include <cstring>
 #include "../board/machine.h"
@@ -296,7 +297,7 @@ struct Sim {
         a = add8(a, a, 0, f); t(4);
         c = a; t(4);
         b = 0; t(7);
-        set_hl(0x4D09); t(10);
+        set_hl((game::ram::pacman_pixel + 1)); t(10);
         set_hl(add16(hl(), bc(), f)); t(11);
         a = rd(hl()); t(7);
         cp_n(0x1D);
@@ -348,7 +349,7 @@ struct Sim {
         set_hl((uint16_t)(after_rst + 2));
         st.push16((uint16_t)(after_rst + 2)); t(11);
         t(12); // jr 0042
-        ld_hl_nn(0x4C80);
+        ld_hl_nn(game::ram::task_queue_write_ptr);
         wr(hl(), b); t(7);
         l = inc8(l, f); t(4);
         wr(hl(), c); t(7);
@@ -358,7 +359,7 @@ struct Sim {
         if (!nz) {
             l = 0xC0; t(7);
         }
-        st_hl_nn(0x4C80);
+        st_hl_nn(game::ram::task_queue_write_ptr);
         ret();
     }
     // ---- rst 18h: HL = word at HL + 2*B (a table of words)
@@ -382,27 +383,27 @@ struct Sim {
     }
     // ---- ROM 20D7: Cruise Elroy
     void s20D7() {
-        ld_a_nn(0x4DA3);
+        ld_a_nn(game::ram::clyde_out);
         and_a();
         if (a == 0) { retcc(true); return; }
         retcc(false);
-        set_hl(0x4E0E); t(10);
-        ld_a_nn(0x4DB6);
+        set_hl(game::ram::dots_eaten); t(10);
+        ld_a_nn(game::ram::elroy1);
         and_a();
         jp();
         if (a == 0) {
             a = 0xF4; t(7);
             a = sub8(a, rd(hl()), 0, f); t(7);
             b = a; t(4);
-            ld_a_nn(0x4DBB);
+            ld_a_nn(game::ram::elroy_dots_left1);
             sub_b();
             const bool cy = f & kC;
             retcc(cy);
             if (cy) return;
             a = 1; t(7);
-            st_a_nn(0x4DB6);
+            st_a_nn(game::ram::elroy1);
         }
-        ld_a_nn(0x4DB7);
+        ld_a_nn(game::ram::elroy2);
         and_a();
         const bool nz = a != 0;
         retcc(nz);
@@ -410,13 +411,13 @@ struct Sim {
         a = 0xF4; t(7);
         a = sub8(a, rd(hl()), 0, f); t(7);
         b = a; t(4);
-        ld_a_nn(0x4DBC);
+        ld_a_nn(game::ram::elroy_dots_left2);
         sub_b();
         const bool cy = f & kC;
         retcc(cy);
         if (cy) return;
         a = 1; t(7);
-        st_a_nn(0x4DB7);
+        st_a_nn(game::ram::elroy2);
         ret();
     }
 
@@ -445,7 +446,7 @@ struct Sim {
     // ---- ROM 1806: Pac-Man's movement. Ends with RET (kRet), or carries on at 19CD (kTo19CD: the dot / energizer part), or kFallback (the fruit is eaten
     // here: the ROM runs the routine itself).
     Exit pacman() {
-        set_hl(0x4D9D); t(10);
+        set_hl(game::ram::pacman_pause); t(10);
         a = 0xFF; t(7);
         cp8(a, rd(hl()), f); t(7);
         jp();
@@ -454,23 +455,23 @@ struct Sim {
             final_ret();
             return Exit::kRet;
         }
-        ld_a_nn(0x4DA6);
+        ld_a_nn(game::ram::frightened);
         and_a();
         jp();
         if (a != 0) {
-            if (speed_pattern(0x4D4A, true)) return Exit::kRet;
+            if (speed_pattern(game::ram::pacman_speed_blue, true)) return Exit::kRet;
         } else {
-            if (speed_pattern(0x4D46, false)) return Exit::kRet;
+            if (speed_pattern(game::ram::pacman_speed_normal, false)) return Exit::kRet;
         }
         // 1843
-        ld_a_nn(0x4E0E);
-        st_a_nn(0x4D9E);
-        ld_a_nn(0x4E72);
+        ld_a_nn(game::ram::dots_eaten);
+        st_a_nn(game::ram::dots_at_last_move);
+        ld_a_nn(game::ram::cocktail_mode);
         c = a; t(4);
-        ld_a_nn(0x4E09);
+        ld_a_nn(game::ram::current_player);
         a = and8(a, c, f); t(4);
         c = a; t(4);
-        set_hl(0x4D3A); t(10);
+        set_hl(game::ram::pacman_tile_b); t(10);
         ld_a_hl();
         b = 0x21; t(7);
         a = sub8(a, b, 0, f); t(4);
@@ -495,15 +496,15 @@ struct Sim {
         bool demo = false;
         if (tunnel_rows) {
             a = 1; t(7);
-            st_a_nn(0x4DBF);
+            st_a_nn(game::ram::pacman_in_tunnel_row);
         }
         // 1869 / 18AB: the demo and level-change walk
-        ld_a_nn(0x4E00);
+        ld_a_nn(game::ram::main_state);
         cp_n(1);
         jp();
         if (a == 1) demo = true;
         else {
-            ld_a_nn(0x4E04);
+            ld_a_nn(game::ram::level_state);
             cp_n(0x10);
             jp();
             if (!(f & kC)) demo = true;
@@ -531,15 +532,15 @@ struct Sim {
                 } else {
                     ld_hl_nn(0x32FF);
                     a = 0; f = z80::kFlagsAfterXorA; t(4);
-                    st_a_nn(0x4D30);
-                    st_hl_nn(0x4D1C);
+                    st_a_nn(game::ram::pacman_direction);
+                    st_hl_nn(game::ram::pacman_step);
                     jp();
                 }
             } else {
                 ld_hl_nn(0x3303);
                 a = 2; t(7);
-                st_a_nn(0x4D30);
-                st_hl_nn(0x4D1C);
+                st_a_nn(game::ram::pacman_direction);
+                st_hl_nn(game::ram::pacman_step);
                 jp();
             }
             return pacman_move_and_centre();
@@ -561,43 +562,43 @@ struct Sim {
                     else { // 1AF8: down
                         ld_hl_nn(0x3301);
                         a = 1; t(7);
-                        st_a_nn(0x4D3C);
-                        st_hl_nn(0x4D26);
+                        st_a_nn(game::ram::pacman_wanted_direction);
+                        st_hl_nn(game::ram::pacman_wanted_step);
                         b = 0; t(7);
                         jp();
                     }
                 } else { // 1AE8: up
                     ld_hl_nn(0x3305);
                     a = 3; t(7);
-                    st_a_nn(0x4D3C);
-                    st_hl_nn(0x4D26);
+                    st_a_nn(game::ram::pacman_wanted_direction);
+                    st_hl_nn(game::ram::pacman_wanted_step);
                     b = 0; t(7);
                     jp();
                 }
             } else { // 1AD9: right
                 ld_hl_nn(0x32FF);
                 a = 0; f = z80::kFlagsAfterXorA; t(4);
-                st_a_nn(0x4D3C);
-                st_hl_nn(0x4D26);
+                st_a_nn(game::ram::pacman_wanted_direction);
+                st_hl_nn(game::ram::pacman_wanted_step);
                 b = 0; t(7);
                 jp();
             }
         } else { // 1AC9: left
             ld_hl_nn(0x3303);
             a = 2; t(7);
-            st_a_nn(0x4D3C);
-            st_hl_nn(0x4D26);
+            st_a_nn(game::ram::pacman_wanted_direction);
+            st_hl_nn(game::ram::pacman_wanted_step);
             b = 0; t(7);
             jp();
         }
         if (!pressed) {
-            ld_hl_nn(0x4D1C);
-            st_hl_nn(0x4D26);
+            ld_hl_nn(game::ram::pacman_step);
+            st_hl_nn(game::ram::pacman_wanted_step);
             b = 1; t(7);
         }
         // 18E4
-        ix = 0x4D26; t(14, 2);
-        iy = 0x4D39; t(14, 2);
+        ix = game::ram::pacman_wanted_step; t(14, 2);
+        iy = game::ram::pacman_tile_a; t(14, 2);
         call(0x18EF);
         s200F();
         a = and8(a, 0xC0, f); t(7);
@@ -614,7 +615,7 @@ struct Sim {
                 if (blocked_stop(0x1900)) return Exit::kRet;
                 go_1950 = take_wanted();
             } else {
-                ix = 0x4D1C; t(14, 2);
+                ix = game::ram::pacman_step; t(14, 2);
                 call(0x191D);
                 s200F();
                 a = and8(a, 0xC0, f); t(7);
@@ -631,24 +632,24 @@ struct Sim {
     }
     // 1940: take the wanted step (and direction unless b ran out)
     bool take_wanted() {
-        ld_hl_nn(0x4D26);
-        st_hl_nn(0x4D1C);
+        ld_hl_nn(game::ram::pacman_wanted_step);
+        st_hl_nn(game::ram::pacman_step);
         b = dec8(b, f); t(4);
         jp();
         if (b != 0) {
-            ld_a_nn(0x4D3C);
-            st_a_nn(0x4D30);
+            ld_a_nn(game::ram::pacman_wanted_direction);
+            st_a_nn(game::ram::pacman_direction);
         }
         return true;
     }
     // the "stop in the middle of the tile" lines at 18F9 / 1923: returns true when the routine returned
     bool blocked_stop(unsigned) {
-        ld_a_nn(0x4D30);
+        ld_a_nn(game::ram::pacman_direction);
         rrca_();
         const bool odd = f & kC;
         jp();
-        if (odd) ld_a_nn(0x4D08);
-        else ld_a_nn(0x4D09);
+        if (odd) ld_a_nn(game::ram::pacman_pixel);
+        else ld_a_nn((game::ram::pacman_pixel + 1));
         a = and8(a, 7, f); t(7);
         cp_n(4);
         const bool stop = f & kZ;
@@ -662,20 +663,20 @@ struct Sim {
     }
     // the demo walk 1A19, ends at 1985
     Exit pacman_demo_walk() {
-        set_hl(0x4D1C); t(10);
+        set_hl(game::ram::pacman_step); t(10);
         ld_a_hl();
         and_a();
         jp();
         bool middle;
         if (a != 0) {
-            ld_a_nn(0x4D08);
+            ld_a_nn(game::ram::pacman_pixel);
             a = and8(a, 7, f); t(7);
             cp_n(4);
             jp();
             middle = f & kZ;
             if (!middle) jp(); // jp 1A5C
         } else {
-            ld_a_nn(0x4D09);
+            ld_a_nn((game::ram::pacman_pixel + 1));
             a = and8(a, 7, f); t(7);
             cp_n(4);
             jp();
@@ -688,18 +689,18 @@ struct Sim {
             const bool cy = f & kC;
             jr(cy);
             if (!cy) rst28(0x1A40, 0x17, 0x00);
-            ix = 0x4D26; t(14, 2);
-            iy = 0x4D12; t(14, 2);
+            ix = game::ram::pacman_wanted_step; t(14, 2);
+            iy = game::ram::pacman_demo_tile; t(14, 2);
             call(0x1A4D);
             s2000();
-            st_hl_nn(0x4D12);
-            ld_hl_nn(0x4D26);
-            st_hl_nn(0x4D1C);
-            ld_a_nn(0x4D3C);
-            st_a_nn(0x4D30);
+            st_hl_nn(game::ram::pacman_demo_tile);
+            ld_hl_nn(game::ram::pacman_wanted_step);
+            st_hl_nn(game::ram::pacman_step);
+            ld_a_nn(game::ram::pacman_wanted_direction);
+            st_a_nn(game::ram::pacman_direction);
         }
-        ix = 0x4D1C; t(14, 2);
-        iy = 0x4D08; t(14, 2);
+        ix = game::ram::pacman_step; t(14, 2);
+        iy = game::ram::pacman_pixel; t(14, 2);
         call(0x1A67);
         s2000();
         jp(); // jp 1985
@@ -707,11 +708,11 @@ struct Sim {
     }
     // 1950: the move, then the pull to the middle of the tile
     Exit pacman_move_and_centre() {
-        ix = 0x4D1C; t(14, 2);
-        iy = 0x4D08; t(14, 2);
+        ix = game::ram::pacman_step; t(14, 2);
+        iy = game::ram::pacman_pixel; t(14, 2);
         call(0x195B);
         s2000();
-        ld_a_nn(0x4D30);
+        ld_a_nn(game::ram::pacman_direction);
         rrca_();
         const bool odd = f & kC;
         jp();
@@ -740,11 +741,11 @@ struct Sim {
     }
     // 1985: the new tile, then the fruit and the dots
     Exit pacman_tile_and_eating() {
-        st_hl_nn(0x4D08);
+        st_hl_nn(game::ram::pacman_pixel);
         call(0x198B);
         s2018();
-        st_hl_nn(0x4D39);
-        ix = 0x4DBF; t(14, 2);
+        st_hl_nn(game::ram::pacman_tile_a);
+        ix = game::ram::pacman_in_tunnel_row; t(14, 2);
         ld_a_ixd(0);
         wr(ix, 0); t(19, 2);
         and_a();
@@ -754,17 +755,17 @@ struct Sim {
             return Exit::kRet;
         }
         final_retcc(false);
-        ld_a_nn(0x4DD2);
+        ld_a_nn(game::ram::fruit_position);
         and_a();
         bool z = a == 0;
         jr(z);
         if (!z) {
-            ld_a_nn(0x4DD4);
+            ld_a_nn(game::ram::fruit_points);
             and_a();
             z = a == 0;
             jr(z);
             if (!z) {
-                ld_hl_nn(0x4D08);
+                ld_hl_nn(game::ram::pacman_pixel);
                 d = 0x80, e = 0x94; t(10);
                 and_a();
                 set_hl(sbc16(hl(), de(), f)); t(15, 2);
@@ -782,7 +783,7 @@ struct Sim {
         const unsigned shift = 0xD7 * g;
         static const uint16_t kAfterTunnelCall[4] = {0x1B4C, 0x1C5F, 0x1D36, 0x1E0D};
         if (g == 0) {
-            ld_a_nn(0x4DA0);
+            ld_a_nn(game::ram::blinky_active);
             and_a();
             if (a == 0) { final_retcc(true); return Exit::kRet; }
             final_retcc(false);
@@ -822,7 +823,7 @@ struct Sim {
             }
         }
         if (!done && g == 0) {
-            ld_a_nn(0x4DB7);
+            ld_a_nn(game::ram::elroy2);
             and_a();
             jp();
             if (a != 0) {
@@ -830,7 +831,7 @@ struct Sim {
                 done = true;
             }
             if (!done) {
-                ld_a_nn(0x4DB6);
+                ld_a_nn(game::ram::elroy1);
                 and_a();
                 jp();
                 if (a != 0) {
@@ -927,7 +928,7 @@ struct Sim {
         b = a; t(4);
         rst18((uint16_t)(0x1F14 + 0x27 * g));
         st_hl_nn(kGhostVectorAddress[g]);
-        ld_a_nn(0x4E02);
+        ld_a_nn(game::ram::intro_state);
         cp_n(0x22);
         const bool nz = !(f & kZ);
         retcc(nz);
@@ -941,21 +942,21 @@ struct Sim {
     // ---- ROM 0E36: the scatter / chase timer (every frame). Always ends with RET.
     void timer_0E36() {
         using namespace logic;
-        ld_a_nn(0x4DA6);
+        ld_a_nn(game::ram::frightened);
         and_a();
         retcc_final(a != 0);
         if (a != 0) return;
-        ld_a_nn(0x4DC1);
+        ld_a_nn(game::ram::phase_number);
         cp_n(7);
         retcc_final(a == 7);
         if (a == 7) return;
         a = add8(a, a, 0, f); t(4);
-        ld_hl_nn(0x4DC2);
+        ld_hl_nn(game::ram::phase_counter);
         set_hl((uint16_t)(hl() + 1)); t(6);
-        st_hl_nn(0x4DC2);
+        st_hl_nn(game::ram::phase_counter);
         e = a; t(4);
         d = 0; t(7);
-        ix = 0x4D86; t(14, 2);
+        ix = game::ram::phase_limits; t(14, 2);
         ix = (uint16_t)add16(ix, de(), f); t(15, 2);
         e = rd(ix); t(19, 2);
         d = rd(ix + 1); t(19, 2);
@@ -966,10 +967,10 @@ struct Sim {
         if (nz) return;
         { const uint8_t cy = a & 1; a = (uint8_t)(a >> 1); f = (uint8_t)((a & kXYm) | cy | (a == 0 ? kZ : 0) | (z80::even_parity(a) ? kPV : 0)); t(8, 2); }
         a = inc8(a, f); t(4);
-        st_a_nn(0x4DC1);
+        st_a_nn(game::ram::phase_number);
         set_hl(0x0101); t(10);
-        st_hl_nn(0x4DB1);
-        st_hl_nn(0x4DB3);
+        st_hl_nn(game::ram::blinky_reverse);
+        st_hl_nn(game::ram::inky_reverse);
         final_ret();
     }
     void and_a_flags() { a = and8(a, a, f); t(4); }
@@ -978,28 +979,28 @@ struct Sim {
     // ---- ROM 1376: the frightened timer (every frame). Always ends with RET.
     void frightened_1376() {
         using namespace logic;
-        ld_a_nn(0x4DA6);
+        ld_a_nn(game::ram::frightened);
         and_a();
         retcc_final(a == 0);
         if (a == 0) return;
-        ix = 0x4DA7; t(14, 2);
+        ix = game::ram::blinky_edible; t(14, 2);
         a = rd(ix); t(19, 2);
         a = or8(a, rd(ix + 1), f); t(19, 2);
         a = or8(a, rd(ix + 2), f); t(19, 2);
         a = or8(a, rd(ix + 3), f); t(19, 2);
         jp();
         if (a != 0) {
-            ld_hl_nn(0x4DCB);
+            ld_hl_nn(game::ram::frightened_counter);
             set_hl((uint16_t)(hl() - 1)); t(6);
-            st_hl_nn(0x4DCB);
+            st_hl_nn(game::ram::frightened_counter);
             a = h; t(4);
             a = or8(a, l, f); t(4);
             retcc_final(a != 0);
             if (a != 0) return;
         }
-        set_hl(0x4C0B); t(10);
+        set_hl(game::ram::pacman_colour); t(10);
         wr(hl(), 9); t(10);
-        static const unsigned kBlocked[4] = {0x4DAC, 0x4DAD, 0x4DAE, 0x4DAF}, kEdible[4] = {0x4DA7, 0x4DA8, 0x4DA9, 0x4DAA};
+        static const unsigned kBlocked[4] = {game::ram::blinky_dead, game::ram::pinky_dead, game::ram::inky_dead, game::ram::clyde_dead}, kEdible[4] = {game::ram::blinky_edible, game::ram::pinky_edible, game::ram::inky_edible, game::ram::clyde_edible};
         for (int g = 0; g < 4; ++g) {
             ld_a_nn(kBlocked[g]);
             and_a();
@@ -1007,12 +1008,12 @@ struct Sim {
             if (a == 0) st_a_nn(kEdible[g]);
         }
         a = 0; f = z80::kFlagsAfterXorA; t(4);
-        st_a_nn(0x4DCB);
-        st_a_nn(0x4DCC);
-        st_a_nn(0x4DA6);
-        st_a_nn(0x4DC8);
-        st_a_nn(0x4DD0);
-        set_hl(0x4EAC); t(10);
+        st_a_nn(game::ram::frightened_counter);
+        st_a_nn((game::ram::frightened_counter + 1));
+        st_a_nn(game::ram::frightened);
+        st_a_nn(game::ram::siren);
+        st_a_nn(game::ram::ghost_chain);
+        set_hl(game::ram::voice2_effect_a); t(10);
         wr(hl(), (uint8_t)(rd(hl()) & ~0x20)); t(15, 2);
         wr(hl(), (uint8_t)(rd(hl()) & ~0x80)); t(15, 2);
         final_ret();
@@ -1023,48 +1024,48 @@ struct Sim {
     void inc_a() { a = inc8(a, f); t(4); }
     // ROM 1066: the eaten ghost waiting to become "dead"
     void eaten_ghost_1066() {
-        ld_a_nn(0x4DAB);
+        ld_a_nn(game::ram::eaten_ghost_waiting);
         and_a();
         retcc_final(a == 0);
         if (a == 0) return;
-        static const unsigned kDead[3] = {0x4DAC, 0x4DAD, 0x4DAE};
+        static const unsigned kDead[3] = {game::ram::blinky_dead, game::ram::pinky_dead, game::ram::inky_dead};
         for (int i = 0; i < 3; ++i) {
             dec_a();
             jr(a != 0);
             if (a == 0) {
-                st_a_nn(0x4DAB);
+                st_a_nn(game::ram::eaten_ghost_waiting);
                 inc_a();
                 st_a_nn(kDead[i]);
                 final_ret();
                 return;
             }
         }
-        st_a_nn(0x4DAF);
+        st_a_nn(game::ram::clyde_dead);
         dec_a();
-        st_a_nn(0x4DAB);
+        st_a_nn(game::ram::eaten_ghost_waiting);
         final_ret();
     }
     // ROM 2069 (who 0), 208C (who 1), 20AF (who 2): may the ghost leave the house now?
     void house_release(unsigned who) {
-        static const unsigned kOut[3] = {0x4DA1, 0x4DA2, 0x4DA3}, kOwn[3] = {0x4E0F, 0x4E10, 0x4E11}, kLimit[3] = {0x4DB8, 0x4DB9, 0x4DBA};
+        static const unsigned kOut[3] = {game::ram::pinky_out, game::ram::inky_out, game::ram::clyde_out}, kOwn[3] = {game::ram::pinky_dot_counter, game::ram::inky_dot_counter, game::ram::clyde_dot_counter}, kLimit[3] = {game::ram::pinky_dot_limit, game::ram::inky_dot_limit, game::ram::clyde_dot_limit};
         static const uint8_t kCommon[3] = {7, 0x11, 0x20}, kValue[3] = {2, 3, 3};
         ld_a_nn(kOut[who]);
         and_a();
         retcc_final(a != 0);
         if (a != 0) return;
-        ld_a_nn(0x4E12);
+        ld_a_nn(game::ram::died_this_level);
         and_a();
         jp();
         bool let_out = false;
         if (a != 0) {
-            ld_a_nn(0x4D9F);
+            ld_a_nn(game::ram::global_dot_counter);
             cp_n(kCommon[who]);
             retcc_final(a != kCommon[who]);
             if (a != kCommon[who]) return;
             if (who == 2) {
                 a = 0; f = z80::kFlagsAfterXorA; t(4);
-                st_a_nn(0x4E12);
-                st_a_nn(0x4D9F);
+                st_a_nn(game::ram::died_this_level);
+                st_a_nn(game::ram::global_dot_counter);
                 final_ret();
                 return;
             }
@@ -1086,27 +1087,27 @@ struct Sim {
     }
     // ROM 13DD: the inactivity timer
     void inactivity_13DD() {
-        set_hl(0x4D9E); t(10);
-        ld_a_nn(0x4E0E);
+        set_hl(game::ram::dots_at_last_move); t(10);
+        ld_a_nn(game::ram::dots_eaten);
         cp8(a, rd(hl()), f); t(7);
         jp();
         if (a != rd(hl())) {
             set_hl(0); t(10);
-            st_hl_nn(0x4D97);
+            st_hl_nn(game::ram::inactivity_counter);
             final_ret();
             return;
         }
-        ld_hl_nn(0x4D97);
+        ld_hl_nn(game::ram::inactivity_counter);
         set_hl((uint16_t)(hl() + 1)); t(6);
-        st_hl_nn(0x4D97);
-        e = rd(0x4D95); d = rd(0x4D96); t(20, 2);
+        st_hl_nn(game::ram::inactivity_counter);
+        e = rd(game::ram::inactivity_limit); d = rd((game::ram::inactivity_limit + 1)); t(20, 2);
         and_a();
         set_hl(sbc16(hl(), de(), f)); t(15, 2);
         retcc_final(!(f & kZ));
         if (f & kZ) {} else return;
         set_hl(0); t(10);
-        st_hl_nn(0x4D97);
-        static const unsigned kOut[3] = {0x4DA1, 0x4DA2, 0x4DA3};
+        st_hl_nn(game::ram::inactivity_counter);
+        static const unsigned kOut[3] = {game::ram::pinky_out, game::ram::inky_out, game::ram::clyde_out};
         static const uint8_t kValue[3] = {2, 3, 3};
         static const uint16_t kAfter[3] = {0x140B, 0x1415, 0x141E};
         for (int g = 0; g < 3; ++g) {
@@ -1141,7 +1142,7 @@ struct Sim {
         const bool given = a != 0;
         jr(given);
         if (!given) {
-            ld_hl_nn(0x4E0A);
+            ld_hl_nn(game::ram::difficulty_pointer);
             a = m.bus.read(hl()); t(7); // the level number the demo points at (a ROM address)
         }
         ix = 0x0796; t(14, 2);
@@ -1171,7 +1172,7 @@ struct Sim {
         set_hl(add16(hl(), de(), f)); t(11);
         call(0x073A);
         // 0814
-        de_imm(0x4D46);
+        de_imm(game::ram::pacman_speed_normal);
         bc_imm(0x001C);
         ldir();
         const unsigned counts[3] = {12, 12, 12};
@@ -1185,7 +1186,7 @@ struct Sim {
         ldir();
         ret();
         a = rd(ix + 1); t(19, 2);
-        st_a_nn(0x4DB0);
+        st_a_nn(game::ram::level_setting);
         a = rd(ix + 2); t(19, 2);
         b = a; t(4);
         a = add8(a, a, 0, f); t(4);
@@ -1195,12 +1196,12 @@ struct Sim {
         set_hl(0x0843); t(10);
         set_hl(add16(hl(), de(), f)); t(11);
         call(0x0750);
-        de_imm(0x4DB8);
+        de_imm(game::ram::pinky_dot_limit);
         bc_imm(0x0003);
         ldir();
         ret();
         static const uint16_t kTab[3] = {0x084F, 0x0861, 0x0873};
-        static const unsigned kDest[3] = {0x4DBB, 0x4DBD, 0x4D95};
+        static const unsigned kDest[3] = {game::ram::elroy_dots_left1, game::ram::frightened_time, game::ram::inactivity_limit};
         for (int i = 0; i < 3; ++i) {
             a = rd(ix + 3 + i); t(19, 2);
             a = add8(a, a, 0, f); t(4);

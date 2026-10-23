@@ -1,0 +1,28 @@
+N20 evidence: native sprite staging in the interrupt handler (ROM block 009D to 018B; src/game/sprites.h; adapter src/rules/rules.h namespace sprites; one hook at 009D in rules::table(), readable rules only). The block: copy 16 bytes 4E8C -> 5050; pick the three ghost sprite codes (5045, 504A, 504F); copy the actors' sprite pairs 4C02.. (28 bytes) to 4C22..; rotate the six +2..+0Ch position bytes left twice; when 4DD1 = 1 (demo) exchange the entries chosen by 4DA4; when 4DA6 <> 0 (ghosts blue) swap the slot order of the pairs 4C22/4C32 with 4C2A/4C3A; copy the staged registers to 4FF2 and 5062 (12 bytes each). Every instruction is accounted for: T-states, opcode fetches (LDIR counts 2 per repeat), WZ and flags.
+Date: 2026-10-17
+Command: sh tests/test_native_sprites.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated random cases)
+Honest notes: (1) there is no cut test in this step: the block runs at the start of a frame (inside the interrupt handler, about 13,000 cycles before the frame end) and cannot be cut by the frame end; when the machine is so late in the frame that it might not fit (only in the tests), the hook hands over to the ROM instruction, and part 1 compares that too (a fifth of the cases start near the end of the frame); (2) the block's addresses are inside the interrupt handler, which is not one of the routines in docs/notes/rom_routines.md, so the 'routines replaced' percentage in the lockstep progress line shows 0 for it; the progress meter in part 5 counts executed ROM instruction addresses, as in N19 (an address handled by a native hook does not count unless the hook ran the ROM instruction itself); (3) first run of the comparison passed without a fault.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 009D 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 009D 240003 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  009D: 90165 / 12881 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3652
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native sprite staging only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native sprite staging only (calls counted): routines replaced 1 of 282 in the map (instructions 0 of 5439 = 0.00 percent); entered in this run 1; calls 1089865
+VARIANT B: all readable rules + N12 to N20: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N20: routines replaced 87 of 282 in the map (instructions 1581 of 5439 = 29.07 percent); entered in this run 83; calls 71888561
+REFERENCE distinct ROM instruction addresses run: 5643
+  009D: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  sprite staging in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "009D one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "009D one staged sprite bit wrong": caught (2395 of 3000 isolated cases differ)
+part 4: wrong version "009D WZ one off": caught (2418 of 3000 isolated cases differ)
+part 4: lockstep with the sprite staging (one cycle too slow): caught at frame 295
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N20 (before N20) 4322; with the N20 sprite staging 4206
+PASS test_native_sprites
+Fast checks run after this step (all PASS): tests/test_rules_all.sh 100000, test_native_scan / maze / sliced / status / helpers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).

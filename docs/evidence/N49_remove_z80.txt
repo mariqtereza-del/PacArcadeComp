@@ -1,0 +1,9 @@
+N49 evidence (2026-10-22): the first of four parts of the Z80 removal (N49, N49a, N49b, N49c; the whole is far more than 20 minutes, so it is split in the plan).
+
+Finding: the native code (src/game, src/logic, src/rules, src/app, src/audio, src/video) includes no Z80 core header and takes its flag/cost helpers from its own src/rules/z80ops.h and z80sim.h. The only direct use of the core was the index-register enum (::z80::iregp) in src/rules/rules.h; it now goes through Machine::get_prefix / set_prefix (src/board/machine.h).
+
+CPU functions the native code calls on the machine (the register file of N49a must provide them):
+on_get_af on_get_bc on_get_de on_get_hl on_get_i on_get_iff1 on_get_iff2 on_get_int_mode on_get_ix on_get_iy on_get_pc on_get_r on_get_sp on_get_wz on_is_halted on_is_int_disabled on_set_a on_set_af on_set_bc on_set_de on_set_f on_set_hl on_set_i on_set_iff1 on_set_iff2 on_set_int_mode on_set_is_halted on_set_is_int_disabled on_set_ix on_set_iy on_set_pc on_set_r on_set_sp on_set_wz on_step on_tick 
+PASS test_no_z80_header (no include of the Z80 core header outside src/board; no index-register enum of the core in src/rules)
+
+Checks run after the change: test_no_rom_code (zero ROM instructions), test_native_f48, test_native_f47b, test_rules_all (100000 frames), test_purist, test_replay, test_integration: all PASS; window program builds.

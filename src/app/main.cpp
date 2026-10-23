@@ -61,6 +61,7 @@
 #include <string>
 #include <vector>
 #include "../board/machine.h"
+#include "../game/output.h"
 #include "../board/romset.h"
 #include "../board/inputs.h"
 #include "../audio/wsg.h"
@@ -86,6 +87,8 @@
 #include "replay.cpp"       // S34: the per-frame hash used by --replay / --hashlog
 #include "lightbar.h"       // X09
 #include "menu.cpp"         // S34: pause menu, help panel, settings, Purist rules
+#include "cheat.h" // the INVINCIBLE test cheat (writes to the machine on purpose; an assist)
+#include "dipnow.h"          // S34D: new DIP settings put into a running machine at a quiet moment
 #include "../rules/rules.h" // T02a: the readable rules in the game (only with --rules readable)
 
 void render_tilemap(const Gfx &g, const uint8_t *videoram, const uint8_t *colorram, uint32_t *out);
@@ -110,6 +113,14 @@ static void write_report() {
     }
 }
 
+#ifdef PAC_NO_Z80
+// N49c: an internal error stops the program; the message must reach the log file first (the report file if one was asked for, else crash-report.txt next to the program)
+static void on_fatal(const char *msg) {
+    g_report += std::string("FATAL: ") + msg + "\nThe game stopped because of an internal error. Please send this file.\n";
+    if (g_report_path.empty()) g_report_path = "crash-report.txt";
+    write_report();
+}
+#endif
 static bool save_png_sized(const std::string &path, const uint32_t *img, int w, int h);
 static bool save_png(const std::string &path, const uint32_t *img) { return save_png_sized(path, img, W, H); }
 static bool save_png_sized(const std::string &path, const uint32_t *img, int W, int H) {
@@ -148,6 +159,7 @@ struct Options {
     long ticks_limit = 0;
     double sim_refresh = 0;
     std::string keys;
+    std::string cmd_at;   // S34D test aid: TICK:NAME,... runs a menu command at a machine tick (purist, lives, bonus, difficulty, names, overlay, scanlines, rules, surround, restart)
     std::string shot, events_file, stats_file, test_clears, replay, hashlog, pad_buttons, pad_virtual;
     bool purist = false, fast = false, virtual_pad = false;
     std::string rules_file, write_rules; // T02i: --rules-file PATH (a rules file for this run, also in replays), --write-rules-file PATH (write the standard file and stop)
@@ -160,11 +172,15 @@ struct Options {
 };
 
 static void compose(const Gfx &g, const RomSet &roms, const Machine &m, const Options &o, uint32_t *fb) {
-    render_tilemap(g, m.bus.videoram, m.bus.colorram, fb);
-    if (!o.tiles_only) render_sprites(g, roms.palettes.data(), m.bus.spriteram, m.bus.sprite_coords, fb, o.mame_sprites);
+    game::Output out = game::output_view(const_cast<Machine &>(m).bus);   // N53: the named output of the game (same bytes as before)
+    render_tilemap(g, out.screen.tile, out.screen.colour, fb);
+    if (!o.tiles_only) render_sprites(g, roms.palettes.data(), (const uint8_t *)&out.sprites, (const uint8_t *)&out.coords, fb, o.mame_sprites);
 }
 
 int main(int argc, char **argv) {
+#ifdef PAC_NO_Z80
+    fatal_hook = on_fatal;   // N49c
+#endif
     Options o;
     if (char *base = SDL_GetBasePath()) {
         o.exe_dir = base;
@@ -206,6 +222,7 @@ int main(int argc, char **argv) {
         } else if (a == "--ticks" && i + 1 < argc) o.ticks_limit = std::atol(argv[++i]);
         else if (a == "--sim-refresh" && i + 1 < argc) o.sim_refresh = std::atof(argv[++i]);
         else if (a == "--keys" && i + 1 < argc) o.keys = argv[++i];
+        else if (a == "--cmd-at" && i + 1 < argc) o.cmd_at = argv[++i];
         else if (a == "--config" && i + 1 < argc) o.config = argv[++i];
         else if (a == "--burst" && i + 1 < argc) o.burst = argv[++i];
         else if (a == "--stall" && i + 1 < argc) o.stall = argv[++i];
@@ -286,16 +303,17 @@ int main(int argc, char **argv) {
         return 2;
     }
     Machine m(roms.program);
-    m.rules = (o.rules_readable && !o.purist) ? rules::table() : nullptr; // T02a
-    rules::tuning().reset();
+    rules::standard_only() = !(o.rules_readable && !o.purist);
+    m.rules = rules::table_for(o.rules_readable && !o.purist); // T02a (N49b: without the Z80 the table always runs)
+    rules::user_tuning().reset();
     if (!o.rules_file.empty()) { // T02i: a rules file given on the command line (also for replays and tests)
         std::string pr, er;
-        if (!rules::load_file(o.rules_file, rules::tuning(), &pr, &er)) say("Rules file: " + er);
+        if (!rules::load_file(o.rules_file, rules::user_tuning(), &pr, &er)) say("Rules file: " + er);
         else {
-            say("Rules file: loaded " + o.rules_file + (rules::tuning().active ? " (values differ from the standard: MODDED)" : " (all values standard)"));
+            say("Rules file: loaded " + o.rules_file + (rules::user_tuning().active ? " (values differ from the standard: MODDED)" : " (all values standard)"));
             if (!pr.empty()) say("Rules file: some lines were ignored:\n" + pr);
         }
-        if (rules::tuning().active && !o.purist) m.rules = rules::table();
+        if (rules::user_tuning().active && !o.purist) { rules::standard_only() = false; m.rules = rules::table_for(true); }
     }
     static uint32_t fb[W * H];
 
@@ -379,7 +397,7 @@ int main(int argc, char **argv) {
             if (!pr.empty()) say("Settings: some lines were ignored:\n" + pr);
         } else say("Settings: no settings file yet (" + (settings_path.empty() ? std::string("no settings folder") : settings_path) + "), using the standard settings");
     }
-    bool purist = o.purist || st.purist, help_pin = st.help_pin;
+    bool purist = o.purist, help_pin = st.help_pin;   // S34D: `purist` is only the test flag --purist now (Purist mode in the menu is the Reset to defaults button)
     bool rules_pref = o.rules_readable || st.rules_readable; // T02i: RULES READABLE chosen (command line or settings)
     if (use_settings && o.rules_file.empty()) { // T02i: rules.cfg next to the program, else in the settings folder
         const std::string settings_dir = settings_path.empty() ? std::string() : fsx::path(settings_path).parent_path().string();
@@ -388,16 +406,21 @@ int main(int argc, char **argv) {
             std::error_code ec;
             if (c.empty() || !fsx::exists(c, ec)) continue;
             std::string pr, er;
-            if (rules::load_file(c, rules::tuning(), &pr, &er)) {
-                say("Rules file: loaded " + c + (rules::tuning().active ? " (values differ from the standard: MODDED" + std::string(purist ? ", but Purist mode ignores it)" : ")") : " (all values standard)"));
+            if (rules::load_file(c, rules::user_tuning(), &pr, &er)) {
+                say("Rules file: loaded " + c + (rules::user_tuning().active ? " (values differ from the standard: MODDED" + std::string(purist ? ", but Purist mode ignores it)" : ")") : " (all values standard)"));
                 if (!pr.empty()) say("Rules file: some lines were ignored:\n" + pr);
                 break;
             }
         }
     }
-    auto rules_table = [&]() -> const Machine::RuleHook * { return (!purist && (rules_pref || rules::tuning().active)) ? rules::table() : nullptr; }; // T02i
+    auto rules_readable_now = [&]() { return !purist && (rules_pref || rules::user_tuning().active); };
+    auto rules_table = [&]() -> const Machine::RuleHook * { rules::standard_only() = !rules_readable_now(); return rules::table_for(rules_readable_now()); }; // T02i (N49b: without the Z80 the original rules are the same table with the standard tuning)
     m.rules = rules_table(); // T02a: Purist mode always runs the original ROM routines
-    say(m.rules ? (rules::tuning().active ? "Game rules: READABLE with a rules file (MODDED)" : "Game rules: READABLE (the proved readable rules in src/logic run instead of the ROM routines)") : "Game rules: original ROM routines");
+    say(rules_readable_now() ? (rules::user_tuning().active ? "Game rules: READABLE with a rules file (MODDED)" : "Game rules: READABLE (the proved readable rules in src/logic run instead of the ROM routines)") : "Game rules: original ROM routines"
+#ifdef PAC_NO_Z80
+        " (run as native code, proved equal to the ROM frame by frame)"
+#endif
+        );
     o.overlay_on = o.overlay_on || st.overlay;
     o.scanlines = o.scanlines || st.scanlines;
     o.fit = o.fit || st.fill;
@@ -409,6 +432,17 @@ int main(int argc, char **argv) {
     dip_chosen.normal_difficulty = st.diff_normal;
     dip_chosen.normal_ghost_names = st.names_normal;
     DipSettings applied_dip = dip_chosen; // what the machine was started with (the ROM reads the DIP switches only at power-on)
+    // S34E: achievements count only while every GAME setting is at its standard value (what the running game really uses: the DIP switches the machine sees, m.bus.dsw1, and the rules).
+    auto game_settings_standard = [&]() -> bool {
+        const menu::Settings d;
+        DipSettings x;
+        x.lives = (DipSettings::Lives)d.lives;
+        x.bonus = (DipSettings::Bonus)d.bonus;
+        x.normal_difficulty = d.diff_normal;
+        x.normal_ghost_names = d.names_normal;
+        return m.bus.dsw1 == x.to_byte() && rules_pref == d.rules_readable && !rules::user_tuning().active;
+    };
+    bool ach_settings_said = true;   // the last state of game_settings_standard() that was written to the log
     Replay rp;
     bool replay_on = false;
     FILE *hashlog = nullptr;
@@ -642,8 +676,9 @@ int main(int argc, char **argv) {
     // the machine side of the sound: after each frame hand the chip its registers and the sound-enable latch, make 1,584 samples, resample, queue
     auto make_sound = [&]() {
         if (!adev) return;
-        wsg.load_registers(m.bus.sound_regs);
-        wsg.set_enabled(m.bus.sound_enabled());
+        game::Output out = game::output_view(m.bus);   // N53: the named sound registers and the sound-enable latch
+        wsg.load_registers((const uint8_t *)&out.sound);
+        wsg.set_enabled(out.latches.sound_enable & 1);
         wsg.render(chip.data(), chip.size());
         // S32: after a freeze (pad unplugged...) keep the queue at its normal level so the pitch controller below never has a big error to correct
         GuardDecision gd = guard.decide(ring.size(), astats.underruns.load(), level_target, sound_catching_up, (size_t)(0.150 * audio_rate));
@@ -1071,10 +1106,32 @@ int main(int argc, char **argv) {
     };
     auto quick_save = [&]() { slot_save(1); };
     auto quick_load = [&]() { slot_load(1); };
+    bool cheat_invincible = false;   // the INVINCIBLE test cheat (Esc > CHEATS > INVINCIBLE): session only, never saved; off in Purist mode and in scripted runs
     auto one_tick = [&]() { // one machine frame, with the S33 extras around it
         if (extras) {
             state::capture(m, wsg, scratch_state);
             rewind.push(scratch_state);
+        }
+        {   // the INVINCIBLE test cheat: the ghost-touch code ignores ghosts that are not blue (ROM bytes for the original rules, the native copy for the readable rules)
+            const bool inv = cheat_invincible && extras;
+            cheat::set_invincible(m.bus, inv);
+            game::att::g_invincible = inv;
+            if (inv && m.bus.read(0x4E00) == 3) keeper.note_assist(assist::kCheatHelp);   // a game that runs with the cheat on does not count
+        }
+        if (dip_chosen.to_byte() != applied_dip.to_byte() && dipnow::quiet(m)) {   // S34D: lives, bonus life, difficulty or ghost names changed: at the attract screen they are put into the running game (no restart)
+            applied_dip = dip_chosen;
+            in.set_dip(applied_dip);
+            char b[8];
+            std::snprintf(b, sizeof b, "%02X", applied_dip.to_byte());
+            say(dipnow::apply(m, applied_dip.to_byte()) ? std::string("Game options: DIP settings put into the running game at the attract screen, DIP switches now ") + b + " (no restart)"
+                                                       : std::string("Game options: DIP settings could not be put into the running game (restart to apply)"));
+        }
+        {   // S34E: the log says once when the game settings leave or return to their standard values
+            const bool std_now = game_settings_standard();
+            if (std_now != ach_settings_said) {
+                ach_settings_said = std_now;
+                say(std_now ? "Achievements: every game setting is at its standard value again (counts from the next game)" : "Achievements: a game setting is not at its standard value, so no achievement can unlock until it is put back (a game played like that never counts afterwards)");
+            }
         }
         sample_inputs();
         m.run_frame();
@@ -1086,7 +1143,7 @@ int main(int argc, char **argv) {
         if (!o.events_file.empty() && !purist) evr.feed(events::read_raw([&](unsigned a) { return (int)m.bus.read(a); }), (unsigned)ticks);
         if (extras) {
             keeper.after_tick(m);
-            if (!purist && rules::tuning().active) keeper.note_assist(assist::kModded); // T02i: a modded game does not count
+            if (!purist && rules::user_tuning().active) keeper.note_assist(assist::kModded); // T02i: a modded game does not count
             std::string msg = keeper.take_message();
             if (!msg.empty()) say(msg);
         }
@@ -1123,7 +1180,7 @@ int main(int argc, char **argv) {
                     pos = e + 1;
                 }
             }
-            if (ach.feed(stc.log(), achievements::counts_for_achievements(keeper.rule().mask()))) { // X25
+            if (ach.feed(stc.log(), achievements::counts_for_achievements(keeper.rule().mask()) && game_settings_standard())) { // X25 + S34E
                 for (int id : ach.newly()) {
                     popup.push(id);
                     say(std::string("Achievement unlocked: ") + achievements::def(id).name + " at machine frame " + std::to_string(ticks));
@@ -1246,6 +1303,29 @@ int main(int argc, char **argv) {
             if (kc != SDLK_UNKNOWN) keyat.push_back({std::atol(it.c_str() + at + 1), kc, false});
         }
     }
+    struct CmdAt {
+        long tick;
+        menu::Cmd cmd;
+        bool done;
+    };
+    std::vector<CmdAt> cmdat;
+    {   // S34D test aid --cmd-at
+        std::string k = o.cmd_at;
+        size_t p0 = 0;
+        while (p0 < k.size()) {
+            size_t p1 = k.find(',', p0);
+            if (p1 == std::string::npos) p1 = k.size();
+            const std::string it = k.substr(p0, p1 - p0);
+            p0 = p1 + 1;
+            const size_t c = it.find(':');
+            if (c == std::string::npos) continue;
+            const std::string n = it.substr(c + 1);
+            using menu::Cmd;
+            const Cmd cm = n == "resetdisplay" ? Cmd::ResetDisplay : n == "resetgame" ? Cmd::ResetGame : n == "lives" ? Cmd::Lives : n == "bonus" ? Cmd::Bonus : n == "difficulty" ? Cmd::Difficulty : n == "names" ? Cmd::Names
+                         : n == "overlay" ? Cmd::Overlay : n == "scanlines" ? Cmd::Scanlines : n == "rules" ? Cmd::Rules : n == "surround" ? Cmd::Surround : n == "restart" ? Cmd::Restart : Cmd::None;
+            if (cm != Cmd::None) cmdat.push_back({std::atol(it.c_str()), cm, false});
+        }
+    }
     struct PadAt {
         long tick;
         int button;
@@ -1327,6 +1407,7 @@ int main(int argc, char **argv) {
     // ---- S34: the menu. Every function key and every menu item goes through do_cmd, so they always do the same thing.
     menu::Menu mn;
     menu::Model model;
+    int reset_armed = 0;   // S34E: 0 nothing asked, 1 DISPLAY reset asked, 2 GAME OPTIONS reset asked (the first Enter on a RESET TO DEFAULTS item arms it, the second one does it (opening or closing the menu disarms it)
     auto fill_model = [&]() {
         model.purist = purist;
         model.overlay = overlay_on;
@@ -1351,6 +1432,8 @@ int main(int argc, char **argv) {
         model.curve = curve_level;
         model.surround = surround_mode;
         model.ach_mask = ach.mask();
+        model.ach_blocked = !game_settings_standard();
+        model.cheat_invincible = cheat_invincible;
         for (int i = 0; i < achievements::kCount && i < 24; ++i) ach.progress(i, &model.ach_have[i], &model.ach_need[i]);
         model.hint_device = (int)lastdev.hint_device();
         for (int i = 0; i < 3; ++i) model.pad_game_btn[i] = bind.pad[i];
@@ -1360,7 +1443,7 @@ int main(int argc, char **argv) {
         model.diff_normal = dip_chosen.normal_difficulty;
         model.names_normal = dip_chosen.normal_ghost_names;
         model.rules_readable = rules_pref;
-        model.rules_file = rules::tuning().active;
+        model.rules_file = rules::user_tuning().active;
         model.assist = keeper.assisted() ? keeper.rule().label() : std::string();
         model.pending = dip_chosen.to_byte() != applied_dip.to_byte();
         menu::binding_lines(bind, model.bind_line);
@@ -1373,7 +1456,6 @@ int main(int argc, char **argv) {
     auto persist = [&]() {
         if (!use_settings) return;
         menu::Settings x;
-        x.purist = purist;
         x.overlay = overlay_on;
         x.scanlines = scanlines;
         x.fill = fit == display::Fit::Fill;
@@ -1435,6 +1517,7 @@ int main(int argc, char **argv) {
             }());
         };
     auto open_menu = [&]() {
+        reset_armed = 0;
         fill_model();
         mn.note.clear();
         mn.open();
@@ -1444,6 +1527,7 @@ int main(int argc, char **argv) {
         say("Menu: opened (the game is paused)");
     };
     auto close_menu = [&]() {
+        reset_armed = 0;
         mn.close();
         mn.note.clear();
         paused = false;
@@ -1501,10 +1585,11 @@ int main(int argc, char **argv) {
         };
     auto do_cmd = [&](menu::Cmd c, int delta) {
         using menu::Cmd;
+        if (c != Cmd::ResetDisplay && c != Cmd::ResetGame) reset_armed = 0;
         fill_model();
         if (menu::locked(c, model)) {
-            mn.note = "LOCKED BY PURIST";
-            flash("that is switched off in Purist mode");
+            mn.note = "LOCKED (TEST FLAG)";
+            flash("that is switched off by the --purist test flag");
             return;
         }
         mn.note.clear();
@@ -1541,28 +1626,33 @@ int main(int argc, char **argv) {
         case Cmd::Lives:
             dip_chosen.lives = (DipSettings::Lives)step4((int)dip_chosen.lives);
             persist();
-            say("Game options: lives " + menu::value_text(c, (fill_model(), model)) + " (restart the game to apply)");
+            say("Game options: lives " + menu::value_text(c, (fill_model(), model)) + " (applies from the next game, no restart needed)");
             break;
         case Cmd::Bonus:
             dip_chosen.bonus = (DipSettings::Bonus)step4((int)dip_chosen.bonus);
             persist();
             fill_model();
-            say("Game options: bonus life " + menu::value_text(c, model) + " (restart the game to apply)");
+            say("Game options: bonus life " + menu::value_text(c, model) + " (applies from the next game, no restart needed)");
             break;
         case Cmd::Difficulty:
             dip_chosen.normal_difficulty = !dip_chosen.normal_difficulty;
             persist();
             fill_model();
-            say("Game options: difficulty " + menu::value_text(c, model) + " (restart the game to apply)");
+            say("Game options: difficulty " + menu::value_text(c, model) + " (applies from the next game, no restart needed)");
+            break;
+        case Cmd::CheatInvincible:
+            cheat_invincible = !cheat_invincible;
+            fill_model();
+            say(std::string("Cheats: invincible ") + (cheat_invincible ? "on (ghosts that are not blue cannot catch Pac-Man; the game stops counting for records and saved achievements)" : "off"));
             break;
         case Cmd::Names:
             dip_chosen.normal_ghost_names = !dip_chosen.normal_ghost_names;
             persist();
             fill_model();
-            say("Game options: ghost names " + menu::value_text(c, model) + " (restart the game to apply)");
+            say("Game options: ghost names " + menu::value_text(c, model) + " (applies from the next game, no restart needed)");
             break;
         case Cmd::Rules:
-            if (rules::tuning().active) {
+            if (rules::user_tuning().active) {
                 mn.note = "A RULES FILE IS IN USE";
                 say("Game options: a rules file is in use, so the game runs the readable rules (remove rules.cfg to choose)");
                 break;
@@ -1727,22 +1817,61 @@ int main(int argc, char **argv) {
             persist();
             say(std::string("Display: key help beside the game ") + (help_pin ? "on" : "off"));
             break;
-        case Cmd::Purist:
-            purist = !purist;
-            extras = !o.scripted && !purist;
-            persist();
-            say(purist ? "Purist mode: ON (no overlay, filters, one-button start, save states, rewind or saved high score)" : "Purist mode: off");
-            if (smooth) {
-                smooth = false;
-                smooth_n = 0;
+        case Cmd::ResetDisplay: {   // S34E: DISPLAY > RESET TO DEFAULTS: only the look, at once, the game is not touched
+            if (reset_armed != 1) {
+                reset_armed = 1;
+                mn.note = "ENTER AGAIN TO RESET";
+                say("Menu: press Enter again on DISPLAY > RESET TO DEFAULTS to put the display settings back to their standard values (the game is not restarted and not changed)");
+                break;
             }
-            set_pacing(smooth_pref && !purist);
-            restart_machine(purist ? "Purist mode on" : "Purist mode off");
+            reset_armed = 0;
+            const menu::Settings d;   // the standard settings: the one list in docs/notes/settings_table.md
+            overlay_on = d.overlay;
+            scanlines = d.scanlines;
+            fit = d.fill ? display::Fit::Fill : display::Fit::Integer;
+            set_pacing(d.smooth);
+            smooth_pref = d.smooth;
+            if (bordered != d.frame) {
+                bordered = d.frame;
+                SDL_SetWindowBordered(win, bordered ? SDL_TRUE : SDL_FALSE);
+            }
+            help_pin = d.help_pin;
+            summary_pref = d.run_summary;
+            if (!summary_pref) summary_until = 0;
+            crt_mask = d.crt_mask;
+            glow_level = d.glow;
+            curve_level = d.curve;
+            surround_mode = d.surround;
+            persist();
+            fill_model();
+            say("Settings: the display settings are back to their standard values (overlay, scanlines, pacing, scaling, window frame, key panel, run summary, CRT mask, glow, curve, surround); nothing else was changed and the game was not restarted");
+            mn.note = "DISPLAY RESET";
+            break;
+        }
+        case Cmd::ResetGame: {   // S34E: GAME OPTIONS > RESET TO DEFAULTS: only the game settings; the game restarts so that they take effect
+            if (reset_armed != 2) {
+                reset_armed = 2;
+                mn.note = "ENTER AGAIN. RESTARTS";
+                say("Menu: press Enter again on GAME OPTIONS > RESET TO DEFAULTS to put the game settings back to their standard values; THE GAME RESTARTS (keys, buttons, high score, records, achievements and save slots are kept)");
+                break;
+            }
+            reset_armed = 0;
+            const menu::Settings d;
+            rules_pref = d.rules_readable;
+            dip_chosen.lives = (DipSettings::Lives)d.lives;
+            dip_chosen.bonus = (DipSettings::Bonus)d.bonus;
+            dip_chosen.normal_difficulty = d.diff_normal;
+            dip_chosen.normal_ghost_names = d.names_normal;
+            persist();
+            say(std::string("Settings: the game settings are back to their standard values (lives, bonus life, difficulty, ghost names, rules); display, sound, keys, buttons, high score, records, achievements and save slots were not changed") +
+                (rules::user_tuning().active ? "; a rules file (rules.cfg) is still in use, so the readable rules still run (remove the file to go back to the original rules)" : ""));
+            restart_machine("game settings reset");
             close_menu();
             break;
+        }
         case Cmd::Locked:
-            mn.note = "LOCKED BY PURIST";
-            flash("that is switched off in Purist mode");
+            mn.note = "LOCKED (TEST FLAG)";
+            flash("that is switched off by the --purist test flag");
             break;
         case Cmd::Quit:
             running = false;
@@ -2061,6 +2190,12 @@ int main(int argc, char **argv) {
             if (!k.done && (long)ticks >= k.tick) {
                 k.done = true;
                 handle_key(k.key);
+            }
+        for (auto &ca : cmdat)
+            if (!ca.done && (long)ticks >= ca.tick) {
+                ca.done = true;
+                say("Test: menu command at tick " + std::to_string(ticks));
+                do_cmd(ca.cmd, 1);
             }
         for (auto &va : vat)
             if (!va.done && (long)(SDL_GetTicks() - t_start_ms) >= va.ms) {

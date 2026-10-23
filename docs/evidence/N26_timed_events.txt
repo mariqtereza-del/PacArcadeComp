@@ -1,0 +1,54 @@
+N26 evidence: native timed events: src/game/events.h; adapters src/rules/rules.h namespace evt; 11 hooks in rules::table() (readable rules only): 0221 (the loop over the 16 three-byte slots at 4C90..4CBF: speed class test against 4C8A, count down, clear the slot when the low six bits reach zero, then the handler through RST 20h and the table at 0247), 025B (where the ROM comes back from a handler into the same loop), the seven handlers that add one to a state byte (0894 -> 4E04, 06A3 -> 4E03, 058E -> 4E02, 1272 -> 4DD1, 212B -> 4E06, 21F0 -> 4E07, 22B9 -> 4E08) and the handler 1000 / 1004 (clears 4DD4, then the pair 4DD2/4DD3).
+Scope note: the handlers 100B and 0263 (they queue a task with RST 28h) and the code behind the later handler entries in the same ROM blocks (0899, 06A8, 1277, 2130 and so on, which other routines reach) are not part of the slot system's own code and stay ROM here; the RST 20h dispatch (hook from N12-N16) and the RST 28h queue (hook from N12-N16) already run natively and are used as they are. At the RST 20h the native loop hands over with the stack exactly as the ROM leaves it (BC, HL, 025B and 0247 pushed), and the hook at 025B takes the loop up again when the handler returns.
+Date: 2026-10-17
+Command: sh tests/test_native_events.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated random cases per entry; the isolated cases randomise all registers, the 16 slots (empty, slow and due slots, event numbers 0 to 9 and now and then 5 and 6), the class counter 4C8A and the stack; for 025B the stack holds a real slot pointer and count)
+How it works: every block is written instruction by instruction (T-states, opcode fetches, flags incl. the undocumented ones, WZ, the bytes pushed on the stack). No ROM bytes in the source (the table at 0247 is read by the ROM's own RST 20h routine).
+Honest notes: (1) no cut test: the loop runs inside the interrupt handler early in the frame; when the machine is so late in the frame that the loop might not fit (only in the tests; the budget checked is 2,500 cycles) the hook hands over to the ROM instruction by instruction. (2) In 90 of the isolated cases (of about 3.3 million case runs) the ROM routine itself did not come back within 100,000 steps because random memory made a queued task (handlers 5 and 6) or a stack byte wild; such a case cannot be compared and is skipped and counted. (3) 1000 runs straight on into 1004 in the ROM, so the test counts the ROM's visits to 1004 against the native direct calls plus runs of 1000. (4) The first run of the comparison passed the real game; the early test failures were test set-up (025B needs a real slot pointer on the stack; the entry counts for 1004). (5) Progress meter rule as in N19; comparable only from N19 on.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 0221 0, 025B 0, 0894 0, 06A3 0, 058E 0, 1272 0, 1000 0, 1004 0, 212B 0, 21F0 0, 22B9 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 0221 240102 of 300000, 025B 239785 of 300000, 0894 240049 of 300000, 06A3 239795 of 300000, 058E 239792 of 300000, 1272 239913 of 300000, 1000 240122 of 300000, 1004 239841 of 300000, 212B 239763 of 300000, 21F0 239911 of 300000, 22B9 239723 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  0221: 90165 / 12881 / 0
+  025B: 937 / 134 / 0
+  0894: 723 / 104 / 0
+  06A3: 24 / 4 / 0
+  058E: 282 / 41 / 0
+  1272: 38 / 6 / 0
+  1000: 44 / 7 / 0
+  1004: 51 / 8 / 0
+  212B: 47 / 7 / 0
+  21F0: 13 / 2 / 0
+  22B9: 15 / 3 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3652
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native timed events only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native timed events only (calls counted): routines replaced 11 of 282 in the map (instructions 76 of 5439 = 1.40 percent); entered in this run 11; calls 1106828
+VARIANT B: all readable rules + N12 to N26: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N26: routines replaced 139 of 282 in the map (instructions 2351 of 5439 = 43.22 percent); entered in this run 135; calls 111537857
+REFERENCE distinct ROM instruction addresses run: 5643
+  0221: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  025B: original machine entered it 5793 times; native version (A or C) ran 5793 times  (equal)
+  0894: original machine entered it 2450 times; native version (A or C) ran 2450 times  (equal)
+  06A3: original machine entered it 192 times; native version (A or C) ran 192 times  (equal)
+  058E: original machine entered it 6082 times; native version (A or C) ran 6082 times  (equal)
+  1272: original machine entered it 1892 times; native version (A or C) ran 1892 times  (equal)
+  1000: original machine entered it 236 times; native version (A or C) ran 236 times  (equal)
+  1004: original machine entered it 243 times; native version (A or C) ran 243 times (direct calls + runs of 1000)  (equal)
+  212B: original machine entered it 47 times; native version (A or C) ran 47 times  (equal)
+  21F0: original machine entered it 13 times; native version (A or C) ran 13 times  (equal)
+  22B9: original machine entered it 15 times; native version (A or C) ran 15 times  (equal)
+  timed events in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "0221 one cycle too slow": caught (2999 of 3000 isolated cases differ)
+part 4: wrong version "0894 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0221 a slot byte wrong": caught (2999 of 3000 isolated cases differ)
+part 4: wrong version "0894 a state byte wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1000 a cleared byte wrong": caught (2407 of 3000 isolated cases differ)
+part 4: wrong version "025B HL wrong": caught (2999 of 3000 isolated cases differ)
+part 4: lockstep with the slot loop 0221 (one cycle too slow): caught at frame 295
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N26 (before N26) 3627; with the N26 timed events 3568
+note: cases in which the ROM routine itself never came back within 100,000 steps (random memory made a queued task or a stack byte wild; the case cannot be compared and is skipped): 90
+PASS test_native_events
+Fast checks run after this step (all PASS): tests/test_rules_all.sh 100000, test_native_handler / labels / coins / clocks / pics / sprites / scan / maze / helpers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).

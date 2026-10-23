@@ -3,6 +3,8 @@
 Merged on 2026-10-08 (step S13) from the study notes; no new research was added. Every claim names its source file; `python3 tools/check_docs.py` checks that each cited path exists. The ROM itself is never part of this repository's releases.
 Confidence words: HIGH = code and prototype agree; MED = clear from the code, role inferred; LOW = few observations. "Prototype" = the Python reference in `tools/analysis` running the user's ROM; all game-logic evidence comes from it only.
 
+**Native game (steps N01 to N53).** These notes describe the arcade *machine*, and they still hold. The program in this repository no longer runs the original instructions: the game is native C++ proved identical to them. Where to look: the routine map `docs/notes/rom_routines.md`, the data the game still reads from the ROM `docs/notes/rom_data_tables.md`, the timing of the frame and interrupt `docs/notes/native_timing.md`, the names of the work RAM `src/game/state.h`, the names of the screen, sprite, sound and latch memory `src/game/output.h`, and the overview in `ARCHITECTURE.md`.
+
 ## 1. Memory map
 Source: `docs/notes/hardware_facts.md` section 2 (MAME driver + prototype experiments in `docs/evidence/S07_prototype_experiments.txt`).
 - 0000-3FFF program ROM (mirrored at 8000-BFFF). 4000-43FF video RAM (tile codes), 4400-47FF colour RAM (palette & 0x1F), both mirrored at A000.

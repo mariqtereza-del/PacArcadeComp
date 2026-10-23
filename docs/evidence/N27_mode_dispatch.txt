@@ -1,0 +1,38 @@
+N27 evidence (milestone): native game-mode dispatchers: src/game/handler.h (mode_dispatch); adapters src/rules/rules.h namespace evt; 4 hooks in rules::table() (readable rules only): 03C8 (A = game state 4E00, then RST 20h with the table at 03CC), 03D4 (state 4E01, table 03D8), 05E5 (state 4E03, table 05E9) and 06BE (state 4E04, table 06C2). Each loads the state byte (13 T-states), then does the RST 20h: pushes the address of the table that follows and continues at 0020, the jump-table routine (native since N12-N16), which jumps to the routine for the state. The routines behind the dispatchers are still ROM, as the step says.
+Scope note: the dispatch at 0413 (state 4E02) lies in the middle of a larger routine (03FE) and is replaced together with that routine in the game-flow steps.
+Date: 2026-10-17
+Command: sh tests/test_native_mode.sh 3000000 30000 300000   (milestone size: 3,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated random cases per entry)
+How it works: each dispatcher is written instruction by instruction (T-states, fetches, WZ, the pushed bytes). A block ends at 0020 with the stack lowered by two. No ROM bytes in the source.
+Honest notes: (1) no cut test: the dispatchers run inside the interrupt handler early in the frame. (2) 06BE and 03D4 are rare in the coverage runs; the random cases and the long lockstep run (06BE was entered thousands of times) cover them. (3) Progress meter rule as in N19; comparable only from N19 on.
+Milestone checks: the FULL regression sh tests/run_all.sh was run after this step: ALL TESTS PASSED (72 PASS lines, no FAIL). A Windows test folder (PacArcadeCompTest-N27-win64.zip: PLAY-ORIGINAL.bat and PLAY-READABLE.bat) was built and sent for the user's ten-minute play test; the user's answer is recorded in PROJECT_STATUS.md.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 03C8 0, 03D4 0, 05E5 0, 06BE 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 03C8 283981 of 300000, 03D4 283955 of 300000, 05E5 284043 of 300000, 06BE 284006 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  03C8: 90165 / 12881 / 0
+  03D4: 54 / 8 / 0
+  05E5: 2968 / 424 / 0
+  06BE: 80554 / 11508 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 9590
+part 3: lockstep, scripted player 3000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 3096000 frames compared
+LOCKSTEP 3096000 frames compared; 2 variant(s)
+VARIANT A: native mode dispatchers only (calls counted): IDENTICAL on every frame (3096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native mode dispatchers only (calls counted): routines replaced 4 of 282 in the map (instructions 77 of 5439 = 1.42 percent); entered in this run 4; calls 5570436
+VARIANT B: all readable rules + N12 to N27: IDENTICAL on every frame (3096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N27: routines replaced 143 of 282 in the map (instructions 2428 of 5439 = 44.64 percent); entered in this run 139; calls 321062481
+REFERENCE distinct ROM instruction addresses run: 5643
+  03C8: original machine entered it 3089849 times; native version (A or C) ran 3089849 times  (equal)
+  03D4: original machine entered it 56 times; native version (A or C) ran 56 times  (equal)
+  05E5: original machine entered it 41610 times; native version (A or C) ran 41610 times  (equal)
+  06BE: original machine entered it 2438921 times; native version (A or C) ran 2438921 times  (equal)
+  mode dispatchers in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 3000000 frames)
+part 4: wrong version "03C8 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "06BE one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "03C8 A wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "05E5 the pushed table address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "06BE WZ wrong": caught (2832 of 3000 isolated cases differ)
+part 4: lockstep with the dispatcher 03C8 (one cycle too slow): caught at frame 295
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N27 (before N27) 3568; with the N27 mode dispatchers 3560
+PASS test_native_mode

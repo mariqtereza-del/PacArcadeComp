@@ -1,0 +1,9 @@
+Cheats page check and plan v3.0  (2026-10-23, user request outside the numbered plan)
+ - Cheats: the main menu has CHEATS (page 8) holding INVINCIBLE; GAME OPTIONS no longer has it. A game played with the cheat on is marked CHEAT HELP (assist rule): no records, statistics or achievements.
+   Proof: tests/test_menu.sh 955 checks (CHEATS page opens, INVINCIBLE gives the command, BACK returns), tests/test_cheat_invincible.sh (both builds), tests/test_achievements.sh,
+   test_progress_ach.sh, test_chain_ach.sh, test_achievement_settings.sh, test_purist.sh, test_replay.sh: all PASS; app builds (tools/build_app.sh).
+   Fixed: dist/README-TEST-N49c.txt said GAME OPTIONS; README.md has a Cheats paragraph.
+   Note: menu.cpp, menu.h, main.cpp, cheat.h and tests/test_menu.cpp were modified on disk between 15:10 and 15:20 by something other than this session's edits; they were checked as above.
+ - Plan v3.0: summary, history of 8 phases, Scrapped steps (31 rows: 28 removed X steps, X57, the Purist item replaced, X47 HDR researched-not-built), other plan changes, lanes and texts
+   brought up to date (tools/plan_data.py, make_plan.py, plan_template.html; docs/PLAN.md and the HTML page regenerated; the page loads without script errors).
+ - Full regression: ALL TESTS PASSED (check_links 128 OK).

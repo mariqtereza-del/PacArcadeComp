@@ -80,12 +80,12 @@ int main(int argc, char **argv) {
         kv[k] = line.substr(sp + 1);
     }
     CHECK(tidy && !dup && comments == 1, "settings file: one comment line, then one 'key value' line per setting, no blank lines, no repeated key");
-    CHECK(kv.size() == 22, "settings file: 22 settings (every field of the Settings table)");
+    CHECK(kv.size() == 21 && !kv.count("purist"), "settings file: 21 settings (every field of the Settings table; S34D: no purist key any more)");
     menu::Settings t;
     std::string prob;
     CHECK(menu::load_settings(a, t, &prob) && prob.empty(), "settings read back with no problems");
     CHECK(menu::save_settings(b, t, &err) && slurp(a) == slurp(b), "read back and written again: identical bytes");
-    CHECK(t.purist && t.overlay && t.scanlines && t.fill && t.smooth && !t.frame && t.help_pin && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal &&
+    CHECK(!t.purist && t.overlay && t.scanlines && t.fill && t.smooth && !t.frame && t.help_pin && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal &&
               t.vibration == 1 && !t.pause_focus && t.hints == 2 && !t.lightbar && !t.run_summary && t.crt_mask == 2 && t.glow == 1 && t.curve == 2 && t.surround == 2 &&
               t.pad_symbols == 3 && t.rules_readable,
           "every value survived the round trip");
@@ -128,7 +128,8 @@ int main(int argc, char **argv) {
                {menu::Cmd::Scaling, "Scaling", true},
                {menu::Cmd::FullScreen, "FullScreen", false},
                {menu::Cmd::HelpPin, "HelpPin", false},
-               {menu::Cmd::Purist, "Purist", false},
+               {menu::Cmd::ResetDisplay, "ResetDisplay", false},
+               {menu::Cmd::ResetGame, "ResetGame", false},
                {menu::Cmd::Quit, "Quit", false},
                {menu::Cmd::Vibration, "Vibration", true},
                {menu::Cmd::PadSymbols, "PadSymbols", false},
@@ -145,7 +146,7 @@ int main(int argc, char **argv) {
                {menu::Cmd::LoadSlot, "LoadSlot", true},
                {menu::Cmd::Rules, "Rules", true},
                {menu::Cmd::WriteRules, "WriteRules", false}};
-    std::printf("PURIST TABLE (menu command: locked in Purist?)\n");
+    std::printf("PURIST TABLE (menu command: locked in the --purist test flag? The menu has no Purist item since S34E; the two RESET TO DEFAULTS items lock nothing)\n");
     int locked_n = 0;
     for (const auto &e : tab) {
         const bool l = menu::locked(e.c, m);

@@ -1,0 +1,34 @@
+N23 evidence: native coin inputs, credits and coin counter pulses: src/game/coins.h; adapters src/rules/rules.h namespace pics; 2 hooks in rules::table() (readable rules only): 0267 (reads the coin inputs at 5000, the credits limit and the coin lockout output 5006, the three coin shift counters 4E66-4E68, calls the credit adder 02DF, counts the pulses to give in 4E69) and 02AD (the coin counter pulse timing: 4E69, 4E6A, the output 5007, one 02DF call per pulse start).
+Note: the credit adder 02DF (all coinage settings and free play: 4E6B-4E6E) was made native in N14 and is run inline here so that the CALL's return address stays on the stack exactly as in the ROM. The start buttons are not read by these routines (they are read in the game-flow routines, steps N28 onwards), so they are not part of this step.
+Date: 2026-10-17
+Command: sh tests/test_native_coins.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated random cases per entry; the isolated cases also randomise the coin input byte 5000, the shift counters near their limit, the coinage settings, credits near 99 and the pulse counters)
+How it works: both routines are written instruction by instruction (T-states, opcode fetches, flags incl. the undocumented ones, WZ, the bytes the CALL leaves on the stack). No ROM bytes in the source.
+Honest notes: (1) no cut test: the code runs inside the interrupt handler; when the machine is so late in the frame that a routine might not fit (only in the tests) the hook hands over to the ROM instruction by instruction. (2) Progress meter rule as in N19 (an address handled by a native hook counts only if the hook ran the ROM instruction); comparable only from N19 on. (3) the lockstep wrong version is a cycle error in 0267.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 0267 0, 02AD 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 0267 240010 of 300000, 02AD 239910 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  0267: 90111 / 12873 / 0
+  02AD: 90111 / 12873 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3652
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native coin routines only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native coin routines only (calls counted): routines replaced 2 of 282 in the map (instructions 60 of 5439 = 1.10 percent); entered in this run 2; calls 2179618
+VARIANT B: all readable rules + N12 to N23: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N23: routines replaced 107 of 282 in the map (instructions 2101 of 5439 = 38.63 percent); entered in this run 103; calls 89741596
+REFERENCE distinct ROM instruction addresses run: 5643
+  0267: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  02AD: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  coin routines in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "0267 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "02AD one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0267 a coin counter bit wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "02AD the coin counter output wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "02AD the CALL's return address wrong": caught (2915 of 3000 isolated cases differ)
+part 4: lockstep with the coin inputs 0267 (one cycle too slow): caught at frame 297
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N23 (before N23) 3754; with the N23 coin routines 3696
+PASS test_native_coins
+Fast checks run after this step (all PASS): tests/test_rules_all.sh 100000, test_native_clocks / pics / sprites / scan / maze / helpers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).

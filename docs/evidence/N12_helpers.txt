@@ -1,0 +1,49 @@
+N12 evidence: native helper routines 0008, 0010, 0018, 0020, 0028, 0030, 0042 (src/game/helpers.h; adapters src/rules/rules.h namespace helpers; hooks in rules::table())
+Date: 2026-10-16
+Command: sh tests/test_native_helpers.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated cases per routine; about 9 minutes)
+
+part 1: 300000 random whole calls of each routine (all registers, R, WZ and memory random; 21343 dispatch cases skipped): differences 0008 0, 0010 0, 0018 0, 0020 0, 0028 0, 0030 0, 0042 0
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  0008: 738743 / 738743 / 0
+  0010: 786318 / 112332 / 0
+  0018: 17070 / 5690 / 0
+  0020: 760692 / 118512 / 0
+  0028: 16832 / 16832 / 0
+  0030: 943 / 943 / 0
+  0042: 18885 / 18885 / 0
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native helpers only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native helpers only (calls counted): routines replaced 7 of 282 in the map (instructions 61 of 5439 = 1.12 percent); entered in this run 7; calls 27089430
+VARIANT B: all readable rules + helpers: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + helpers: routines replaced 31 of 282 in the map (instructions 1018 of 5439 = 18.72 percent); entered in this run 31; calls 43137258
+REFERENCE distinct ROM instruction addresses run: 5643
+  0008: original machine entered it 2304997 times; native version A ran 129039 times  (not compared: see above)
+  0010: original machine entered it 12147910 times; native version A ran 21519 times  (not compared: see above)
+  0018: original machine entered it 607768 times; native version A ran 607768 times  (equal)
+  0020: original machine entered it 11518625 times; native version A ran 11518625 times  (equal)
+  0028: original machine entered it 237164 times; native version A ran 237164 times  (equal)
+  0030: original machine entered it 5799 times; native version A ran 5799 times  (equal)
+  0042: original machine entered it 267167 times; native version A ran 30003 times  (not compared: see above)
+  helpers in lockstep: identical on every frame, both variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "0010 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0008 last byte not written": caught (2220 of 3000 isolated cases differ)
+part 4: wrong version "0018 HL wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0020 a flag wrong": caught (2746 of 3000 isolated cases differ)
+part 4: wrong version "0028 B and C swapped": caught (2722 of 3000 isolated cases differ)
+part 4: wrong version "0030 DE one too far": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0042 pointer wrap wrong": caught (159 of 3000 isolated cases differ)
+part 4: lockstep with the wrong 0010 (one cycle too slow): caught at frame 251
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed): original ROM 5638; readable rules before N12 4790; readable rules with the N12 helpers 4746
+PASS test_native_helpers
+
+Other tests run in this step (fast check): sh tests/test_rules_all.sh 100000 PASS (all readable rules together, now including the helpers, identical for 100,000 frames); sh tests/test_rules_random.sh 100000 PASS; sh tests/test_rules_file.sh 20000 PASS (270 checks); sh tests/test_purist.sh PASS (Purist mode unchanged, 7273 frame hashes equal the prototype); sh tests/test_replay.sh PASS (7273 frame hashes identical).
+Not run: the full sh tests/run_all.sh and the other test_rules_*.sh (fast-check policy; the readable-rules table gained 7 entries that are tested here and by test_rules_all). The game you play in the original-rules mode is unchanged; the readable-rules mode now also uses the native helpers.
+
+Notes
+- The helpers push return addresses on the stack inside the ROM (the RST 10h inside 0018 and 0020, PUSH HL in 0028); those stack bytes are part of the hashed memory, so the adapters write them (found by the random-state test; the first version without them passed the real-state comparison by luck).
+- WZ (MEMPTR) is set exactly too, because two ROM places use BIT n,(HL), whose flags depend on it.
+- 0008 is also the loop head of the fill (DJNZ 0008), 0010 is called inside 0018 and 0020, 0042 inside 0028: the native versions do not call each other, so the call counts of those three differ from the ROM's entry counts by design; 0018, 0020, 0028 and 0030 are compared one to one (equal).
+- The routine map (docs/notes/rom_routines.md) shows no callers of 0008 because RST 08 is not counted as a call there; the run shows it is used (the native fill ran 129,039 times in the lockstep run).

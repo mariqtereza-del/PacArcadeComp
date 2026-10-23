@@ -73,7 +73,7 @@ inline const Def &def(int i) {
     return t[i >= 0 && i < kCount ? i : 0];
 }
 // X29: the rule changed at the user's request: a loaded save state does NOT stop achievements (it still stops records and statistics); rewind and the other helps (assist.h) still stop them.
-inline const char *kRule1 = "PLAYER 1, 3 LIVES,", *kRule2 = "NO REWIND, STATES OK";
+inline const char *kRule1 = "PLAYER 1, STANDARD", *kRule2 = "GAME OPTIONS, NO REWIND";
 // What the assist rule (assist.h) means for achievements: a game counts if nothing but a loaded state helped.
 inline bool counts_for_achievements(uint32_t assist_mask) { return (assist_mask & ~(1u << assist::kLoad)) == 0; }
 

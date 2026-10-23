@@ -1,0 +1,92 @@
+N45a evidence: the per-frame game update, part 1, native: ROM 0AC3-0BD5 (the ghost sprite changes: blue/flashing/eyes sprite numbers of the four ghosts from the flags 4DA6-4DAA, the timer 4DC8 and the counter 4DCB), 0BD6-0C0C (the ghost colours: 4DAC-4DAF), 0C0D-0C41 (the power-dot flash counter 4DCF and the flash of the power-dot tiles) and 0E23-0E35 (the ghost animation flag 4DC0 every 8 frames). The routines are called from the per-frame update (08CD and 051C). Entry points: 0AC3, 0B33, 0B68, 0B9D, 0BD2 (inside 0AC3), 0BD6, 0BE2, 0BF0, 0BFA, 0C04, 0C0D, 0E23.
+Scope notes (honest): (1) The names above come from reading the code (what it writes), not from the project's label list. (2) The coverage players reach the ghost-flag branches 0B33-0BD2 only rarely (95 real entries in the evidence run), so those are proved mostly by the random cases (with the flag bytes, compare value and counters set to the interesting values) and the lockstep. (3) New instruction kinds in the runner: CP (IX+d), CP (IY+d), DEC (IY+d), RES n,(HL).
+Date: 2026-10-20
+Command: sh tests/test_native_f45a.sh 1000000 20000 100000
+Fast regression (this step; the full run_all.sh is for milestones and was NOT run): 39 PASS, no FAIL:
+PASS tests/test_native_attract.sh 30000 10000 2000
+PASS tests/test_native_demo.sh 30000 10000 2000
+PASS tests/test_native_game.sh 30000 10000 2000
+PASS tests/test_native_level.sh 30000 10000 2000
+PASS tests/test_native_frame.sh 30000 10000 2000
+PASS tests/test_native_meet.sh 30000 10000 2000
+PASS tests/test_native_eaten.sh 30000 10000 2000
+PASS tests/test_native_death.sh 30000 10000 2000
+PASS tests/test_native_clear.sh 30000 10000 2000
+PASS tests/test_native_fruit.sh 30000 10000 2000
+PASS tests/test_native_over.sh 30000 10000 2000
+PASS tests/test_native_inter1.sh 30000 10000 2000
+PASS tests/test_native_inter2.sh 30000 10000 2000
+PASS tests/test_native_inter3.sh 30000 10000 2000
+PASS tests/test_native_snd.sh 30000 10000 2000
+PASS tests/test_native_tune.sh 30000 10000 2000
+PASS tests/test_native_sched.sh 30000 10000 2000
+PASS tests/test_native_f45a.sh 30000 10000 2000
+PASS tests/test_native_players.sh 30000 10000
+PASS tests/test_native_helpers.sh 30000 10000 20000
+PASS tests/test_native_screen.sh 30000 10000 20000
+PASS tests/test_native_numbers.sh 30000 10000 20000
+PASS tests/test_native_text.sh 30000 10000 20000
+PASS tests/test_native_status.sh 30000 10000 20000
+PASS tests/test_native_sliced.sh 30000 10000 20000
+PASS tests/test_native_maze.sh 30000 10000 20000
+PASS tests/test_native_scan.sh 30000 10000 20000
+PASS tests/test_native_sprites.sh 30000 10000 20000
+PASS tests/test_native_pics.sh 30000 10000 20000
+PASS tests/test_native_clocks.sh 30000 10000 20000
+PASS tests/test_native_mode.sh 20000 5000 10000
+PASS tests/test_native_events.sh 20000 5000 10000
+PASS tests/test_native_handler.sh 20000 5000 10000
+PASS tests/test_native_labels.sh 20000 5000 10000
+PASS tests/test_native_coins.sh 20000 5000 10000
+PASS tests/test_rules_all.sh 100000
+PASS tests/test_rules_file.sh 20000
+PASS tests/test_purist.sh
+PASS tests/test_replay.sh
+
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 0E23 0, 0C0D 0, 0C04 0, 0BFA 0, 0BF0 0, 0BE2 0, 0BD6 0, 0BD2 0, 0B9D 0, 0B68 0, 0B33 0, 0AC3 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 0E23 79797 of 100000, 0C0D 79797 of 100000, 0C04 80028 of 100000, 0BFA 79801 of 100000, 0BF0 79828 of 100000, 0BE2 80042 of 100000, 0BD6 79861 of 100000, 0BD2 79932 of 100000, 0B9D 80050 of 100000, 0B68 79986 of 100000, 0B33 80066 of 100000, 0AC3 80040 of 100000
+part 2: real entry states from the coverage players A, B, C, D (20000 frames each, D a fifth): entries / compared / differences
+  0E23: 35509 / 5073 / 0
+  0C0D: 30623 / 4375 / 0
+  0C04: 30623 / 4375 / 0
+  0BFA: 30623 / 4375 / 0
+  0BF0: 30623 / 4375 / 0
+  0BE2: 30623 / 4375 / 0
+  0BD6: 30623 / 4375 / 0
+  0BD2: 22746 / 3250 / 0
+  0B9D: 1667 / 239 / 0
+  0B68: 1667 / 239 / 0
+  0B33: 1667 / 239 / 0
+  0AC3: 30079 / 4297 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3409
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (20000 frames each) and D (a fifth): 1064000 frames compared
+LOCKSTEP 1064000 frames compared; 2 variant(s)
+VARIANT A: native frame-update code only (calls counted): IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native frame-update code only (calls counted): routines replaced 12 of 282 in the map (instructions 166 of 5439 = 3.05 percent); entered in this run 12; calls 7145621
+VARIANT B: all readable rules + N12 to N45a: IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N45a: routines replaced 504 of 282 in the map (instructions 4366 of 5439 = 80.27 percent); entered in this run 485; calls 190298597
+REFERENCE distinct ROM instruction addresses run: 5640
+  0E23: original machine entered it 817640 times; native version (A or C) ran 817640 times  (equal)
+  0C0D: original machine entered it 812754 times; native version (A or C) ran 812754 times  (equal)
+  0C04: original machine entered it 812754 times; native version (A or C) ran 812754 times  (equal)
+  0BFA: original machine entered it 812754 times; native version (A or C) ran 812754 times  (equal)
+  0BF0: original machine entered it 812754 times; native version (A or C) ran 812754 times  (equal)
+  0BE2: original machine entered it 812754 times; native version (A or C) ran 812754 times  (equal)
+  0BD6: original machine entered it 812754 times; native version (A or C) ran 812754 times  (equal)
+  0BD2: original machine entered it 594184 times; native version (A or C) ran 594184 times  (equal)
+  0B9D: original machine entered it 43044 times; native version (A or C) ran 43044 times  (equal)
+  0B68: original machine entered it 43044 times; native version (A or C) ran 43044 times  (equal)
+  0B33: original machine entered it 43044 times; native version (A or C) ran 43044 times  (equal)
+  0AC3: original machine entered it 728141 times; native version (A or C) ran 728141 times  (equal)
+  frame-update code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "0AC3 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0BD6 an undocumented flag bit wrong": caught (2398 of 3000 isolated cases differ)
+part 4: wrong version "0C0D the byte 4E91 wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0E23 the return address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0B68 register BC wrong": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the ghost sprite routine 0AC3 (one cycle too slow): caught at frame 678
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N45a (before N45a) 2089; with the N45a frame-update code 1888
+PASS test_native_f45a
+PASS test_native_f45a.sh (report in build/n45a/report.txt)

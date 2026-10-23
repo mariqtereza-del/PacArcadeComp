@@ -1,0 +1,27 @@
+N15 evidence: native text printer 2C5E (src/game/text.h; adapter src/rules/rules.h namespace text; hook in rules::table())
+Date: 2026-10-16
+Command: sh tests/test_native_text.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated cases)
+Note: the string table and the strings are read from the player's ROM image at run time through the bus (no ROM bytes in the source). When the routine does not fit into the rest of the frame, or the string pointer is not in the ROM, the hook lets the ROM run instruction by instruction (always exact).
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2C5E 0
+  (in 300000 cases the routine did not fit into the rest of the frame or the string pointer was not in the ROM, so the ROM ran instruction by instruction: 81255; the other 218745 cases ran the native version)
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  2C5E: 12687 / 1813 / 0
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native text printer only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native text printer only (calls counted): routines replaced 1 of 282 in the map (instructions 54 of 5439 = 0.99 percent); entered in this run 1; calls 544010
+VARIANT B: all readable rules + N12 to N15 helpers: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N15 helpers: routines replaced 43 of 282 in the map (instructions 1187 of 5439 = 21.82 percent); entered in this run 43; calls 62351003
+REFERENCE distinct ROM instruction addresses run: 5643
+  2C5E: original machine entered it 544010 times; native version A ran 544010 times  (equal)
+  text printer in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "2C5E one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2C5E IX one too far": caught (2185 of 3000 isolated cases differ)
+part 4: wrong version "2C5E a stack leftover wrong": caught (2241 of 3000 isolated cases differ)
+part 4: wrong version "2C5E a colour byte wrong": caught (2995 of 3000 isolated cases differ)
+part 4: lockstep with the wrong 2C5E (one cycle too slow): caught at frame 251
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed): original ROM 5638; readable rules + N12 to N14 helpers (before N15) 4645; with the N15 text printer 4623
+PASS test_native_text

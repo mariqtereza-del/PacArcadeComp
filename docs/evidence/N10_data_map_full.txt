@@ -1,0 +1,1046 @@
+N10 ROM data map (tests/rom_data_map.cpp). Players A, B, C, D of tests/coverage_player.h: 300000 300000 300000 54000 frames. Addresses, sizes and counts only.
+
+== 1. Totals
+Z80 steps in the ROM 5316346535; instruction-fetch reads 10131310331; DATA reads 28824865 (from 85 reading instructions); reads made outside a step (interrupt vector lookup) 1859730
+distinct ROM addresses read as data (or by the interrupt): 14545
+self-checks: steps whose length differs from the instruction length table 0; steps whose first reads are not the instruction's own bytes 0; jump/call/return steps that also made a data read 0; steps with fewer reads than their length 0 (all must be 0)
+
+== 2. Reads by data block of docs/disasm/blocks.txt (S08)
+block | type | block range | size | distinct bytes read | data reads | ranges read (first-last) | reading routines (entry:reads)
+data001 | bytedata | 0068-008C | 37 | 24 | 1350 | 0068-007F | 06BE:24 0A7C:23 
+data003 | bytedata | 0219-0220 | 8 | 7 | 1101961 | 0219-021F | 01DC:7 
+jumptable005 | pointers | 0247-025A | 20 | 20 | 17260 | 0247-025A | 0010:10 0020:10 
+inline007 | bytedata | 0264-0265 | 2 | 2 | 1886 | 0264-0265 | 0028:2 
+jumptable009 | pointers | 03CC-03D3 | 8 | 8 | 1859538 | 03CC-03D3 | 0010:4 0020:4 
+jumptable011 | pointers | 03D8-03DB | 4 | 4 | 20272 | 03D8-03DB | 0010:2 0020:2 
+inline013 | bytedata | 03DD-03DE | 2 | 2 | 102 | 03DD-03DE | 0028:2 
+inline015 | bytedata | 03E0-03E1 | 2 | 2 | 102 | 03E0-03E1 | 0028:2 
+inline017 | bytedata | 03E3-03E4 | 2 | 2 | 102 | 03E3-03E4 | 0028:2 
+inline019 | bytedata | 03E6-03E7 | 2 | 2 | 102 | 03E6-03E7 | 0028:2 
+inline021 | bytedata | 03E9-03EA | 2 | 2 | 102 | 03E9-03EA | 0028:2 
+inline023 | bytedata | 03EC-03ED | 2 | 2 | 102 | 03EC-03ED | 0028:2 
+inline025 | bytedata | 03EF-03F0 | 2 | 2 | 102 | 03EF-03F0 | 0028:2 
+inline027 | bytedata | 03F2-03F3 | 2 | 2 | 102 | 03F2-03F3 | 0028:2 
+jumptable029 | pointers | 0417-045E | 72 | 72 | 194698 | 0417-045E | 0010:36 0020:36 
+inline031 | bytedata | 0460-0461 | 2 | 2 | 322 | 0460-0461 | 0028:2 
+inline033 | bytedata | 0463-0464 | 2 | 2 | 322 | 0463-0464 | 0028:2 
+inline035 | bytedata | 0466-0467 | 2 | 2 | 322 | 0466-0467 | 0028:2 
+inline037 | bytedata | 0469-046A | 2 | 2 | 322 | 0469-046A | 0028:2 
+inline039 | bytedata | 04D9-04DA | 2 | 2 | 136 | 04D9-04DA | 0028:2 
+inline041 | bytedata | 04EA-04EB | 2 | 2 | 98 | 04EA-04EB | 0028:2 
+inline043 | bytedata | 04ED-04EE | 2 | 2 | 98 | 04ED-04EE | 0028:2 
+inline045 | bytedata | 04F0-04F1 | 2 | 2 | 98 | 04F0-04F1 | 0028:2 
+inline047 | bytedata | 04F3-04F4 | 2 | 2 | 98 | 04F3-04F4 | 0028:2 
+inline049 | bytedata | 058B-058D | 3 | 3 | 2628 | 058B-058D | 0042:3 
+inline051 | bytedata | 059E-05A0 | 3 | 3 | 2661 | 059E-05A0 | 0042:3 
+jumptable053 | pointers | 05E9-05F2 | 10 | 10 | 59050 | 05E9-05F2 | 0010:5 0020:5 
+inline055 | bytedata | 05F7-05F8 | 2 | 2 | 262 | 05F7-05F8 | 0028:2 
+inline057 | bytedata | 05FA-05FB | 2 | 2 | 262 | 05FA-05FB | 0028:2 
+inline059 | bytedata | 05FD-05FE | 2 | 2 | 262 | 05FD-05FE | 0028:2 
+inline061 | bytedata | 0600-0601 | 2 | 2 | 262 | 0600-0601 | 0028:2 
+inline063 | bytedata | 0603-0604 | 2 | 2 | 262 | 0603-0604 | 0028:2 
+inline065 | bytedata | 0615-0616 | 2 | 2 | 258 | 0615-0616 | 0028:2 
+inline067 | bytedata | 0618-0619 | 2 | 2 | 258 | 0618-0619 | 0028:2 
+inline069 | bytedata | 0675-0676 | 2 | 2 | 262 | 0675-0676 | 0028:2 
+inline071 | bytedata | 0678-0679 | 2 | 2 | 262 | 0678-0679 | 0028:2 
+inline073 | bytedata | 067B-067C | 2 | 2 | 262 | 067B-067C | 0028:2 
+inline075 | bytedata | 067E-067F | 2 | 2 | 262 | 067E-067F | 0028:2 
+inline077 | bytedata | 0681-0682 | 2 | 2 | 262 | 0681-0682 | 0028:2 
+inline079 | bytedata | 0684-0685 | 2 | 2 | 262 | 0684-0685 | 0028:2 
+inline081 | bytedata | 0687-0688 | 2 | 2 | 262 | 0687-0688 | 0028:2 
+inline083 | bytedata | 068A-068B | 2 | 2 | 262 | 068A-068B | 0028:2 
+inline085 | bytedata | 068D-068E | 2 | 2 | 262 | 068D-068E | 0028:2 
+inline087 | bytedata | 069D-069E | 2 | 2 | 262 | 069D-069E | 0028:2 
+inline089 | bytedata | 06A0-06A2 | 3 | 3 | 393 | 06A0-06A2 | 0042:3 
+jumptable091 | pointers | 06C2-070D | 76 | 76 | 1612192 | 06C2-070D | 0010:38 0020:38 
+data093 | bytedata | 0796-0813 | 126 | 126 | 8394 | 0796-0813 | 06BE:126 
+data095 | bytedata | 0843-0878 | 54 | 45 | 12591 | 0846-085E 0865-0878 | 06BE:36 083A:9 
+inline097 | bytedata | 08A6-08A7 | 2 | 2 | 262 | 08A6-08A7 | 0028:2 
+inline099 | bytedata | 08A9-08AA | 2 | 2 | 262 | 08A9-08AA | 0028:2 
+inline101 | bytedata | 08AC-08AD | 2 | 2 | 262 | 08AC-08AD | 0028:2 
+inline103 | bytedata | 08AF-08B0 | 2 | 2 | 262 | 08AF-08B0 | 0028:2 
+inline105 | bytedata | 08B2-08B3 | 2 | 2 | 262 | 08B2-08B3 | 0028:2 
+inline107 | bytedata | 08B5-08B6 | 2 | 2 | 262 | 08B5-08B6 | 0028:2 
+inline109 | bytedata | 08B8-08BA | 3 | 3 | 393 | 08B8-08BA | 0042:3 
+inline111 | bytedata | 08BC-08BE | 3 | 3 | 393 | 08BC-08BE | 0042:3 
+inline113 | bytedata | 08DB-08DC | 2 | 2 | 12 | 08DB-08DC | 0028:2 
+inline115 | bytedata | 0937-0938 | 2 | 2 | 26 | 0937-0938 | 0028:2 
+inline117 | bytedata | 093A-093C | 3 | 3 | 39 | 093A-093C | 0042:3 
+inline119 | bytedata | 0956-0957 | 2 | 2 | 244 | 0956-0957 | 0028:2 
+inline121 | bytedata | 0959-095B | 3 | 3 | 366 | 0959-095B | 0042:3 
+inline123 | bytedata | 0989-098A | 2 | 2 | 1658 | 0989-098A | 0028:2 
+inline125 | bytedata | 098C-098D | 2 | 2 | 1658 | 098C-098D | 0028:2 
+inline127 | bytedata | 098F-0990 | 2 | 2 | 1658 | 098F-0990 | 0028:2 
+inline129 | bytedata | 0992-0993 | 2 | 2 | 1658 | 0992-0993 | 0028:2 
+inline131 | bytedata | 0995-0996 | 2 | 2 | 1658 | 0995-0996 | 0028:2 
+inline133 | bytedata | 0998-0999 | 2 | 2 | 1658 | 0998-0999 | 0028:2 
+inline135 | bytedata | 099B-099C | 2 | 2 | 1658 | 099B-099C | 0028:2 
+inline137 | bytedata | 099E-099F | 2 | 2 | 1658 | 099E-099F | 0028:2 
+inline139 | bytedata | 09A1-09A2 | 2 | 2 | 1658 | 09A1-09A2 | 0028:2 
+inline141 | bytedata | 09A4-09A5 | 2 | 2 | 1658 | 09A4-09A5 | 0028:2 
+inline143 | bytedata | 09A7-09A8 | 2 | 2 | 1658 | 09A7-09A8 | 0028:2 
+inline145 | bytedata | 09B1-09B2 | 2 | 2 | 32 | 09B1-09B2 | 0028:2 
+inline147 | bytedata | 09B4-09B5 | 2 | 2 | 32 | 09B4-09B5 | 0028:2 
+inline149 | bytedata | 09B7-09B9 | 3 | 3 | 2487 | 09B7-09B9 | 0042:3 
+inline151 | bytedata | 09C1-09C3 | 3 | 3 | 2439 | 09C1-09C3 | 0042:3 
+inline153 | bytedata | 09D9-09DB | 3 | 3 | 1152 | 09D9-09DB | 0042:3 
+inline155 | bytedata | 09F0-09F2 | 3 | 3 | 9360 | 09F0-09F2 | 0042:3 
+inline157 | bytedata | 0A0F-0A10 | 2 | 2 | 780 | 0A0F-0A10 | 0028:2 
+inline159 | bytedata | 0A12-0A13 | 2 | 2 | 780 | 0A12-0A13 | 0028:2 
+inline161 | bytedata | 0A15-0A16 | 2 | 2 | 780 | 0A15-0A16 | 0028:2 
+inline163 | bytedata | 0A18-0A19 | 2 | 2 | 780 | 0A18-0A19 | 0028:2 
+inline165 | bytedata | 0A1B-0A1C | 2 | 2 | 780 | 0A1B-0A1C | 0028:2 
+inline167 | bytedata | 0A1E-0A1F | 2 | 2 | 780 | 0A1E-0A1F | 0028:2 
+inline169 | bytedata | 0A21-0A22 | 2 | 2 | 780 | 0A21-0A22 | 0028:2 
+inline171 | bytedata | 0A24-0A26 | 3 | 3 | 1170 | 0A24-0A26 | 0042:3 
+jumptable173 | pointers | 0A45-0A6E | 42 | 42 | 119466 | 0A45-0A6E | 0010:21 0020:21 
+inline175 | bytedata | 0EF9-0EFB | 3 | 3 | 1092 | 0EF9-0EFB | 0042:3 
+data177 | bytedata | 0EFD-0FFF | 259 | 63 | 1092 | 0EFD-0F3B | 0010:21 0EAD:42 
+inline179 | bytedata | 100C-100D | 2 | 2 | 170 | 100C-100D | 0028:2 
+inline181 | bytedata | 1014-1015 | 2 | 2 | 170 | 1014-1015 | 0028:2 
+jumptable183 | pointers | 1098-109D | 6 | 6 | 1642592 | 1098-109D | 0010:3 0020:3 
+jumptable185 | pointers | 10A2-10A7 | 6 | 6 | 1642592 | 10A2-10A7 | 0010:3 0020:3 
+jumptable187 | pointers | 10AC-10B3 | 8 | 8 | 1642592 | 10AC-10B3 | 0010:4 0020:4 
+jumptable189 | pointers | 10B8-10BF | 8 | 8 | 1642592 | 10B8-10BF | 0010:4 0020:4 
+jumptable191 | pointers | 1239-123E | 6 | 6 | 37498 | 1239-123E | 0010:3 0020:3 
+inline193 | bytedata | 126F-1271 | 3 | 3 | 492 | 126F-1271 | 0042:3 
+jumptable195 | pointers | 1295-12B6 | 34 | 34 | 2123416 | 1295-12B6 | 0010:17 0020:17 
+jumptable197 | pointers | 1514-151B | 8 | 8 | 1424554 | 1514-151B | 0010:4 0020:4 
+inline199 | bytedata | 19C5-19C7 | 3 | 3 | 255 | 19C5-19C7 | 0042:3 
+inline201 | bytedata | 1A40-1A41 | 2 | 2 | 14276 | 1A40-1A41 | 0028:2 
+inline203 | bytedata | 1C06-1C07 | 2 | 2 | 52224 | 1C06-1C07 | 0028:2 
+inline205 | bytedata | 1C17-1C18 | 2 | 2 | 93250 | 1C17-1C18 | 0028:2 
+inline207 | bytedata | 1CDD-1CDE | 2 | 2 | 14692 | 1CDD-1CDE | 0028:2 
+inline209 | bytedata | 1CEE-1CEF | 2 | 2 | 61356 | 1CEE-1CEF | 0028:2 
+inline211 | bytedata | 1DB4-1DB5 | 2 | 2 | 5154 | 1DB4-1DB5 | 0028:2 
+inline213 | bytedata | 1DC5-1DC6 | 2 | 2 | 31870 | 1DC5-1DC6 | 0028:2 
+inline215 | bytedata | 1E8B-1E8C | 2 | 2 | 1548 | 1E8B-1E8C | 0028:2 
+inline217 | bytedata | 1E9C-1E9D | 2 | 2 | 21882 | 1E9C-1E9D | 0028:2 
+jumptable221 | pointers | 210C-2119 | 14 | 14 | 89060 | 210C-2119 | 0010:7 0020:7 
+inline223 | bytedata | 216A-216C | 3 | 3 | 219 | 216A-216C | 0042:3 
+inline225 | bytedata | 2196-2198 | 3 | 3 | 219 | 2196-2198 | 0042:3 
+jumptable227 | pointers | 21A6-21C1 | 28 | 28 | 7154 | 21A6-21C1 | 0010:14 0020:14 
+inline229 | bytedata | 21DC-21DE | 3 | 3 | 21 | 21DC-21DE | 0042:3 
+inline231 | bytedata | 2265-2267 | 3 | 3 | 21 | 2265-2267 | 0042:3 
+inline233 | bytedata | 2280-2282 | 3 | 3 | 21 | 2280-2282 | 0042:3 
+inline235 | bytedata | 2287-2289 | 3 | 3 | 21 | 2287-2289 | 0042:3 
+jumptable237 | pointers | 229B-22A6 | 12 | 12 | 22678 | 229B-22A6 | 0010:6 0020:6 
+inline239 | bytedata | 22D8-22DA | 3 | 3 | 69 | 22D8-22DA | 0042:3 
+inline241 | bytedata | 2303-2305 | 3 | 3 | 69 | 2303-2305 | 0042:3 
+jumptable243 | pointers | 23A8-23E7 | 64 | 60 | 372068 | 23A8-23D1 23D6-23E7 | 0010:30 0020:30 
+jumptable245 | pointers | 23EF-23F2 | 4 | 4 | 3488 | 23EF-23F2 | 0010:2 0020:2 
+data247 | bytedata | 2728-272F | 8 | 8 | 153 | 2728-272F | 0010:6 0018:2 
+data249 | bytedata | 2B17-2B32 | 28 | 16 | 29358 | 2B17-2B1E 2B23-2B28 2B31-2B32 | 0010:8 0018:8 
+code250 | code | 2B33-2D84 | 594 | 5 | 6030 | 2B73-2B77 | 2BCD:5 
+jumptable251 | pointers | 2D85-2DA4 | 32 | 12 | 6776 | 2D85-2D8E 2DA3-2DA4 | 0010:6 0020:6 
+jumptable253 | pointers | 2F02-2F21 | 32 | 4 | 1448318 | 2F02-2F05 | 0010:2 0020:2 
+data257 | bytedata | 3154-3173 | 32 | 24 | 37944 | 3154-316B | 2FAD:24 
+data259 | bytedata | 32F9-3AF3 | 2043 | 1444 | 9491183 | 32F9-330C 338D-35B1 35B5-36AC 36AF-36D4 36DB-36E0 36E9-36EC 36EF-3708 370B-3710 3713-3720 3723-372F 3732-373E 3741-3759 376A-3777 377A-379A 379D-37AE 37B1-37C2 37FD-3814 384C-3857 385A-3865 38BC-38CB 38CE-38D5 3900-3917 392A-393E 3941-3955 3958-396C 396F-3983 3986-3994 3997-39A0 39B0-39BA 39BD-39C7 39CA-39D0 3A4F-3AF3 | 0010:48 0018:48 0814:168 1806:4 1A70:8 2000:14 2419:381 2448:240 2487:240 291E:14 2966:8 2C5E:382 2FAD:24 3AF4:147 
+data261 | bytedata | 3B08-3FFF | 1272 | 785 | 1153464 | 3B08-3D1E 3D21-3D39 3D3C-3D54 3D57-3D64 3D67-3D73 3D76-3D83 3D86-3D92 3D95-3DA2 3DA5-3DB1 3DB4-3DC1 3DC4-3DD0 3DD3-3DE0 3DE3-3DEF 3DF2-3DFF 3E02-3E0E 3E11-3E1E 3E21-3E2D 3E4F-3E59 | 0010:24 0018:4 2BEA:512 2C5E:281 2D44:246 2DEE:120 2F55:4 2F65:4 2F77:4 2F89:4 2F9B:4 
+blocks with reads: 129 data/table blocks, 1 code blocks read as data; normal reads in data blocks 28182496, normal reads of code bytes as data 6030, normal reads in no block 0
+
+== 2b. Tables: runs of consecutive bytes read by the same routines (normal reads)
+first-last | size | block | reading routines | data reads | reading instructions
+0068-007E | 23 | data001 | 06BE 0A7C | 1345 | 0715 0A97 
+007F-007F | 1 | data001 | 06BE | 5 | 0715 
+0219-021F | 7 | data003 | 01DC | 1101961 | 01EE 01F9 
+0247-0247 | 1 | jumptable005 | 0010 | 5084 | 0016 
+0248-0248 | 1 | jumptable005 | 0020 | 5084 | 0025 
+0249-0249 | 1 | jumptable005 | 0010 | 131 | 0016 
+024A-024A | 1 | jumptable005 | 0020 | 131 | 0025 
+024B-024B | 1 | jumptable005 | 0010 | 1736 | 0016 
+024C-024C | 1 | jumptable005 | 0020 | 1736 | 0025 
+024D-024D | 1 | jumptable005 | 0010 | 164 | 0016 
+024E-024E | 1 | jumptable005 | 0020 | 164 | 0025 
+024F-024F | 1 | jumptable005 | 0010 | 363 | 0016 
+0250-0250 | 1 | jumptable005 | 0020 | 363 | 0025 
+0251-0251 | 1 | jumptable005 | 0010 | 85 | 0016 
+0252-0252 | 1 | jumptable005 | 0020 | 85 | 0025 
+0253-0253 | 1 | jumptable005 | 0010 | 943 | 0016 
+0254-0254 | 1 | jumptable005 | 0020 | 943 | 0025 
+0255-0255 | 1 | jumptable005 | 0010 | 73 | 0016 
+0256-0256 | 1 | jumptable005 | 0020 | 73 | 0025 
+0257-0257 | 1 | jumptable005 | 0010 | 28 | 0016 
+0258-0258 | 1 | jumptable005 | 0020 | 28 | 0025 
+0259-0259 | 1 | jumptable005 | 0010 | 23 | 0016 
+025A-025A | 1 | jumptable005 | 0020 | 23 | 0025 
+0264-0265 | 2 | inline007 | 0028 | 1886 | 0029 002B 
+03CC-03CC | 1 | jumptable009 | 0010 | 10136 | 0016 
+03CD-03CD | 1 | jumptable009 | 0020 | 10136 | 0025 
+03CE-03CE | 1 | jumptable009 | 0010 | 97489 | 0016 
+03CF-03CF | 1 | jumptable009 | 0020 | 97489 | 0025 
+03D0-03D0 | 1 | jumptable009 | 0010 | 29525 | 0016 
+03D1-03D1 | 1 | jumptable009 | 0020 | 29525 | 0025 
+03D2-03D2 | 1 | jumptable009 | 0010 | 792619 | 0016 
+03D3-03D3 | 1 | jumptable009 | 0020 | 792619 | 0025 
+03D8-03D8 | 1 | jumptable011 | 0010 | 51 | 0016 
+03D9-03D9 | 1 | jumptable011 | 0020 | 51 | 0025 
+03DA-03DA | 1 | jumptable011 | 0010 | 10085 | 0016 
+03DB-03DB | 1 | jumptable011 | 0020 | 10085 | 0025 
+03DD-03DE | 2 | inline013 | 0028 | 102 | 0029 002B 
+03E0-03E1 | 2 | inline015 | 0028 | 102 | 0029 002B 
+03E3-03E4 | 2 | inline017 | 0028 | 102 | 0029 002B 
+03E6-03E7 | 2 | inline019 | 0028 | 102 | 0029 002B 
+03E9-03EA | 2 | inline021 | 0028 | 102 | 0029 002B 
+03EC-03ED | 2 | inline023 | 0028 | 102 | 0029 002B 
+03EF-03F0 | 2 | inline025 | 0028 | 102 | 0029 002B 
+03F2-03F3 | 2 | inline027 | 0028 | 102 | 0029 002B 
+0417-0417 | 1 | jumptable029 | 0010 | 161 | 0016 
+0418-0418 | 1 | jumptable029 | 0020 | 161 | 0025 
+0419-0419 | 1 | jumptable029 | 0010 | 7676 | 0016 
+041A-041A | 1 | jumptable029 | 0020 | 7676 | 0025 
+041B-041B | 1 | jumptable029 | 0010 | 134 | 0016 
+041C-041C | 1 | jumptable029 | 0020 | 134 | 0025 
+041D-041D | 1 | jumptable029 | 0010 | 7868 | 0016 
+041E-041E | 1 | jumptable029 | 0020 | 7868 | 0025 
+041F-041F | 1 | jumptable029 | 0010 | 132 | 0016 
+0420-0420 | 1 | jumptable029 | 0020 | 132 | 0025 
+0421-0421 | 1 | jumptable029 | 0010 | 3828 | 0016 
+0422-0422 | 1 | jumptable029 | 0020 | 3828 | 0025 
+0423-0423 | 1 | jumptable029 | 0010 | 132 | 0016 
+0424-0424 | 1 | jumptable029 | 0020 | 132 | 0025 
+0425-0425 | 1 | jumptable029 | 0010 | 3828 | 0016 
+0426-0426 | 1 | jumptable029 | 0020 | 3828 | 0025 
+0427-0427 | 1 | jumptable029 | 0010 | 132 | 0016 
+0428-0428 | 1 | jumptable029 | 0020 | 132 | 0025 
+0429-0429 | 1 | jumptable029 | 0010 | 7788 | 0016 
+042A-042A | 1 | jumptable029 | 0020 | 7788 | 0025 
+042B-042B | 1 | jumptable029 | 0010 | 132 | 0016 
+042C-042C | 1 | jumptable029 | 0020 | 132 | 0025 
+042D-042D | 1 | jumptable029 | 0010 | 3828 | 0016 
+042E-042E | 1 | jumptable029 | 0020 | 3828 | 0025 
+042F-042F | 1 | jumptable029 | 0010 | 132 | 0016 
+0430-0430 | 1 | jumptable029 | 0020 | 132 | 0025 
+0431-0431 | 1 | jumptable029 | 0010 | 3828 | 0016 
+0432-0432 | 1 | jumptable029 | 0020 | 3828 | 0025 
+0433-0433 | 1 | jumptable029 | 0010 | 132 | 0016 
+0434-0434 | 1 | jumptable029 | 0020 | 132 | 0025 
+0435-0435 | 1 | jumptable029 | 0010 | 7788 | 0016 
+0436-0436 | 1 | jumptable029 | 0020 | 7788 | 0025 
+0437-0437 | 1 | jumptable029 | 0010 | 132 | 0016 
+0438-0438 | 1 | jumptable029 | 0020 | 132 | 0025 
+0439-0439 | 1 | jumptable029 | 0010 | 3828 | 0016 
+043A-043A | 1 | jumptable029 | 0020 | 3828 | 0025 
+043B-043B | 1 | jumptable029 | 0010 | 132 | 0016 
+043C-043C | 1 | jumptable029 | 0020 | 132 | 0025 
+043D-043D | 1 | jumptable029 | 0010 | 3828 | 0016 
+043E-043E | 1 | jumptable029 | 0020 | 3828 | 0025 
+043F-043F | 1 | jumptable029 | 0010 | 132 | 0016 
+0440-0440 | 1 | jumptable029 | 0020 | 132 | 0025 
+0441-0441 | 1 | jumptable029 | 0010 | 6981 | 0016 
+0442-0442 | 1 | jumptable029 | 0020 | 6981 | 0025 
+0443-0443 | 1 | jumptable029 | 0010 | 95 | 0016 
+0444-0444 | 1 | jumptable029 | 0020 | 95 | 0025 
+0445-0445 | 1 | jumptable029 | 0010 | 2536 | 0016 
+0446-0446 | 1 | jumptable029 | 0020 | 2536 | 0025 
+0447-0447 | 1 | jumptable029 | 0010 | 68 | 0016 
+0448-0448 | 1 | jumptable029 | 0020 | 68 | 0025 
+0449-0449 | 1 | jumptable029 | 0010 | 4012 | 0016 
+044A-044A | 1 | jumptable029 | 0020 | 4012 | 0025 
+044B-044B | 1 | jumptable029 | 0010 | 68 | 0016 
+044C-044C | 1 | jumptable029 | 0020 | 68 | 0025 
+044D-044D | 1 | jumptable029 | 0010 | 3604 | 0016 
+044E-044E | 1 | jumptable029 | 0020 | 3604 | 0025 
+044F-044F | 1 | jumptable029 | 0010 | 49 | 0016 
+0450-0450 | 1 | jumptable029 | 0020 | 49 | 0025 
+0451-0451 | 1 | jumptable029 | 0010 | 2299 | 0016 
+0452-0452 | 1 | jumptable029 | 0020 | 2299 | 0025 
+0453-0453 | 1 | jumptable029 | 0010 | 477 | 0016 
+0454-0454 | 1 | jumptable029 | 0020 | 477 | 0025 
+0455-0455 | 1 | jumptable029 | 0010 | 240 | 0016 
+0456-0456 | 1 | jumptable029 | 0020 | 240 | 0025 
+0457-0457 | 1 | jumptable029 | 0010 | 224 | 0016 
+0458-0458 | 1 | jumptable029 | 0020 | 224 | 0025 
+0459-0459 | 1 | jumptable029 | 0010 | 240 | 0016 
+045A-045A | 1 | jumptable029 | 0020 | 240 | 0025 
+045B-045B | 1 | jumptable029 | 0010 | 7408 | 0016 
+045C-045C | 1 | jumptable029 | 0020 | 7408 | 0025 
+045D-045D | 1 | jumptable029 | 0010 | 13477 | 0016 
+045E-045E | 1 | jumptable029 | 0020 | 13477 | 0025 
+0460-0461 | 2 | inline031 | 0028 | 322 | 0029 002B 
+0463-0464 | 2 | inline033 | 0028 | 322 | 0029 002B 
+0466-0467 | 2 | inline035 | 0028 | 322 | 0029 002B 
+0469-046A | 2 | inline037 | 0028 | 322 | 0029 002B 
+04D9-04DA | 2 | inline039 | 0028 | 136 | 0029 002B 
+04EA-04EB | 2 | inline041 | 0028 | 98 | 0029 002B 
+04ED-04EE | 2 | inline043 | 0028 | 98 | 0029 002B 
+04F0-04F1 | 2 | inline045 | 0028 | 98 | 0029 002B 
+04F3-04F4 | 2 | inline047 | 0028 | 98 | 0029 002B 
+058B-058D | 3 | inline049 | 0042 | 2628 | 005E 
+059E-05A0 | 3 | inline051 | 0042 | 2661 | 005E 
+05E9-05E9 | 1 | jumptable053 | 0010 | 131 | 0016 
+05EA-05EA | 1 | jumptable053 | 0020 | 131 | 0025 
+05EB-05EB | 1 | jumptable053 | 0010 | 11523 | 0016 
+05EC-05EC | 1 | jumptable053 | 0020 | 11523 | 0025 
+05ED-05ED | 1 | jumptable053 | 0010 | 131 | 0016 
+05EE-05EE | 1 | jumptable053 | 0020 | 131 | 0025 
+05EF-05EF | 1 | jumptable053 | 0010 | 17609 | 0016 
+05F0-05F0 | 1 | jumptable053 | 0020 | 17609 | 0025 
+05F1-05F1 | 1 | jumptable053 | 0010 | 131 | 0016 
+05F2-05F2 | 1 | jumptable053 | 0020 | 131 | 0025 
+05F7-05F8 | 2 | inline055 | 0028 | 262 | 0029 002B 
+05FA-05FB | 2 | inline057 | 0028 | 262 | 0029 002B 
+05FD-05FE | 2 | inline059 | 0028 | 262 | 0029 002B 
+0600-0601 | 2 | inline061 | 0028 | 262 | 0029 002B 
+0603-0604 | 2 | inline063 | 0028 | 262 | 0029 002B 
+0615-0616 | 2 | inline065 | 0028 | 258 | 0029 002B 
+0618-0619 | 2 | inline067 | 0028 | 258 | 0029 002B 
+0675-0676 | 2 | inline069 | 0028 | 262 | 0029 002B 
+0678-0679 | 2 | inline071 | 0028 | 262 | 0029 002B 
+067B-067C | 2 | inline073 | 0028 | 262 | 0029 002B 
+067E-067F | 2 | inline075 | 0028 | 262 | 0029 002B 
+0681-0682 | 2 | inline077 | 0028 | 262 | 0029 002B 
+0684-0685 | 2 | inline079 | 0028 | 262 | 0029 002B 
+0687-0688 | 2 | inline081 | 0028 | 262 | 0029 002B 
+068A-068B | 2 | inline083 | 0028 | 262 | 0029 002B 
+068D-068E | 2 | inline085 | 0028 | 262 | 0029 002B 
+069D-069E | 2 | inline087 | 0028 | 262 | 0029 002B 
+06A0-06A2 | 3 | inline089 | 0042 | 393 | 005E 
+06C2-06C2 | 1 | jumptable091 | 0010 | 147 | 0016 
+06C3-06C3 | 1 | jumptable091 | 0020 | 147 | 0025 
+06C4-06C4 | 1 | jumptable091 | 0010 | 147 | 0016 
+06C5-06C5 | 1 | jumptable091 | 0020 | 147 | 0025 
+06C6-06C6 | 1 | jumptable091 | 0010 | 15327 | 0016 
+06C7-06C7 | 1 | jumptable091 | 0020 | 15327 | 0025 
+06C8-06C8 | 1 | jumptable091 | 0010 | 522735 | 0016 
+06C9-06C9 | 1 | jumptable091 | 0020 | 522735 | 0025 
+06CA-06CA | 1 | jumptable091 | 0010 | 545 | 0016 
+06CB-06CB | 1 | jumptable091 | 0020 | 545 | 0025 
+06CC-06CC | 1 | jumptable091 | 0010 | 1519 | 0016 
+06CD-06CD | 1 | jumptable091 | 0020 | 1519 | 0025 
+06CE-06CE | 1 | jumptable091 | 0010 | 545 | 0016 
+06CF-06CF | 1 | jumptable091 | 0020 | 545 | 0025 
+06D0-06D0 | 1 | jumptable091 | 0010 | 14173 | 0016 
+06D1-06D1 | 1 | jumptable091 | 0020 | 14173 | 0025 
+06D2-06D2 | 1 | jumptable091 | 0010 | 122 | 0016 
+06D3-06D3 | 1 | jumptable091 | 0020 | 122 | 0025 
+06D4-06D4 | 1 | jumptable091 | 0010 | 439 | 0016 
+06D5-06D5 | 1 | jumptable091 | 0020 | 439 | 0025 
+06D6-06D6 | 1 | jumptable091 | 0010 | 51292 | 0016 
+06D7-06D7 | 1 | jumptable091 | 0020 | 51292 | 0025 
+06D8-06D8 | 1 | jumptable091 | 0010 | 439 | 0016 
+06D9-06D9 | 1 | jumptable091 | 0020 | 439 | 0025 
+06DA-06DA | 1 | jumptable091 | 0010 | 384 | 0016 
+06DB-06DB | 1 | jumptable091 | 0020 | 384 | 0025 
+06DC-06DC | 1 | jumptable091 | 0010 | 44751 | 0016 
+06DD-06DD | 1 | jumptable091 | 0020 | 44751 | 0025 
+06DE-06DE | 1 | jumptable091 | 0010 | 390 | 0016 
+06DF-06DF | 1 | jumptable091 | 0020 | 390 | 0025 
+06E0-06E0 | 1 | jumptable091 | 0010 | 4278 | 0016 
+06E1-06E1 | 1 | jumptable091 | 0020 | 4278 | 0025 
+06E2-06E2 | 1 | jumptable091 | 0010 | 390 | 0016 
+06E3-06E3 | 1 | jumptable091 | 0020 | 390 | 0025 
+06E4-06E4 | 1 | jumptable091 | 0010 | 4290 | 0016 
+06E5-06E5 | 1 | jumptable091 | 0020 | 4290 | 0025 
+06E6-06E6 | 1 | jumptable091 | 0010 | 390 | 0016 
+06E7-06E7 | 1 | jumptable091 | 0020 | 390 | 0025 
+06E8-06E8 | 1 | jumptable091 | 0010 | 4290 | 0016 
+06E9-06E9 | 1 | jumptable091 | 0020 | 4290 | 0025 
+06EA-06EA | 1 | jumptable091 | 0010 | 390 | 0016 
+06EB-06EB | 1 | jumptable091 | 0020 | 390 | 0025 
+06EC-06EC | 1 | jumptable091 | 0010 | 4290 | 0016 
+06ED-06ED | 1 | jumptable091 | 0020 | 4290 | 0025 
+06EE-06EE | 1 | jumptable091 | 0010 | 390 | 0016 
+06EF-06EF | 1 | jumptable091 | 0020 | 390 | 0025 
+06F0-06F0 | 1 | jumptable091 | 0010 | 4290 | 0016 
+06F1-06F1 | 1 | jumptable091 | 0020 | 4290 | 0025 
+06F2-06F2 | 1 | jumptable091 | 0010 | 390 | 0016 
+06F3-06F3 | 1 | jumptable091 | 0020 | 390 | 0025 
+06F4-06F4 | 1 | jumptable091 | 0010 | 4290 | 0016 
+06F5-06F5 | 1 | jumptable091 | 0020 | 4290 | 0025 
+06F6-06F6 | 1 | jumptable091 | 0010 | 390 | 0016 
+06F7-06F7 | 1 | jumptable091 | 0020 | 390 | 0025 
+06F8-06F8 | 1 | jumptable091 | 0010 | 4290 | 0016 
+06F9-06F9 | 1 | jumptable091 | 0020 | 4290 | 0025 
+06FA-06FA | 1 | jumptable091 | 0010 | 390 | 0016 
+06FB-06FB | 1 | jumptable091 | 0020 | 390 | 0025 
+06FC-06FC | 1 | jumptable091 | 0010 | 4290 | 0016 
+06FD-06FD | 1 | jumptable091 | 0020 | 4290 | 0025 
+06FE-06FE | 1 | jumptable091 | 0010 | 390 | 0016 
+06FF-06FF | 1 | jumptable091 | 0020 | 390 | 0025 
+0700-0700 | 1 | jumptable091 | 0010 | 6630 | 0016 
+0701-0701 | 1 | jumptable091 | 0020 | 6630 | 0025 
+0702-0702 | 1 | jumptable091 | 0010 | 59733 | 0016 
+0703-0703 | 1 | jumptable091 | 0020 | 59733 | 0025 
+0704-0704 | 1 | jumptable091 | 0010 | 2565 | 0016 
+0705-0705 | 1 | jumptable091 | 0020 | 2565 | 0025 
+0706-0706 | 1 | jumptable091 | 0010 | 390 | 0016 
+0707-0707 | 1 | jumptable091 | 0020 | 390 | 0025 
+0708-0708 | 1 | jumptable091 | 0010 | 390 | 0016 
+0709-0709 | 1 | jumptable091 | 0020 | 390 | 0025 
+070A-070A | 1 | jumptable091 | 0010 | 45616 | 0016 
+070B-070B | 1 | jumptable091 | 0020 | 45616 | 0025 
+070C-070C | 1 | jumptable091 | 0010 | 389 | 0016 
+070D-070D | 1 | jumptable091 | 0020 | 389 | 0025 
+0796-0813 | 126 | data093 | 06BE | 8394 | 0725 073B 0741 0751 0767 077D 
+0846-084E | 9 | data095 | 083A | 4197 | 0840 
+084F-085E | 16 | data095 | 06BE | 2798 | 075E 0761 
+0865-0878 | 20 | data095 | 06BE | 5596 | 0774 0777 078A 078D 
+08A6-08A7 | 2 | inline097 | 0028 | 262 | 0029 002B 
+08A9-08AA | 2 | inline099 | 0028 | 262 | 0029 002B 
+08AC-08AD | 2 | inline101 | 0028 | 262 | 0029 002B 
+08AF-08B0 | 2 | inline103 | 0028 | 262 | 0029 002B 
+08B2-08B3 | 2 | inline105 | 0028 | 262 | 0029 002B 
+08B5-08B6 | 2 | inline107 | 0028 | 262 | 0029 002B 
+08B8-08BA | 3 | inline109 | 0042 | 393 | 005E 
+08BC-08BE | 3 | inline111 | 0042 | 393 | 005E 
+08DB-08DC | 2 | inline113 | 0028 | 12 | 0029 002B 
+0937-0938 | 2 | inline115 | 0028 | 26 | 0029 002B 
+093A-093C | 3 | inline117 | 0042 | 39 | 005E 
+0956-0957 | 2 | inline119 | 0028 | 244 | 0029 002B 
+0959-095B | 3 | inline121 | 0042 | 366 | 005E 
+0989-098A | 2 | inline123 | 0028 | 1658 | 0029 002B 
+098C-098D | 2 | inline125 | 0028 | 1658 | 0029 002B 
+098F-0990 | 2 | inline127 | 0028 | 1658 | 0029 002B 
+0992-0993 | 2 | inline129 | 0028 | 1658 | 0029 002B 
+0995-0996 | 2 | inline131 | 0028 | 1658 | 0029 002B 
+0998-0999 | 2 | inline133 | 0028 | 1658 | 0029 002B 
+099B-099C | 2 | inline135 | 0028 | 1658 | 0029 002B 
+099E-099F | 2 | inline137 | 0028 | 1658 | 0029 002B 
+09A1-09A2 | 2 | inline139 | 0028 | 1658 | 0029 002B 
+09A4-09A5 | 2 | inline141 | 0028 | 1658 | 0029 002B 
+09A7-09A8 | 2 | inline143 | 0028 | 1658 | 0029 002B 
+09B1-09B2 | 2 | inline145 | 0028 | 32 | 0029 002B 
+09B4-09B5 | 2 | inline147 | 0028 | 32 | 0029 002B 
+09B7-09B9 | 3 | inline149 | 0042 | 2487 | 005E 
+09C1-09C3 | 3 | inline151 | 0042 | 2439 | 005E 
+09D9-09DB | 3 | inline153 | 0042 | 1152 | 005E 
+09F0-09F2 | 3 | inline155 | 0042 | 9360 | 005E 
+0A0F-0A10 | 2 | inline157 | 0028 | 780 | 0029 002B 
+0A12-0A13 | 2 | inline159 | 0028 | 780 | 0029 002B 
+0A15-0A16 | 2 | inline161 | 0028 | 780 | 0029 002B 
+0A18-0A19 | 2 | inline163 | 0028 | 780 | 0029 002B 
+0A1B-0A1C | 2 | inline165 | 0028 | 780 | 0029 002B 
+0A1E-0A1F | 2 | inline167 | 0028 | 780 | 0029 002B 
+0A21-0A22 | 2 | inline169 | 0028 | 780 | 0029 002B 
+0A24-0A26 | 3 | inline171 | 0042 | 1170 | 005E 
+0A45-0A45 | 1 | jumptable173 | 0010 | 103 | 0016 
+0A46-0A46 | 1 | jumptable173 | 0020 | 103 | 0025 
+0A47-0A47 | 1 | jumptable173 | 0010 | 44530 | 0016 
+0A48-0A48 | 1 | jumptable173 | 0020 | 44530 | 0025 
+0A49-0A49 | 1 | jumptable173 | 0010 | 16 | 0016 
+0A4A-0A4A | 1 | jumptable173 | 0020 | 16 | 0025 
+0A4B-0A4B | 1 | jumptable173 | 0010 | 7 | 0016 
+0A4C-0A4C | 1 | jumptable173 | 0020 | 7 | 0025 
+0A4D-0A4D | 1 | jumptable173 | 0010 | 3577 | 0016 
+0A4E-0A4E | 1 | jumptable173 | 0020 | 3577 | 0025 
+0A4F-0A4F | 1 | jumptable173 | 0010 | 7 | 0016 
+0A50-0A50 | 1 | jumptable173 | 0020 | 7 | 0025 
+0A51-0A51 | 1 | jumptable173 | 0010 | 7 | 0016 
+0A52-0A52 | 1 | jumptable173 | 0020 | 7 | 0025 
+0A53-0A53 | 1 | jumptable173 | 0010 | 10 | 0016 
+0A54-0A54 | 1 | jumptable173 | 0020 | 10 | 0025 
+0A55-0A55 | 1 | jumptable173 | 0010 | 4437 | 0016 
+0A56-0A56 | 1 | jumptable173 | 0020 | 4437 | 0025 
+0A57-0A57 | 1 | jumptable173 | 0010 | 8 | 0016 
+0A58-0A58 | 1 | jumptable173 | 0020 | 8 | 0025 
+0A59-0A59 | 1 | jumptable173 | 0010 | 6 | 0016 
+0A5A-0A5A | 1 | jumptable173 | 0020 | 6 | 0025 
+0A5B-0A5B | 1 | jumptable173 | 0010 | 7 | 0016 
+0A5C-0A5C | 1 | jumptable173 | 0020 | 7 | 0025 
+0A5D-0A5D | 1 | jumptable173 | 0010 | 3451 | 0016 
+0A5E-0A5E | 1 | jumptable173 | 0020 | 3451 | 0025 
+0A5F-0A5F | 1 | jumptable173 | 0010 | 7 | 0016 
+0A60-0A60 | 1 | jumptable173 | 0020 | 7 | 0025 
+0A61-0A61 | 1 | jumptable173 | 0010 | 6 | 0016 
+0A62-0A62 | 1 | jumptable173 | 0020 | 6 | 0025 
+0A63-0A63 | 1 | jumptable173 | 0010 | 7 | 0016 
+0A64-0A64 | 1 | jumptable173 | 0020 | 7 | 0025 
+0A65-0A65 | 1 | jumptable173 | 0010 | 3451 | 0016 
+0A66-0A66 | 1 | jumptable173 | 0020 | 3451 | 0025 
+0A67-0A67 | 1 | jumptable173 | 0010 | 7 | 0016 
+0A68-0A68 | 1 | jumptable173 | 0020 | 7 | 0025 
+0A69-0A69 | 1 | jumptable173 | 0010 | 7 | 0016 
+0A6A-0A6A | 1 | jumptable173 | 0020 | 7 | 0025 
+0A6B-0A6B | 1 | jumptable173 | 0010 | 9 | 0016 
+0A6C-0A6C | 1 | jumptable173 | 0020 | 9 | 0025 
+0A6D-0A6D | 1 | jumptable173 | 0010 | 73 | 0016 
+0A6E-0A6E | 1 | jumptable173 | 0020 | 73 | 0025 
+0EF9-0EFB | 3 | inline175 | 0042 | 1092 | 005E 
+0EFD-0EFD | 1 | data177 | 0010 | 75 | 0016 
+0EFE-0EFF | 2 | data177 | 0EAD | 150 | 0EEF 0EF4 
+0F00-0F00 | 1 | data177 | 0010 | 48 | 0016 
+0F01-0F02 | 2 | data177 | 0EAD | 96 | 0EEF 0EF4 
+0F03-0F03 | 1 | data177 | 0010 | 31 | 0016 
+0F04-0F05 | 2 | data177 | 0EAD | 62 | 0EEF 0EF4 
+0F06-0F06 | 1 | data177 | 0010 | 9 | 0016 
+0F07-0F08 | 2 | data177 | 0EAD | 18 | 0EEF 0EF4 
+0F09-0F09 | 1 | data177 | 0010 | 7 | 0016 
+0F0A-0F0B | 2 | data177 | 0EAD | 14 | 0EEF 0EF4 
+0F0C-0F0C | 1 | data177 | 0010 | 7 | 0016 
+0F0D-0F0E | 2 | data177 | 0EAD | 14 | 0EEF 0EF4 
+0F0F-0F0F | 1 | data177 | 0010 | 7 | 0016 
+0F10-0F11 | 2 | data177 | 0EAD | 14 | 0EEF 0EF4 
+0F12-0F12 | 1 | data177 | 0010 | 11 | 0016 
+0F13-0F14 | 2 | data177 | 0EAD | 22 | 0EEF 0EF4 
+0F15-0F15 | 1 | data177 | 0010 | 10 | 0016 
+0F16-0F17 | 2 | data177 | 0EAD | 20 | 0EEF 0EF4 
+0F18-0F18 | 1 | data177 | 0010 | 8 | 0016 
+0F19-0F1A | 2 | data177 | 0EAD | 16 | 0EEF 0EF4 
+0F1B-0F1B | 1 | data177 | 0010 | 7 | 0016 
+0F1C-0F1D | 2 | data177 | 0EAD | 14 | 0EEF 0EF4 
+0F1E-0F1E | 1 | data177 | 0010 | 9 | 0016 
+0F1F-0F20 | 2 | data177 | 0EAD | 18 | 0EEF 0EF4 
+0F21-0F21 | 1 | data177 | 0010 | 8 | 0016 
+0F22-0F23 | 2 | data177 | 0EAD | 16 | 0EEF 0EF4 
+0F24-0F24 | 1 | data177 | 0010 | 7 | 0016 
+0F25-0F26 | 2 | data177 | 0EAD | 14 | 0EEF 0EF4 
+0F27-0F27 | 1 | data177 | 0010 | 6 | 0016 
+0F28-0F29 | 2 | data177 | 0EAD | 12 | 0EEF 0EF4 
+0F2A-0F2A | 1 | data177 | 0010 | 7 | 0016 
+0F2B-0F2C | 2 | data177 | 0EAD | 14 | 0EEF 0EF4 
+0F2D-0F2D | 1 | data177 | 0010 | 8 | 0016 
+0F2E-0F2F | 2 | data177 | 0EAD | 16 | 0EEF 0EF4 
+0F30-0F30 | 1 | data177 | 0010 | 7 | 0016 
+0F31-0F32 | 2 | data177 | 0EAD | 14 | 0EEF 0EF4 
+0F33-0F33 | 1 | data177 | 0010 | 8 | 0016 
+0F34-0F35 | 2 | data177 | 0EAD | 16 | 0EEF 0EF4 
+0F36-0F36 | 1 | data177 | 0010 | 9 | 0016 
+0F37-0F38 | 2 | data177 | 0EAD | 18 | 0EEF 0EF4 
+0F39-0F39 | 1 | data177 | 0010 | 75 | 0016 
+0F3A-0F3B | 2 | data177 | 0EAD | 150 | 0EEF 0EF4 
+100C-100D | 2 | inline179 | 0028 | 170 | 0029 002B 
+1014-1015 | 2 | inline181 | 0028 | 170 | 0029 002B 
+1098-1098 | 1 | jumptable183 | 0010 | 768128 | 0016 
+1099-1099 | 1 | jumptable183 | 0020 | 768128 | 0025 
+109A-109A | 1 | jumptable183 | 0010 | 52888 | 0016 
+109B-109B | 1 | jumptable183 | 0020 | 52888 | 0025 
+109C-109C | 1 | jumptable183 | 0010 | 280 | 0016 
+109D-109D | 1 | jumptable183 | 0020 | 280 | 0025 
+10A2-10A2 | 1 | jumptable185 | 0010 | 806566 | 0016 
+10A3-10A3 | 1 | jumptable185 | 0020 | 806566 | 0025 
+10A4-10A4 | 1 | jumptable185 | 0010 | 14394 | 0016 
+10A5-10A5 | 1 | jumptable185 | 0020 | 14394 | 0025 
+10A6-10A6 | 1 | jumptable185 | 0010 | 336 | 0016 
+10A7-10A7 | 1 | jumptable185 | 0020 | 336 | 0025 
+10AC-10AC | 1 | jumptable187 | 0010 | 816683 | 0016 
+10AD-10AD | 1 | jumptable187 | 0020 | 816683 | 0025 
+10AE-10AE | 1 | jumptable187 | 0010 | 4261 | 0016 
+10AF-10AF | 1 | jumptable187 | 0020 | 4261 | 0025 
+10B0-10B0 | 1 | jumptable187 | 0010 | 224 | 0016 
+10B1-10B1 | 1 | jumptable187 | 0020 | 224 | 0025 
+10B2-10B2 | 1 | jumptable187 | 0010 | 128 | 0016 
+10B3-10B3 | 1 | jumptable187 | 0020 | 128 | 0025 
+10B8-10B8 | 1 | jumptable189 | 0010 | 820412 | 0016 
+10B9-10B9 | 1 | jumptable189 | 0020 | 820412 | 0025 
+10BA-10BA | 1 | jumptable189 | 0010 | 752 | 0016 
+10BB-10BB | 1 | jumptable189 | 0020 | 752 | 0025 
+10BC-10BC | 1 | jumptable189 | 0010 | 84 | 0016 
+10BD-10BD | 1 | jumptable189 | 0020 | 84 | 0025 
+10BE-10BE | 1 | jumptable189 | 0010 | 48 | 0016 
+10BF-10BF | 1 | jumptable189 | 0020 | 48 | 0025 
+1239-1239 | 1 | jumptable191 | 0010 | 164 | 0016 
+123A-123A | 1 | jumptable191 | 0020 | 164 | 0025 
+123B-123B | 1 | jumptable191 | 0010 | 18437 | 0016 
+123C-123C | 1 | jumptable191 | 0020 | 18437 | 0025 
+123D-123D | 1 | jumptable191 | 0010 | 148 | 0016 
+123E-123E | 1 | jumptable191 | 0020 | 148 | 0025 
+126F-1271 | 3 | inline193 | 0042 | 492 | 005E 
+1295-1295 | 1 | jumptable195 | 0010 | 821296 | 0016 
+1296-1296 | 1 | jumptable195 | 0020 | 821296 | 0025 
+1297-1297 | 1 | jumptable195 | 0010 | 22028 | 0016 
+1298-1298 | 1 | jumptable195 | 0020 | 22028 | 0025 
+1299-1299 | 1 | jumptable195 | 0010 | 20400 | 0016 
+129A-129A | 1 | jumptable195 | 0020 | 20400 | 0025 
+129B-129B | 1 | jumptable195 | 0010 | 14418 | 0016 
+129C-129C | 1 | jumptable195 | 0020 | 14418 | 0025 
+129D-129D | 1 | jumptable195 | 0010 | 8880 | 0016 
+129E-129E | 1 | jumptable195 | 0020 | 8880 | 0025 
+129F-129F | 1 | jumptable195 | 0010 | 32700 | 0016 
+12A0-12A0 | 1 | jumptable195 | 0020 | 32700 | 0025 
+12A1-12A1 | 1 | jumptable195 | 0010 | 8175 | 0016 
+12A2-12A2 | 1 | jumptable195 | 0020 | 8175 | 0025 
+12A3-12A3 | 1 | jumptable195 | 0010 | 8175 | 0016 
+12A4-12A4 | 1 | jumptable195 | 0020 | 8175 | 0025 
+12A5-12A5 | 1 | jumptable195 | 0010 | 8175 | 0016 
+12A6-12A6 | 1 | jumptable195 | 0020 | 8175 | 0025 
+12A7-12A7 | 1 | jumptable195 | 0010 | 8175 | 0016 
+12A8-12A8 | 1 | jumptable195 | 0020 | 8175 | 0025 
+12A9-12A9 | 1 | jumptable195 | 0010 | 8175 | 0016 
+12AA-12AA | 1 | jumptable195 | 0020 | 8175 | 0025 
+12AB-12AB | 1 | jumptable195 | 0010 | 8175 | 0016 
+12AC-12AC | 1 | jumptable195 | 0020 | 8175 | 0025 
+12AD-12AD | 1 | jumptable195 | 0010 | 8175 | 0016 
+12AE-12AE | 1 | jumptable195 | 0020 | 8175 | 0025 
+12AF-12AF | 1 | jumptable195 | 0010 | 8175 | 0016 
+12B0-12B0 | 1 | jumptable195 | 0020 | 8175 | 0025 
+12B1-12B1 | 1 | jumptable195 | 0010 | 8175 | 0016 
+12B2-12B2 | 1 | jumptable195 | 0020 | 8175 | 0025 
+12B3-12B3 | 1 | jumptable195 | 0010 | 16350 | 0016 
+12B4-12B4 | 1 | jumptable195 | 0020 | 16350 | 0025 
+12B5-12B5 | 1 | jumptable195 | 0010 | 52061 | 0016 
+12B6-12B6 | 1 | jumptable195 | 0020 | 52061 | 0025 
+1514-1514 | 1 | jumptable197 | 0010 | 161879 | 0016 
+1515-1515 | 1 | jumptable197 | 0020 | 161879 | 0025 
+1516-1516 | 1 | jumptable197 | 0010 | 114127 | 0016 
+1517-1517 | 1 | jumptable197 | 0020 | 114127 | 0025 
+1518-1518 | 1 | jumptable197 | 0010 | 339820 | 0016 
+1519-1519 | 1 | jumptable197 | 0020 | 339820 | 0025 
+151A-151A | 1 | jumptable197 | 0010 | 96451 | 0016 
+151B-151B | 1 | jumptable197 | 0020 | 96451 | 0025 
+19C5-19C7 | 3 | inline199 | 0042 | 255 | 005E 
+1A40-1A41 | 2 | inline201 | 0028 | 14276 | 0029 002B 
+1C06-1C07 | 2 | inline203 | 0028 | 52224 | 0029 002B 
+1C17-1C18 | 2 | inline205 | 0028 | 93250 | 0029 002B 
+1CDD-1CDE | 2 | inline207 | 0028 | 14692 | 0029 002B 
+1CEE-1CEF | 2 | inline209 | 0028 | 61356 | 0029 002B 
+1DB4-1DB5 | 2 | inline211 | 0028 | 5154 | 0029 002B 
+1DC5-1DC6 | 2 | inline213 | 0028 | 31870 | 0029 002B 
+1E8B-1E8C | 2 | inline215 | 0028 | 1548 | 0029 002B 
+1E9C-1E9D | 2 | inline217 | 0028 | 21882 | 0029 002B 
+210C-210C | 1 | jumptable221 | 0010 | 1095 | 0016 
+210D-210D | 1 | jumptable221 | 0020 | 1095 | 0025 
+210E-210E | 1 | jumptable221 | 0010 | 13578 | 0016 
+210F-210F | 1 | jumptable221 | 0020 | 13578 | 0025 
+2110-2110 | 1 | jumptable221 | 0010 | 803 | 0016 
+2111-2111 | 1 | jumptable221 | 0020 | 803 | 0025 
+2112-2112 | 1 | jumptable221 | 0010 | 2044 | 0016 
+2113-2113 | 1 | jumptable221 | 0020 | 2044 | 0025 
+2114-2114 | 1 | jumptable221 | 0010 | 11899 | 0016 
+2115-2115 | 1 | jumptable221 | 0020 | 11899 | 0025 
+2116-2116 | 1 | jumptable221 | 0010 | 14089 | 0016 
+2117-2117 | 1 | jumptable221 | 0020 | 14089 | 0025 
+2118-2118 | 1 | jumptable221 | 0010 | 1022 | 0016 
+2119-2119 | 1 | jumptable221 | 0020 | 1022 | 0025 
+216A-216C | 3 | inline223 | 0042 | 219 | 005E 
+2196-2198 | 3 | inline225 | 0042 | 219 | 005E 
+21A6-21A6 | 1 | jumptable227 | 0010 | 7 | 0016 
+21A7-21A7 | 1 | jumptable227 | 0020 | 7 | 0025 
+21A8-21A8 | 1 | jumptable227 | 0010 | 119 | 0016 
+21A9-21A9 | 1 | jumptable227 | 0020 | 119 | 0025 
+21AA-21AA | 1 | jumptable227 | 0010 | 595 | 0016 
+21AB-21AB | 1 | jumptable227 | 0020 | 595 | 0025 
+21AC-21AC | 1 | jumptable227 | 0010 | 644 | 0016 
+21AD-21AD | 1 | jumptable227 | 0020 | 644 | 0025 
+21AE-21AE | 1 | jumptable227 | 0010 | 28 | 0016 
+21AF-21AF | 1 | jumptable227 | 0020 | 28 | 0025 
+21B0-21B0 | 1 | jumptable227 | 0010 | 119 | 0016 
+21B1-21B1 | 1 | jumptable227 | 0020 | 119 | 0025 
+21B2-21B2 | 1 | jumptable227 | 0010 | 119 | 0016 
+21B3-21B3 | 1 | jumptable227 | 0020 | 119 | 0025 
+21B4-21B4 | 1 | jumptable227 | 0010 | 84 | 0016 
+21B5-21B5 | 1 | jumptable227 | 0020 | 84 | 0025 
+21B6-21B6 | 1 | jumptable227 | 0010 | 595 | 0016 
+21B7-21B7 | 1 | jumptable227 | 0020 | 595 | 0025 
+21B8-21B8 | 1 | jumptable227 | 0010 | 7 | 0016 
+21B9-21B9 | 1 | jumptable227 | 0020 | 7 | 0025 
+21BA-21BA | 1 | jumptable227 | 0010 | 413 | 0016 
+21BB-21BB | 1 | jumptable227 | 0020 | 413 | 0025 
+21BC-21BC | 1 | jumptable227 | 0010 | 7 | 0016 
+21BD-21BD | 1 | jumptable227 | 0020 | 7 | 0025 
+21BE-21BE | 1 | jumptable227 | 0010 | 833 | 0016 
+21BF-21BF | 1 | jumptable227 | 0020 | 833 | 0025 
+21C0-21C0 | 1 | jumptable227 | 0010 | 7 | 0016 
+21C1-21C1 | 1 | jumptable227 | 0020 | 7 | 0025 
+21DC-21DE | 3 | inline229 | 0042 | 21 | 005E 
+2265-2267 | 3 | inline231 | 0042 | 21 | 005E 
+2280-2282 | 3 | inline233 | 0042 | 21 | 005E 
+2287-2289 | 3 | inline235 | 0042 | 21 | 005E 
+229B-229B | 1 | jumptable237 | 0010 | 920 | 0016 
+229C-229C | 1 | jumptable237 | 0020 | 920 | 0025 
+229D-229D | 1 | jumptable237 | 0010 | 4485 | 0016 
+229E-229E | 1 | jumptable237 | 0020 | 4485 | 0025 
+229F-229F | 1 | jumptable237 | 0010 | 1357 | 0016 
+22A0-22A0 | 1 | jumptable237 | 0020 | 1357 | 0025 
+22A1-22A1 | 1 | jumptable237 | 0010 | 2415 | 0016 
+22A2-22A2 | 1 | jumptable237 | 0020 | 2415 | 0025 
+22A3-22A3 | 1 | jumptable237 | 0010 | 2139 | 0016 
+22A4-22A4 | 1 | jumptable237 | 0020 | 2139 | 0025 
+22A5-22A5 | 1 | jumptable237 | 0010 | 23 | 0016 
+22A6-22A6 | 1 | jumptable237 | 0020 | 23 | 0025 
+22D8-22DA | 3 | inline239 | 0042 | 69 | 005E 
+2303-2305 | 3 | inline241 | 0042 | 69 | 005E 
+23A8-23A8 | 1 | jumptable243 | 0010 | 1693 | 0016 
+23A9-23A9 | 1 | jumptable243 | 0020 | 1693 | 0025 
+23AA-23AA | 1 | jumptable243 | 0010 | 4423 | 0016 
+23AB-23AB | 1 | jumptable243 | 0020 | 4423 | 0025 
+23AC-23AC | 1 | jumptable243 | 0010 | 960 | 0016 
+23AD-23AD | 1 | jumptable243 | 0020 | 960 | 0025 
+23AE-23AE | 1 | jumptable243 | 0010 | 960 | 0016 
+23AF-23AF | 1 | jumptable243 | 0020 | 960 | 0025 
+23B0-23B0 | 1 | jumptable243 | 0010 | 1584 | 0016 
+23B1-23B1 | 1 | jumptable243 | 0020 | 1584 | 0025 
+23B2-23B2 | 1 | jumptable243 | 0010 | 1399 | 0016 
+23B3-23B3 | 1 | jumptable243 | 0020 | 1399 | 0025 
+23B4-23B4 | 1 | jumptable243 | 0010 | 441 | 0016 
+23B5-23B5 | 1 | jumptable243 | 0020 | 441 | 0025 
+23B6-23B6 | 1 | jumptable243 | 0010 | 51 | 0016 
+23B7-23B7 | 1 | jumptable243 | 0020 | 51 | 0025 
+23B8-23B8 | 1 | jumptable243 | 0010 | 46625 | 0016 
+23B9-23B9 | 1 | jumptable243 | 0020 | 46625 | 0025 
+23BA-23BA | 1 | jumptable243 | 0010 | 30678 | 0016 
+23BB-23BB | 1 | jumptable243 | 0020 | 30678 | 0025 
+23BC-23BC | 1 | jumptable243 | 0010 | 15935 | 0016 
+23BD-23BD | 1 | jumptable243 | 0020 | 15935 | 0025 
+23BE-23BE | 1 | jumptable243 | 0010 | 10941 | 0016 
+23BF-23BF | 1 | jumptable243 | 0020 | 10941 | 0025 
+23C0-23C0 | 1 | jumptable243 | 0010 | 26112 | 0016 
+23C1-23C1 | 1 | jumptable243 | 0020 | 26112 | 0025 
+23C2-23C2 | 1 | jumptable243 | 0010 | 7346 | 0016 
+23C3-23C3 | 1 | jumptable243 | 0020 | 7346 | 0025 
+23C4-23C4 | 1 | jumptable243 | 0010 | 2577 | 0016 
+23C5-23C5 | 1 | jumptable243 | 0020 | 2577 | 0025 
+23C6-23C6 | 1 | jumptable243 | 0010 | 774 | 0016 
+23C7-23C7 | 1 | jumptable243 | 0020 | 774 | 0025 
+23C8-23C8 | 1 | jumptable243 | 0010 | 1399 | 0016 
+23C9-23C9 | 1 | jumptable243 | 0020 | 1399 | 0025 
+23CA-23CA | 1 | jumptable243 | 0010 | 1399 | 0016 
+23CB-23CB | 1 | jumptable243 | 0020 | 1399 | 0025 
+23CC-23CC | 1 | jumptable243 | 0010 | 131 | 0016 
+23CD-23CD | 1 | jumptable243 | 0020 | 131 | 0025 
+23CE-23CE | 1 | jumptable243 | 0010 | 1225 | 0016 
+23CF-23CF | 1 | jumptable243 | 0020 | 1225 | 0025 
+23D0-23D0 | 1 | jumptable243 | 0010 | 51 | 0016 
+23D1-23D1 | 1 | jumptable243 | 0020 | 51 | 0025 
+23D6-23D6 | 1 | jumptable243 | 0010 | 7138 | 0016 
+23D7-23D7 | 1 | jumptable243 | 0020 | 7138 | 0025 
+23D8-23D8 | 1 | jumptable243 | 0010 | 182 | 0016 
+23D9-23D9 | 1 | jumptable243 | 0020 | 182 | 0025 
+23DA-23DA | 1 | jumptable243 | 0010 | 15548 | 0016 
+23DB-23DB | 1 | jumptable243 | 0020 | 15548 | 0025 
+23DC-23DC | 1 | jumptable243 | 0010 | 1091 | 0016 
+23DD-23DD | 1 | jumptable243 | 0020 | 1091 | 0025 
+23DE-23DE | 1 | jumptable243 | 0010 | 131 | 0016 
+23DF-23DF | 1 | jumptable243 | 0020 | 131 | 0025 
+23E0-23E0 | 1 | jumptable243 | 0010 | 4779 | 0016 
+23E1-23E1 | 1 | jumptable243 | 0020 | 4779 | 0025 
+23E2-23E2 | 1 | jumptable243 | 0010 | 16 | 0016 
+23E3-23E3 | 1 | jumptable243 | 0020 | 16 | 0025 
+23E4-23E4 | 1 | jumptable243 | 0010 | 316 | 0016 
+23E5-23E5 | 1 | jumptable243 | 0020 | 316 | 0025 
+23E6-23E6 | 1 | jumptable243 | 0010 | 129 | 0016 
+23E7-23E7 | 1 | jumptable243 | 0020 | 129 | 0025 
+23EF-23EF | 1 | jumptable245 | 0010 | 102 | 0016 
+23F0-23F0 | 1 | jumptable245 | 0020 | 102 | 0025 
+23F1-23F1 | 1 | jumptable245 | 0010 | 1642 | 0016 
+23F2-23F2 | 1 | jumptable245 | 0020 | 1642 | 0025 
+2728-272C | 5 | data247 | 0010 | 100 | 0016 
+272D-272D | 1 | data247 | 0018 | 49 | 001D 
+272E-272E | 1 | data247 | 0010 | 2 | 0016 
+272F-272F | 1 | data247 | 0018 | 2 | 001D 
+2B17-2B17 | 1 | data249 | 0010 | 14355 | 0016 
+2B18-2B18 | 1 | data249 | 0018 | 14355 | 001D 
+2B19-2B19 | 1 | data249 | 0010 | 151 | 0016 
+2B1A-2B1A | 1 | data249 | 0018 | 151 | 001D 
+2B1B-2B1B | 1 | data249 | 0010 | 77 | 0016 
+2B1C-2B1C | 1 | data249 | 0018 | 77 | 001D 
+2B1D-2B1D | 1 | data249 | 0010 | 11 | 0016 
+2B1E-2B1E | 1 | data249 | 0018 | 11 | 001D 
+2B23-2B23 | 1 | data249 | 0010 | 46 | 0016 
+2B24-2B24 | 1 | data249 | 0018 | 46 | 001D 
+2B25-2B25 | 1 | data249 | 0010 | 26 | 0016 
+2B26-2B26 | 1 | data249 | 0018 | 26 | 001D 
+2B27-2B27 | 1 | data249 | 0010 | 12 | 0016 
+2B28-2B28 | 1 | data249 | 0018 | 12 | 001D 
+2B31-2B31 | 1 | data249 | 0010 | 1 | 0016 
+2B32-2B32 | 1 | data249 | 0018 | 1 | 001D 
+2B73-2B77 | 5 | code250 | 2BCD | 6030 | 2BCE 2BD0 2BD2 2BD4 2BD6 
+2D85-2D85 | 1 | jumptable251 | 0010 | 206 | 0016 
+2D86-2D86 | 1 | jumptable251 | 0020 | 206 | 0025 
+2D87-2D87 | 1 | jumptable251 | 0010 | 730 | 0016 
+2D88-2D88 | 1 | jumptable251 | 0020 | 730 | 0025 
+2D89-2D89 | 1 | jumptable251 | 0010 | 730 | 0016 
+2D8A-2D8A | 1 | jumptable251 | 0020 | 730 | 0025 
+2D8B-2D8B | 1 | jumptable251 | 0010 | 730 | 0016 
+2D8C-2D8C | 1 | jumptable251 | 0020 | 730 | 0025 
+2D8D-2D8D | 1 | jumptable251 | 0010 | 730 | 0016 
+2D8E-2D8E | 1 | jumptable251 | 0020 | 730 | 0025 
+2DA3-2DA3 | 1 | jumptable251 | 0010 | 262 | 0016 
+2DA4-2DA4 | 1 | jumptable251 | 0020 | 262 | 0025 
+2F02-2F02 | 1 | jumptable253 | 0010 | 618362 | 0016 
+2F03-2F03 | 1 | jumptable253 | 0020 | 618362 | 0025 
+2F04-2F04 | 1 | jumptable253 | 0010 | 105797 | 0016 
+2F05-2F05 | 1 | jumptable253 | 0020 | 105797 | 0025 
+3154-316B | 24 | data257 | 2FAD | 37944 | 3047 3048 306F 3070 30A3 30A4 
+32F9-32FE | 6 | data259 | 2FAD | 138526 | 3213 3218 
+32FF-32FF | 1 | data259 | 0010 1806 1A70 2000 291E 2966 | 265340 | 0016 189E 1AD9 2004 294E 29E2 
+3300-3300 | 1 | data259 | 0018 1806 1A70 2000 291E 2966 | 265340 | 001D 189E 1AD9 200B 2951 29E5 
+3301-3301 | 1 | data259 | 0010 1A70 2000 291E 2966 | 265025 | 0016 1AF8 2004 294E 29E2 
+3302-3302 | 1 | data259 | 0018 1A70 2000 291E 2966 | 265025 | 001D 1AF8 200B 2951 29E5 
+3303-3303 | 1 | data259 | 0010 1806 1A70 2000 291E 2966 | 221906 | 0016 188B 1AC9 2004 294E 29E2 
+3304-3304 | 1 | data259 | 0018 1806 1A70 2000 291E 2966 | 221906 | 001D 188B 1AC9 200B 2951 29E5 
+3305-3305 | 1 | data259 | 0010 1A70 2000 291E 2966 | 281207 | 0016 1AE8 2004 294E 29E2 
+3306-3306 | 1 | data259 | 0018 1A70 2000 291E 2966 | 281207 | 001D 1AE8 200B 2951 29E5 
+3307-330C | 6 | data259 | 2000 291E | 21008 | 2004 200B 294E 2951 
+338D-3434 | 168 | data259 | 0814 | 109122 | 081A 0822 082A 0832 0837 
+3435-35B1 | 381 | data259 | 2419 | 365760 | 241F 242B 
+35B5-36A4 | 240 | data259 | 2448 2487 | 361200 | 245D 2499 
+36A5-36A5 | 1 | data259 | 0010 | 182 | 0016 
+36A6-36A6 | 1 | data259 | 0018 | 182 | 001D 
+36A7-36A7 | 1 | data259 | 0010 | 107771 | 0016 
+36A8-36A8 | 1 | data259 | 0018 | 107771 | 001D 
+36A9-36A9 | 1 | data259 | 0010 | 1638 | 0016 
+36AA-36AA | 1 | data259 | 0018 | 1638 | 001D 
+36AB-36AB | 1 | data259 | 0010 | 275 | 0016 
+36AC-36AC | 1 | data259 | 0018 | 275 | 001D 
+36AF-36AF | 1 | data259 | 0010 | 151 | 0016 
+36B0-36B0 | 1 | data259 | 0018 | 151 | 001D 
+36B1-36B1 | 1 | data259 | 0010 | 1903 | 0016 
+36B2-36B2 | 1 | data259 | 0018 | 1903 | 001D 
+36B3-36B3 | 1 | data259 | 0010 | 131 | 0016 
+36B4-36B4 | 1 | data259 | 0018 | 131 | 001D 
+36B5-36B5 | 1 | data259 | 0010 | 6669 | 0016 
+36B6-36B6 | 1 | data259 | 0018 | 6669 | 001D 
+36B7-36B7 | 1 | data259 | 0010 | 4854 | 0016 
+36B8-36B8 | 1 | data259 | 0018 | 4854 | 001D 
+36B9-36B9 | 1 | data259 | 0010 | 129 | 0016 
+36BA-36BA | 1 | data259 | 0018 | 129 | 001D 
+36BB-36BB | 1 | data259 | 0010 | 131 | 0016 
+36BC-36BC | 1 | data259 | 0018 | 131 | 001D 
+36BD-36BD | 1 | data259 | 0010 | 664 | 0016 
+36BE-36BE | 1 | data259 | 0018 | 664 | 001D 
+36BF-36BF | 1 | data259 | 0010 | 130 | 0016 
+36C0-36C0 | 1 | data259 | 0018 | 130 | 001D 
+36C1-36C1 | 1 | data259 | 0010 | 2 | 0016 
+36C2-36C2 | 1 | data259 | 0018 | 2 | 001D 
+36C3-36C3 | 1 | data259 | 0010 | 130 | 0016 
+36C4-36C4 | 1 | data259 | 0018 | 130 | 001D 
+36C5-36C5 | 1 | data259 | 0010 | 2 | 0016 
+36C6-36C6 | 1 | data259 | 0018 | 2 | 001D 
+36C7-36C7 | 1 | data259 | 0010 | 68 | 0016 
+36C8-36C8 | 1 | data259 | 0018 | 68 | 001D 
+36C9-36C9 | 1 | data259 | 0010 | 68 | 0016 
+36CA-36CA | 1 | data259 | 0018 | 68 | 001D 
+36CB-36CB | 1 | data259 | 0010 | 49 | 0016 
+36CC-36CC | 1 | data259 | 0018 | 49 | 001D 
+36CD-36CD | 1 | data259 | 0010 | 130 | 0016 
+36CE-36CE | 1 | data259 | 0018 | 130 | 001D 
+36CF-36CF | 1 | data259 | 0010 | 2 | 0016 
+36D0-36D0 | 1 | data259 | 0018 | 2 | 001D 
+36D1-36D1 | 1 | data259 | 0010 | 130 | 0016 
+36D2-36D2 | 1 | data259 | 0018 | 130 | 001D 
+36D3-36D3 | 1 | data259 | 0010 | 2 | 0016 
+36D4-36D4 | 1 | data259 | 0018 | 2 | 001D 
+36DB-36DB | 1 | data259 | 0010 | 131 | 0016 
+36DC-36DC | 1 | data259 | 0018 | 131 | 001D 
+36DD-36DD | 1 | data259 | 0010 | 26 | 0016 
+36DE-36DE | 1 | data259 | 0018 | 26 | 001D 
+36DF-36DF | 1 | data259 | 0010 | 12 | 0016 
+36E0-36E0 | 1 | data259 | 0018 | 12 | 001D 
+36E9-36E9 | 1 | data259 | 0010 | 86 | 0016 
+36EA-36EA | 1 | data259 | 0018 | 86 | 001D 
+36EB-36EB | 1 | data259 | 0010 | 51 | 0016 
+36EC-36EC | 1 | data259 | 0018 | 51 | 001D 
+36EF-36EF | 1 | data259 | 0010 | 3 | 0016 
+36F0-36F0 | 1 | data259 | 0018 | 3 | 001D 
+36F1-36F1 | 1 | data259 | 0010 | 69253 | 0016 
+36F2-36F2 | 1 | data259 | 0018 | 69253 | 001D 
+36F3-36F3 | 1 | data259 | 0010 | 5 | 0016 
+36F4-36F4 | 1 | data259 | 0018 | 5 | 001D 
+36F5-36F5 | 1 | data259 | 0010 | 4 | 0016 
+36F6-36F6 | 1 | data259 | 0018 | 4 | 001D 
+36F7-36F7 | 1 | data259 | 0010 | 69265 | 0016 
+36F8-36F8 | 1 | data259 | 0018 | 69265 | 001D 
+36F9-36F9 | 1 | data259 | 0010 | 2 | 0016 
+36FA-36FA | 1 | data259 | 0018 | 2 | 001D 
+36FB-36FB | 1 | data259 | 0010 | 69263 | 0016 
+36FC-36FC | 1 | data259 | 0018 | 69263 | 001D 
+36FD-36FD | 1 | data259 | 0010 | 1400 | 0016 
+36FE-36FE | 1 | data259 | 0018 | 1400 | 001D 
+36FF-36FF | 1 | data259 | 0010 | 67865 | 0016 
+3700-3700 | 1 | data259 | 0018 | 67865 | 001D 
+3701-3701 | 1 | data259 | 0010 | 69263 | 0016 
+3702-3702 | 1 | data259 | 0018 | 69263 | 001D 
+3703-3703 | 1 | data259 | 0010 | 130 | 0016 
+3704-3704 | 1 | data259 | 0018 | 130 | 001D 
+3705-3705 | 1 | data259 | 0010 | 2 | 0016 
+3706-3706 | 1 | data259 | 0018 | 2 | 001D 
+3707-3707 | 1 | data259 | 0010 | 68 | 0016 
+3708-3708 | 1 | data259 | 0018 | 68 | 001D 
+370B-370B | 1 | data259 | 0010 | 130 | 0016 
+370C-370C | 1 | data259 | 0018 | 130 | 001D 
+370D-370D | 1 | data259 | 0010 | 2 | 0016 
+370E-370E | 1 | data259 | 0018 | 2 | 001D 
+370F-370F | 1 | data259 | 0010 | 95 | 0016 
+3710-3710 | 1 | data259 | 0018 | 95 | 001D 
+3713-3720 | 14 | data259 | 2C5E | 2730 | 2C62 2C64 2C75 2C84 2C95 
+3723-372F | 13 | data259 | 2C5E | 1508794 | 2C62 2C64 2C75 2C84 2C95 
+3732-373E | 13 | data259 | 2C5E | 22932 | 2C62 2C64 2C75 2C84 2C95 
+3741-3759 | 25 | data259 | 2C5E | 5697 | 2C62 2C64 2C75 2C84 2C95 2C9A 2CAC 2CBD 
+376A-3777 | 14 | data259 | 2C5E | 2265 | 2C62 2C64 2C75 2C84 2C95 
+377A-379A | 33 | data259 | 2C5E | 25701 | 2C62 2C64 2C75 2C84 2C95 2CAC 2CBD 
+379D-37AE | 18 | data259 | 2C5E | 126711 | 2C62 2C64 2C75 2C84 2C95 
+37B1-37C2 | 18 | data259 | 2C5E | 92226 | 2C62 2C64 2C75 2C84 2C95 
+37FD-3814 | 24 | data259 | 2C5E | 16600 | 2C62 2C64 2C75 2C84 2C95 
+384C-3857 | 12 | data259 | 2C5E | 884 | 2C62 2C64 2C75 2C84 2C95 
+385A-3865 | 12 | data259 | 2C5E | 884 | 2C62 2C64 2C75 2C84 2C95 
+38BC-38CB | 16 | data259 | 2C5E | 1321 | 2C62 2C64 2C75 2C84 2C95 2CAC 2CBD 
+38CE-38D5 | 8 | data259 | 2C5E | 108 | 2C62 2C64 2C75 2C84 2C95 
+3900-3917 | 24 | data259 | 2C5E | 1709 | 2C62 2C64 2C75 2C84 2C95 2CAC 2CBD 
+392A-393E | 21 | data259 | 2C5E | 1523566 | 2C62 2C64 2C75 2C84 2C95 
+3941-3955 | 21 | data259 | 2C5E | 88 | 2C62 2C64 2C75 2C84 2C95 
+3958-396C | 21 | data259 | 2C5E | 110 | 2C62 2C64 2C75 2C84 2C95 
+396F-3983 | 21 | data259 | 2C5E | 66 | 2C62 2C64 2C75 2C84 2C95 
+3986-3994 | 15 | data259 | 2C5E | 32 | 2C62 2C64 2C75 2C84 2C95 
+3997-39A0 | 10 | data259 | 2C5E | 761893 | 2C62 2C64 2C75 2C84 2C95 
+39B0-39BA | 11 | data259 | 2C5E | 16800 | 2C62 2C64 2C75 2C84 2C95 
+39BD-39C7 | 11 | data259 | 2C5E | 814380 | 2C62 2C64 2C75 2C84 2C95 
+39CA-39D0 | 7 | data259 | 2C5E | 554104 | 2C62 2C64 2C75 2C84 2C95 
+3A4F-3AE1 | 147 | data259 | 3AF4 | 294 | 3AFC 
+3AE2-3AF3 | 18 | data259 | 2FAD | 4182 | 3259 325A 325E 3269 3278 
+3B08-3B2F | 40 | data261 | 2BEA | 10780 | 2C02 2C0B 
+3B30-3B77 | 72 | data261 | 2BEA 2DEE | 23352 | 2C02 2C0B 2E45 
+3B78-3B7F | 8 | data261 | 2BEA | 120 | 2C02 2C0B 
+3B80-3BAF | 48 | data261 | 2BEA 2DEE | 134720 | 2C02 2C0B 2E45 
+3BB0-3BB4 | 5 | data261 | 0010 2BEA | 39644 | 0016 2C02 2C0B 
+3BB5-3BB7 | 3 | data261 | 2BEA | 45 | 2C02 2C0B 
+3BB8-3BB8 | 1 | data261 | 0010 2BEA | 14298 | 0016 2C02 
+3BB9-3BB9 | 1 | data261 | 2BEA | 15 | 2C0B 
+3BBA-3BC8 | 15 | data261 | 0010 2BEA | 24762 | 0016 2C02 2C0B 
+3BC9-3BC9 | 1 | data261 | 0018 2BEA | 146 | 001D 2C0B 
+3BCA-3BCA | 1 | data261 | 0010 2BEA | 118 | 0016 2C02 
+3BCB-3BCB | 1 | data261 | 0018 2BEA | 118 | 001D 2C0B 
+3BCC-3BCC | 1 | data261 | 0010 2BEA | 146 | 0016 2C02 
+3BCD-3BCD | 1 | data261 | 0018 2BEA | 146 | 001D 2C0B 
+3BCE-3BCE | 1 | data261 | 0010 2BEA | 118 | 0016 2C02 
+3BCF-3BCF | 1 | data261 | 0018 2BEA | 118 | 001D 2C0B 
+3BD0-3BD3 | 4 | data261 | 2BEA | 60 | 2C02 2C0B 
+3BD4-3BD4 | 1 | data261 | 2BEA 2D44 | 146 | 2C02 2D72 
+3BD5-3BD5 | 1 | data261 | 2BEA 2F65 | 146 | 2C0B 2F6B 
+3BD6-3BD6 | 1 | data261 | 2BEA 2D44 | 146 | 2C02 2D72 
+3BD7-3BD7 | 1 | data261 | 2BEA 2F77 | 146 | 2C0B 2F7D 
+3BD8-3BD8 | 1 | data261 | 2BEA 2D44 | 146 | 2C02 2D72 
+3BD9-3BD9 | 1 | data261 | 2BEA 2F89 | 146 | 2C0B 2F8F 
+3BDA-3BDA | 1 | data261 | 2BEA 2D44 | 146 | 2C02 2D72 
+3BDB-3BDB | 1 | data261 | 2BEA 2F9B | 146 | 2C0B 2FA1 
+3BDC-3BF3 | 24 | data261 | 2BEA 2D44 | 3607 | 2C02 2C0B 2D72 
+3BF4-3BF4 | 1 | data261 | 2BEA 2F65 | 249 | 2C02 2F6B 
+3BF5-3BF5 | 1 | data261 | 2BEA 2D44 | 249 | 2C0B 2D72 
+3BF6-3BF6 | 1 | data261 | 2BEA 2F77 | 249 | 2C02 2F7D 
+3BF7-3BF7 | 1 | data261 | 2BEA 2D44 | 249 | 2C0B 2D72 
+3BF8-3BF8 | 1 | data261 | 2BEA 2F89 | 249 | 2C02 2F8F 
+3BF9-3BF9 | 1 | data261 | 2BEA 2D44 | 249 | 2C0B 2D72 
+3BFA-3BFA | 1 | data261 | 2BEA 2F9B | 249 | 2C02 2FA1 
+3BFB-3C55 | 91 | data261 | 2BEA 2D44 | 19121 | 2C02 2C0B 2D72 
+3C56-3C57 | 2 | data261 | 2BEA 2F55 | 236 | 2C02 2C0B 2F5B 2F60 
+3C58-3C58 | 1 | data261 | 2BEA 2D44 | 146 | 2C02 2D72 
+3C59-3C59 | 1 | data261 | 2BEA 2F65 | 146 | 2C0B 2F6B 
+3C5A-3C5A | 1 | data261 | 2BEA 2D44 | 146 | 2C02 2D72 
+3C5B-3C5B | 1 | data261 | 2BEA 2F77 | 146 | 2C0B 2F7D 
+3C5C-3C5C | 1 | data261 | 2BEA 2D44 | 146 | 2C02 2D72 
+3C5D-3C5D | 1 | data261 | 2BEA 2F89 | 146 | 2C0B 2F8F 
+3C5E-3C5E | 1 | data261 | 2BEA 2D44 | 146 | 2C02 2D72 
+3C5F-3C5F | 1 | data261 | 2BEA 2F9B | 146 | 2C0B 2FA1 
+3C60-3C95 | 54 | data261 | 2BEA 2D44 | 7987 | 2C02 2C0B 2D72 
+3C96-3C96 | 1 | data261 | 2BEA 2F65 | 249 | 2C02 2F6B 
+3C97-3C97 | 1 | data261 | 2BEA 2D44 | 249 | 2C0B 2D72 
+3C98-3C98 | 1 | data261 | 2BEA 2F77 | 249 | 2C02 2F7D 
+3C99-3C99 | 1 | data261 | 2BEA 2D44 | 249 | 2C0B 2D72 
+3C9A-3C9A | 1 | data261 | 2BEA 2F89 | 249 | 2C02 2F8F 
+3C9B-3C9B | 1 | data261 | 2BEA 2D44 | 249 | 2C0B 2D72 
+3C9C-3C9C | 1 | data261 | 2BEA 2F9B | 249 | 2C02 2FA1 
+3C9D-3CDB | 63 | data261 | 2BEA 2D44 | 13270 | 2C02 2C0B 2D72 
+3CDC-3CDD | 2 | data261 | 2BEA 2F55 | 236 | 2C02 2C0B 2F5B 2F60 
+3CDE-3CFF | 34 | data261 | 2BEA | 510 | 2C02 2C0B 
+3D00-3D07 | 8 | data261 | 2BEA 2C5E | 1281 | 2C02 2C0B 2C62 2C64 2C75 2C84 
+3D08-3D1E | 23 | data261 | 2C5E | 2967 | 2C84 2C95 
+3D21-3D39 | 25 | data261 | 2C5E | 3406 | 2C62 2C64 2C75 2C84 2C95 
+3D3C-3D54 | 25 | data261 | 2C5E | 1274 | 2C62 2C64 2C75 2C84 2C95 
+3D57-3D64 | 14 | data261 | 2C5E | 1950 | 2C62 2C64 2C75 2C84 2C95 
+3D67-3D73 | 13 | data261 | 2C5E | 1820 | 2C62 2C64 2C75 2C84 2C95 
+3D76-3D83 | 14 | data261 | 2C5E | 1950 | 2C62 2C64 2C75 2C84 2C95 
+3D86-3D92 | 13 | data261 | 2C5E | 1820 | 2C62 2C64 2C75 2C84 2C95 
+3D95-3DA2 | 14 | data261 | 2C5E | 1950 | 2C62 2C64 2C75 2C84 2C95 
+3DA5-3DB1 | 13 | data261 | 2C5E | 1820 | 2C62 2C64 2C75 2C84 2C95 
+3DB4-3DC1 | 14 | data261 | 2C5E | 1425 | 2C62 2C64 2C75 2C84 2C95 
+3DC4-3DD0 | 13 | data261 | 2C5E | 952 | 2C62 2C64 2C75 2C84 2C95 
+3DD3-3DE0 | 14 | data261 | 2C5E | 30 | 2C62 2C64 2C75 2C84 2C95 
+3DE3-3DEF | 13 | data261 | 2C5E | 28 | 2C62 2C64 2C75 2C84 2C95 
+3DF2-3DFF | 14 | data261 | 2C5E | 30 | 2C62 2C64 2C75 2C84 2C95 
+3E02-3E0E | 13 | data261 | 2C5E | 28 | 2C62 2C64 2C75 2C84 2C95 
+3E11-3E1E | 14 | data261 | 2C5E | 30 | 2C62 2C64 2C75 2C84 2C95 
+3E21-3E2D | 13 | data261 | 2C5E | 28 | 2C62 2C64 2C75 2C84 2C95 
+3E4F-3E59 | 11 | data261 | 2C5E | 831180 | 2C62 2C64 2C75 2C84 2C95 
+runs: 810
+
+== 3. Reads of the other kinds (not part of the game tables)
+ROM checksum loop of the power-on test (reading instruction 300A): 626688 reads, 12288 distinct addresses, ranges: 0000-2FFF 
+ROM bytes used as random numbers (reading instruction 2A30): 9651 reads, 153 distinct addresses, ranges: 0001-0001 0006-0006 001F-001F 009B-009C 00BE-00BE 013D-013D 016F-016F 0179-0179 01C6-01C6 01E7-01E7 0219-0219 0255-0255 0265-0265 0271-0271 02A7-02A7 0308-0308 030D-030D 032D-032D 0348-0348 0364-0364 0386-0386 03A0-03A0 03B5-03B5 03B7-03B7 03DD-03DD 044F-044F 0474-0474 04D7-04D7 0537-0537 053F-053F 057B-057B 0593-0593 05CB-05CB 0632-0632 0654-0654 0689-0689 06C1-06C1 06EE-06EE 0724-0724 072C-072C 
+interrupt vector lookup when the interrupt is delivered: 1859730 reads, 4 distinct addresses, ranges: 3FFA-3FFD 
+
+== 4. Reading instructions (address : data reads : lowest-highest address read)
+0016 : 8594269 : 0247-3BCE : routine 0010
+001D : 521669 : 272D-3BCF : routine 0018
+0025 : 7993927 : 0248-2F05 : routine 0020
+0029 : 165586 : 0264-1E9C : routine 0028
+002B : 165586 : 0265-1E9D : routine 0028
+005E : 25980 : 058B-2305 : routine 0042
+01EE : 945472 : 0219-021F : routine 01DC
+01F9 : 156489 : 021A-021E : routine 01DC
+0715 : 960 : 0068-007F : routine 06BE
+0725 : 1399 : 0796-080E : routine 06BE
+073B : 1399 : 0797-080F : routine 06BE
+0741 : 1399 : 0798-0810 : routine 06BE
+0751 : 1399 : 0799-0811 : routine 06BE
+075E : 1399 : 084F-085D : routine 06BE
+0761 : 1399 : 0850-085E : routine 06BE
+0767 : 1399 : 079A-0812 : routine 06BE
+0774 : 1399 : 0865-0871 : routine 06BE
+0777 : 1399 : 0866-0872 : routine 06BE
+077D : 1399 : 079B-0813 : routine 06BE
+078A : 1399 : 0873-0877 : routine 06BE
+078D : 1399 : 0874-0878 : routine 06BE
+081A : 39172 : 338D-3426 : routine 0814
+0822 : 16788 : 339D-3426 : routine 0814
+082A : 16788 : 339D-3426 : routine 0814
+0832 : 16788 : 339D-3426 : routine 0814
+0837 : 19586 : 33A9-3434 : routine 0814
+0840 : 4197 : 0846-084E : routine 083A
+0A97 : 390 : 0068-007E : routine 0A7C
+0EEF : 364 : 0EFE-0F3A : routine 0EAD
+0EF4 : 364 : 0EFF-0F3B : routine 0EAD
+188B : 1656 : 3303-3304 : routine 1806
+189E : 1520 : 32FF-3300 : routine 1806
+1AC9 : 182648 : 3303-3304 : routine 1A70
+1AD9 : 184484 : 32FF-3300 : routine 1A70
+1AE8 : 176736 : 3305-3306 : routine 1A70
+1AF8 : 178174 : 3301-3302 : routine 1A70
+2004 : 499043 : 32FF-330B : routine 2000
+200B : 499043 : 3300-330C : routine 2000
+241F : 287040 : 3435-35B1 : routine 2419
+242B : 78720 : 3436-35B0 : routine 2419
+245D : 230400 : 35B5-36A4 : routine 2448
+2499 : 130800 : 35B5-36A4 : routine 2487
+294E : 9651 : 32FF-330B : routine 291E
+2951 : 9651 : 3300-330C : routine 291E
+29E2 : 138475 : 32FF-3305 : routine 2966
+29E5 : 138475 : 3300-3306 : routine 2966
+2A30 : 9651 : 0001-1FD0 : routine 2A23
+2BCE : 1206 : 2B73-2B73 : routine 2BCD
+2BD0 : 1206 : 2B74-2B74 : routine 2BCD
+2BD2 : 1206 : 2B75-2B75 : routine 2BCD
+2BD4 : 1206 : 2B76-2B76 : routine 2BCD
+2BD6 : 1206 : 2B77-2B77 : routine 2BCD
+2C02 : 8930 : 3B08-3D06 : routine 2BEA
+2C0B : 8930 : 3B09-3D07 : routine 2BEA
+2C62 : 472267 : 3713-3E4F : routine 2C5E
+2C64 : 472267 : 3714-3E50 : routine 2C5E
+2C75 : 472267 : 3714-3E50 : routine 2C5E
+2C84 : 4431862 : 3715-3E58 : routine 2C5E
+2C95 : 472267 : 3720-3E59 : routine 2C5E
+2C9A : 1310 : 3750-3759 : routine 2C5E
+2CAC : 8722 : 3743-3906 : routine 2C5E
+2CBD : 2488 : 374E-3908 : routine 2C5E
+2D72 : 42957 : 3BD4-3CDB : routine 2D44
+2E45 : 156272 : 3B30-3BAF : routine 2DEE
+2F5B : 206 : 3C56-3CDC : routine 2F55
+2F60 : 206 : 3C57-3CDD : routine 2F55
+2F6B : 730 : 3BD5-3C96 : routine 2F65
+2F7D : 730 : 3BD7-3C98 : routine 2F77
+2F8F : 730 : 3BD9-3C9A : routine 2F89
+2FA1 : 730 : 3BDB-3C9C : routine 2F9B
+300A : 626688 : 0000-2FFF : routine 2FAD
+3047 : 9180 : 3154-3169 : routine 2FAD
+3048 : 9180 : 3156-316B : routine 2FAD
+306F : 9180 : 3154-3169 : routine 2FAD
+3070 : 9180 : 3156-316B : routine 2FAD
+30A3 : 612 : 3154-3169 : routine 2FAD
+30A4 : 612 : 3156-316B : routine 2FAD
+3213 : 69263 : 32F9-32FD : routine 2FAD
+3218 : 69263 : 32FA-32FE : routine 2FAD
+3259 : 306 : 3AE2-3AEF : routine 2FAD
+325A : 306 : 3AE4-3AF1 : routine 2FAD
+325E : 1632 : 3AE6-3AF3 : routine 2FAD
+3269 : 1632 : 3AE6-3AF3 : routine 2FAD
+3278 : 306 : 3AE6-3AF3 : routine 2FAD
+3AFC : 294 : 3A4F-3AE1 : routine 3AF4

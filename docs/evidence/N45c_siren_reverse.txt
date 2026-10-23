@@ -1,0 +1,84 @@
+N45c evidence: siren selection and ghost turn-around calls, native: ROM 0E6C-0EAC (picks the siren pitch bit in 4EAC from the dots-left byte 4E0E at the thresholds E4, D4, B4, 74; cleared when 4DA5 is set), 1EFE-1F24 (the reverse-direction flag 4DB1: new direction from 4D28, calls the table at 18 via RST 18h, sets 4D1E/4D14), the entry parts 1F25, 1F4C, 1F73 (flags 4DB2-4DB4 that fall into the N45b helpers), and the power-dot stub 1AC9-1AD6 (reached from 18CA; the main routine 1A70 was already native).
+Scope notes (honest): (1) Names come from reading the code, not from the project's label list. (2) Only the readable-rules mode uses the native code; Purist mode and original-rules mode always run the ROM. (3) The full run_all.sh was NOT run (not a milestone; next one is N45g). (4) The container restarted during the fast regression; the first 14 lines were run before and the rest were run again after the restart, all PASS.
+Date: 2026-10-20
+Command: sh tests/test_native_f45c.sh 1000000 20000 100000
+Fast regression (this step): 41 PASS, no FAIL:
+PASS tests/test_native_attract.sh 30000 10000 2000
+PASS tests/test_native_demo.sh 30000 10000 2000
+PASS tests/test_native_game.sh 30000 10000 2000
+PASS tests/test_native_level.sh 30000 10000 2000
+PASS tests/test_native_frame.sh 30000 10000 2000
+PASS tests/test_native_meet.sh 30000 10000 2000
+PASS tests/test_native_eaten.sh 30000 10000 2000
+PASS tests/test_native_death.sh 30000 10000 2000
+PASS tests/test_native_clear.sh 30000 10000 2000
+PASS tests/test_native_fruit.sh 30000 10000 2000
+PASS tests/test_native_over.sh 30000 10000 2000
+PASS tests/test_native_inter1.sh 30000 10000 2000
+PASS tests/test_native_inter2.sh 30000 10000 2000
+PASS tests/test_native_inter3.sh 30000 10000 2000
+PASS tests/test_native_snd.sh 30000 10000 2000
+PASS tests/test_native_tune.sh 30000 10000 2000
+PASS tests/test_native_sched.sh 30000 10000 2000
+PASS tests/test_native_f45a.sh 30000 10000 2000
+PASS tests/test_native_f45b.sh 30000 10000 2000
+PASS tests/test_native_f45c.sh 30000 10000 2000
+PASS tests/test_native_players.sh 30000 10000
+PASS tests/test_native_helpers.sh 30000 10000 20000
+PASS tests/test_native_screen.sh 30000 10000 20000
+PASS tests/test_native_numbers.sh 30000 10000 20000
+PASS tests/test_native_text.sh 30000 10000 20000
+PASS tests/test_native_status.sh 30000 10000 20000
+PASS tests/test_native_sliced.sh 30000 10000 20000
+PASS tests/test_native_maze.sh 30000 10000 20000
+PASS tests/test_native_scan.sh 30000 10000 20000
+PASS tests/test_native_sprites.sh 30000 10000 20000
+PASS tests/test_native_pics.sh 30000 10000 20000
+PASS tests/test_native_clocks.sh 30000 10000 20000
+PASS tests/test_native_mode.sh 20000 5000 10000
+PASS tests/test_native_events.sh 20000 5000 10000
+PASS tests/test_native_handler.sh 20000 5000 10000
+PASS tests/test_native_labels.sh 20000 5000 10000
+PASS tests/test_native_coins.sh 20000 5000 10000
+PASS tests/test_rules_all.sh 100000
+PASS tests/test_rules_file.sh 20000
+PASS tests/test_purist.sh
+PASS tests/test_replay.sh
+
+Test report (build/n45c/report.txt):
+part 1: 2000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 1F73 0, 1F4C 0, 1F25 0, 1F14 0, 1EFE 0, 1AC9 0, 0E6C 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 1F73 1600 of 2000, 1F4C 1597 of 2000, 1F25 1602 of 2000, 1F14 1571 of 2000, 1EFE 1587 of 2000, 1AC9 1601 of 2000, 0E6C 1599 of 2000
+part 2: real entry states from the coverage players A, B, C, D (10000 frames each, D a fifth): entries / compared / differences
+  1F73: 893 / 128 / 0
+  1F4C: 1225 / 175 / 0
+  1F25: 2039 / 292 / 0
+  1F14: 23 / 4 / 0
+  1EFE: 3309 / 473 / 0
+  1AC9: 2690 / 385 / 0
+  0E6C: 15208 / 2173 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 301
+part 3: lockstep, scripted player 30000 frames, then the coverage players A, B, C (10000 frames each) and D (a fifth): 62000 frames compared
+LOCKSTEP 62000 frames compared; 2 variant(s)
+VARIANT A: native frame-update code only (calls counted): IDENTICAL on every frame (62000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native frame-update code only (calls counted): routines replaced 7 of 282 in the map (instructions 76 of 5439 = 1.40 percent); entered in this run 7; calls 64104
+VARIANT B: all readable rules + N12 to N45c: IDENTICAL on every frame (62000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N45c: routines replaced 541 of 282 in the map (instructions 4658 of 5439 = 85.64 percent); entered in this run 519; calls 10568611
+REFERENCE distinct ROM instruction addresses run: 5538
+  1F73: original machine entered it 3453 times; native version (A or C) ran 3453 times  (equal)
+  1F4C: original machine entered it 4339 times; native version (A or C) ran 4339 times  (equal)
+  1F25: original machine entered it 5934 times; native version (A or C) ran 5934 times  (equal)
+  1F14: original machine entered it 52 times; native version (A or C) ran 52 times  (equal)
+  1EFE: original machine entered it 7681 times; native version (A or C) ran 7681 times  (equal)
+  1AC9: original machine entered it 5929 times; native version (A or C) ran 5929 times  (equal)
+  0E6C: original machine entered it 36716 times; native version (A or C) ran 36716 times  (equal)
+  frame-update code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 30000 frames)
+part 4: wrong version "0E6C one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0E6C an undocumented flag bit wrong": caught (2397 of 3000 isolated cases differ)
+part 4: wrong version "0E6C the byte 4EAC wrong": caught (2410 of 3000 isolated cases differ)
+part 4: wrong version "1EFE the return address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1F25 register BC wrong": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the siren routine 0E6C (one cycle too slow): caught at frame 678
+part 5: progress meter (coverage players A, B, C of 10000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5536; readable rules + N12 to N45c (before N45c) 1563; with the N45c frame-update code 1481
+PASS test_native_f45c

@@ -1,0 +1,14 @@
+N49c evidence (2026-10-22): the Z80 core is out of the program tree for good.
+
+- src/core moved to src/oracle (z80.h, z80_test.cpp, licence, CREDITS.md, new README.md): used only by tests and tools; all scripts, includes and notes updated.
+- The window program is built with -DPAC_NO_Z80 (tools/build_app.sh, build_windows.sh, package.sh, package_test.sh); package.sh and package_test.sh stop if the program source still contains the Z80 core (tests/test_no_z80_symbols.sh).
+- README.md says the game has no Z80 inside and was proved identical frame by frame against it.
+- Release (tools/package.sh) and test package (tools/package_test.sh N49c) build.
+
+Z80 core in the window program: 0 lines after the preprocessor, 0 symbols, 0 names in the binary (control: the Z80 test program has 23 symbols)
+PASS test_no_z80_symbols (the window program has no Z80 core)
+frame fingerprints (memory, I/O writes, cycles, registers) identical on all 171273 frames
+wrong version caught: 1 frame lines differ (first: > scripted 1001 mem 61b8212def)
+PASS test_native_machine.sh (171273 frames)
+
+Full regression (sh tests/run_all.sh): ALL TESTS PASSED (includes zero ROM instructions, native machine = Z80 machine, replay and Purist hashes, rules file, app tests).

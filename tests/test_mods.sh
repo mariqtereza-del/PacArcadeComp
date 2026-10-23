@@ -10,7 +10,7 @@ T=build/mods; mkdir -p $T
 [ -f build/rom/prog.bin ] || python3 tools/check_rom.py >/dev/null || { echo "FAIL: no ROM (put pacman.zip in roms/)"; exit 2; }
 ls mods/*.cfg >/dev/null 2>&1 || { echo "FAIL: no example mods in mods/"; exit 1; }
 [ "$(ls mods/*.cfg | wc -l)" -ge 3 ] || { echo "FAIL: fewer than three example mods"; exit 1; }
-g++ -O2 -std=c++17 -Wall -Wextra -Isrc/core -Itests tests/test_mods.cpp src/board/machine.cpp src/board/bus.cpp -o $T/test_mods || { echo "FAIL: build"; exit 1; }
+g++ -O2 -std=c++17 -Wall -Wextra -Itests/oracle -Itests tests/test_mods.cpp src/board/machine.cpp src/board/bus.cpp -o $T/test_mods || { echo "FAIL: build"; exit 1; }
 $T/test_mods build/rom/prog.bin "$N" mods/*.cfg || exit 1
 # ---- the worked C++ example: Pinky aims 6 tiles ahead
 rm -rf $T/logic_original $T/logic_pinky6; cp -r src/logic $T/logic_original; cp -r src/logic $T/logic_pinky6

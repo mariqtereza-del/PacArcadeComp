@@ -1,0 +1,129 @@
+N45b evidence: the per-frame game update, part 2, native: ROM 0C42-0E22 (the ghost house routine called every frame: it counts down 4DA4, steps the three ghost sprites that wait in or leave the pen (states 4DA0-4DA3, positions 4D00-4D07, direction bytes 4D28-4D2F, the exit position 64h / 78h / 80h, calls the movement sum 2000) and the three turn-round helpers 1F2E, 1F55, 1F7C (reverse one ghost: direction xor 2, called by 0C42 and falling through from 1F25, 1F4C, 1F73 of N45c). Entry points: 30 (0C42, the call return points, and the jump targets inside).
+Scope notes (honest): (1) The names come from reading the code (what it writes), not from the project's label list. (2) The calls to 2000 (position sum) and 2000's hook were native before this step and are not part of it. (3) New instruction kinds in the runner: CALL Z and RET NC. FOUND AND FIXED while building this step: the generator read any conditional RET it did not know (here RET NC) as a plain RET; the first test run caught it (work RAM and cycle count differences at 0C42). The generator now refuses an unknown RET form, so this cannot happen silently; the earlier arrays are byte-for-byte unchanged (compared against the saved header) and the earlier step tests were re-run.
+Date: 2026-10-20
+Command: sh tests/test_native_f45b.sh 1000000 20000 100000
+Fast regression (this step; the full run_all.sh is for milestones and was NOT run): 40 PASS, no FAIL:
+PASS tests/test_native_attract.sh 30000 10000 2000
+PASS tests/test_native_demo.sh 30000 10000 2000
+PASS tests/test_native_game.sh 30000 10000 2000
+PASS tests/test_native_level.sh 30000 10000 2000
+PASS tests/test_native_frame.sh 30000 10000 2000
+PASS tests/test_native_meet.sh 30000 10000 2000
+PASS tests/test_native_eaten.sh 30000 10000 2000
+PASS tests/test_native_death.sh 30000 10000 2000
+PASS tests/test_native_clear.sh 30000 10000 2000
+PASS tests/test_native_fruit.sh 30000 10000 2000
+PASS tests/test_native_over.sh 30000 10000 2000
+PASS tests/test_native_inter1.sh 30000 10000 2000
+PASS tests/test_native_inter2.sh 30000 10000 2000
+PASS tests/test_native_inter3.sh 30000 10000 2000
+PASS tests/test_native_snd.sh 30000 10000 2000
+PASS tests/test_native_tune.sh 30000 10000 2000
+PASS tests/test_native_sched.sh 30000 10000 2000
+PASS tests/test_native_f45a.sh 30000 10000 2000
+PASS tests/test_native_f45b.sh 30000 10000 2000
+PASS tests/test_native_players.sh 30000 10000
+PASS tests/test_native_helpers.sh 30000 10000 20000
+PASS tests/test_native_screen.sh 30000 10000 20000
+PASS tests/test_native_numbers.sh 30000 10000 20000
+PASS tests/test_native_text.sh 30000 10000 20000
+PASS tests/test_native_status.sh 30000 10000 20000
+PASS tests/test_native_sliced.sh 30000 10000 20000
+PASS tests/test_native_maze.sh 30000 10000 20000
+PASS tests/test_native_scan.sh 30000 10000 20000
+PASS tests/test_native_sprites.sh 30000 10000 20000
+PASS tests/test_native_pics.sh 30000 10000 20000
+PASS tests/test_native_clocks.sh 30000 10000 20000
+PASS tests/test_native_mode.sh 20000 5000 10000
+PASS tests/test_native_events.sh 20000 5000 10000
+PASS tests/test_native_handler.sh 20000 5000 10000
+PASS tests/test_native_labels.sh 20000 5000 10000
+PASS tests/test_native_coins.sh 20000 5000 10000
+PASS tests/test_rules_all.sh 100000
+PASS tests/test_rules_file.sh 20000
+PASS tests/test_purist.sh
+PASS tests/test_replay.sh
+
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 1F89 0, 1F7C 0, 1F62 0, 1F55 0, 1F3B 0, 1F2E 0, 0DF5 0, 0DEA 0, 0DD3 0, 0DC0 0, 0DBC 0, 0DAB 0, 0DA6 0, 0D93 0, 0D64 0, 0D59 0, 0D3F 0, 0D2C 0, 0D26 0, 0D15 0, 0D10 0, 0CFB 0, 0CCC 0, 0CC1 0, 0CBB 0, 0CAA 0, 0CA5 0, 0C90 0, 0C61 0, 0C42 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 1F89 79995 of 100000, 1F7C 79918 of 100000, 1F62 80085 of 100000, 1F55 79977 of 100000, 1F3B 79887 of 100000, 1F2E 79832 of 100000, 0DF5 80142 of 100000, 0DEA 79890 of 100000, 0DD3 79966 of 100000, 0DC0 80029 of 100000, 0DBC 80170 of 100000, 0DAB 79789 of 100000, 0DA6 80001 of 100000, 0D93 79985 of 100000, 0D64 79916 of 100000, 0D59 80084 of 100000, 0D3F 80004 of 100000, 0D2C 79897 of 100000, 0D26 79802 of 100000, 0D15 80165 of 100000, 0D10 79885 of 100000, 0CFB 79953 of 100000, 0CCC 80041 of 100000, 0CC1 80139 of 100000, 0CBB 79825 of 100000, 0CAA 79994 of 100000, 0CA5 79963 of 100000, 0C90 79906 of 100000, 0C61 80137 of 100000, 0C42 79970 of 100000
+part 2: real entry states from the coverage players A, B, C, D (20000 frames each, D a fifth): entries / compared / differences
+  1F89: 885 / 127 / 0
+  1F7C: 885 / 127 / 0
+  1F62: 565 / 81 / 0
+  1F55: 565 / 81 / 0
+  1F3B: 192 / 28 / 0
+  1F2E: 192 / 28 / 0
+  0DF5: 726 / 104 / 0
+  0DEA: 726 / 104 / 0
+  0DD3: 526 / 76 / 0
+  0DC0: 1252 / 179 / 0
+  0DBC: 6937 / 991 / 0
+  0DAB: 6937 / 991 / 0
+  0DA6: 6937 / 991 / 0
+  0D93: 11359 / 1623 / 0
+  0D64: 1046 / 150 / 0
+  0D59: 1046 / 150 / 0
+  0D3F: 704 / 101 / 0
+  0D2C: 1750 / 250 / 0
+  0D26: 4297 / 614 / 0
+  0D15: 4297 / 614 / 0
+  0D10: 4297 / 614 / 0
+  0CFB: 11359 / 1623 / 0
+  0CCC: 1293 / 185 / 0
+  0CC1: 1293 / 185 / 0
+  0CBB: 1274 / 182 / 0
+  0CAA: 1274 / 182 / 0
+  0CA5: 1274 / 182 / 0
+  0C90: 11359 / 1623 / 0
+  0C61: 28 / 4 / 0
+  0C42: 30079 / 4297 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3409
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (20000 frames each) and D (a fifth): 1064000 frames compared
+LOCKSTEP 1064000 frames compared; 2 variant(s)
+VARIANT A: native frame-update code only (calls counted): IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native frame-update code only (calls counted): routines replaced 30 of 282 in the map (instructions 216 of 5439 = 3.97 percent); entered in this run 30; calls 3029829
+VARIANT B: all readable rules + N12 to N45b: IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N45b: routines replaced 534 of 282 in the map (instructions 4582 of 5439 = 84.24 percent); entered in this run 515; calls 193328426
+REFERENCE distinct ROM instruction addresses run: 5640
+  1F89: original machine entered it 27783 times; native version (A or C) ran 27783 times  (equal)
+  1F7C: original machine entered it 27783 times; native version (A or C) ran 27783 times  (equal)
+  1F62: original machine entered it 17921 times; native version (A or C) ran 17921 times  (equal)
+  1F55: original machine entered it 17921 times; native version (A or C) ran 17921 times  (equal)
+  1F3B: original machine entered it 6389 times; native version (A or C) ran 6389 times  (equal)
+  1F2E: original machine entered it 6389 times; native version (A or C) ran 6389 times  (equal)
+  0DF5: original machine entered it 4279 times; native version (A or C) ran 4279 times  (equal)
+  0DEA: original machine entered it 4279 times; native version (A or C) ran 4279 times  (equal)
+  0DD3: original machine entered it 3162 times; native version (A or C) ran 3162 times  (equal)
+  0DC0: original machine entered it 7441 times; native version (A or C) ran 7441 times  (equal)
+  0DBC: original machine entered it 218436 times; native version (A or C) ran 218436 times  (equal)
+  0DAB: original machine entered it 218436 times; native version (A or C) ran 218436 times  (equal)
+  0DA6: original machine entered it 218436 times; native version (A or C) ran 218436 times  (equal)
+  0D93: original machine entered it 296946 times; native version (A or C) ran 296946 times  (equal)
+  0D64: original machine entered it 13353 times; native version (A or C) ran 13353 times  (equal)
+  0D59: original machine entered it 13353 times; native version (A or C) ran 13353 times  (equal)
+  0D3F: original machine entered it 9291 times; native version (A or C) ran 9291 times  (equal)
+  0D2C: original machine entered it 22644 times; native version (A or C) ran 22644 times  (equal)
+  0D26: original machine entered it 136109 times; native version (A or C) ran 136109 times  (equal)
+  0D15: original machine entered it 136109 times; native version (A or C) ran 136109 times  (equal)
+  0D10: original machine entered it 136109 times; native version (A or C) ran 136109 times  (equal)
+  0CFB: original machine entered it 296946 times; native version (A or C) ran 296946 times  (equal)
+  0CCC: original machine entered it 17563 times; native version (A or C) ran 17563 times  (equal)
+  0CC1: original machine entered it 17563 times; native version (A or C) ran 17563 times  (equal)
+  0CBB: original machine entered it 42555 times; native version (A or C) ran 42555 times  (equal)
+  0CAA: original machine entered it 42555 times; native version (A or C) ran 42555 times  (equal)
+  0CA5: original machine entered it 42555 times; native version (A or C) ran 42555 times  (equal)
+  0C90: original machine entered it 296946 times; native version (A or C) ran 296946 times  (equal)
+  0C61: original machine entered it 2436 times; native version (A or C) ran 2436 times  (equal)
+  0C42: original machine entered it 728141 times; native version (A or C) ran 728141 times  (equal)
+  frame-update code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "0C42 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0D93 an undocumented flag bit wrong": caught (2366 of 3000 isolated cases differ)
+part 4: wrong version "0C90 the byte 4E91 wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1F2E the return address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0CFB register BC wrong": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the ghost house routine 0C42 (one cycle too slow): caught at frame 678
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N45b (before N45b) 1888; with the N45b frame-update code 1654
+PASS test_native_f45b
+PASS test_native_f45b.sh (report in build/n45b/report.txt)

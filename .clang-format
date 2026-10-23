@@ -1,4 +1,4 @@
-# Layout only. Run: clang-format -i <file>   (the project formats src/ and tests/ except the third-party code in src/core/z80.h and src/third_party/)
+# Layout only. Run: clang-format -i <file>   (the project formats src/ and tests/ except the third-party code in tests/oracle/z80.h and src/third_party/)
 BasedOnStyle: LLVM
 Language: Cpp
 Standard: c++17

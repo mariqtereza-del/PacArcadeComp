@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.." || exit 2
 N=${1:-20000}
 T=$(mktemp -d)
 [ -f build/rom/prog.bin ] || python3 tools/check_rom.py >/dev/null || exit 2
-g++ -O2 -std=c++17 -Wall -Wextra -Isrc/core src/board/boot_test.cpp -o "$T/boot_test" || { echo "FAIL: build"; exit 1; }
+g++ -O2 -std=c++17 -Wall -Wextra -Itests/oracle tests/oracle/boot_test.cpp -o "$T/boot_test" || { echo "FAIL: build"; exit 1; }
 "$T/boot_test" build/rom/prog.bin "$N" > "$T/cpp.txt" || { echo "FAIL: C++ run"; exit 1; }
 python3 tools/analysis/oracle_trace.py "$N" > "$T/py.txt" || { echo "FAIL: Python run"; exit 1; }
 compare() {  # $1 = file to compare with the Python log, $2 = label

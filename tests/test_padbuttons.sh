@@ -23,7 +23,7 @@ chk "normal: quicksave.sav written" "$([ -s $T/n/quicksave.sav ] && echo yes || 
 chk "purist: menu opened by the pad button (twice; the refused load leaves it open, so X and RB are ignored until R3 closes it)" "$(c $T/p/run.txt 'Menu: opened')" 2
 chk "purist: menu closed by the pad button" "$(c $T/p/run.txt 'Menu: resumed')" 2
 chk "purist: nothing saved or loaded" "$(c $T/p/run.txt 'State: saved')$(c $T/p/run.txt 'State: loaded')" 00
-chk "purist: refusals shown (Y rewind, menu A twice on SAVE STATE, LB, menu A twice on LOAD STATE)" "$(c $T/p/run.txt 'switched off in Purist')" 6
+chk "purist: refusals shown (Y rewind, menu A twice on SAVE STATE, LB, menu A twice on LOAD STATE)" "$(c $T/p/run.txt 'switched off')" 6
 chk "purist: no quicksave.sav" "$([ -e $T/p/quicksave.sav ] && echo yes || echo no)" no
 
 # S34B fix: triggers (L2/R2 are axes), Share/Mic, paddle and touchpad can be bound. A virtual pad drives the triggers and extra buttons.

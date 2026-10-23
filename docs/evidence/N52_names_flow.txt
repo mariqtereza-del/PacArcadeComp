@@ -1,0 +1,10 @@
+N52: Named game state: flow, scores and settings
+================================================
+ - tools/gen_names.py now writes src/game/state.h with four named blocks (same bytes as the machine, views for the tests): Actors (4D00-4DD6, N51), Flow (4E00-4EFF: main/intro/level
+   state, player, dots eaten, fruit flags, ghost-house dot counters, died_this_level, level, lives, pill and energizer arrays, DIP-derived settings, credits, scores and high score as BCD,
+   the sound-register shadow and the six sound request groups), System (4C80-4CC0: task queue, frame counters, timers, random bytes, timed events) and SpriteBytes (4C02-4C3D: pacman
+   colour, fruit sprite code/colour, the sprite copies). Names: docs/notes/ram_map.md, boot_flow.md, src/logic/*.h; byte_XXXX where the meaning is not established.
+ - 120 more code lines in src/game and src/rules now use game::ram::<name> (tools/gen_names.py --replace); only the work-RAM base 4C00 stays a number (it is a base, not a variable).
+ - tests/test_names.sh (in run_all) now checks all four blocks: anchors at compile time; on the S27 replay (7,273 frames) the four views equal the memory in every frame (215+252+65+60 bytes),
+   the named fields read the ROM's addresses, a game was played and scored; a shifted view is caught; no raw 4Cxx/4Dxx/4Exx address in code; state.h is exactly what the generator writes.
+ - The game is unchanged (names are equal constants): full regression ALL TESTS PASSED (lockstep, coverage, native-vs-ROM, Purist, replay hashes, 0 ROM instructions).

@@ -1,0 +1,57 @@
+N18 evidence: native maze drawing, dot placing / collecting, dot-bit reset and maze colours (src/game/maze.h; adapters src/rules/rules.h: namespace maze; hooks in rules::table()): ROM routines 2419 (maze, loop head 241F), 2448 (dots onto the screen, head 245C), 2487 (collect the dots, head 2498), 24C9 (reset the dot bits), 24D7 (maze colours, pass loop head 24E7). Tables (maze 3435, dot offsets 35B5) are read from the player's ROM at run time; no ROM bytes in the source.
+Date: 2026-10-17
+Command: sh tests/test_native_maze.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated cases per routine (15,000 for the maze 2419 / 241F, which are 26,000 instructions long), 75,000 cut cases per routine)
+How the cut works: as in N17 (src/game/sliced.h): the native loops run only whole rounds that end before the 50,688-cycle limit and leave the machine at the loop head (241F, 245C, 2498, 24E7) with the exact registers, flags, WZ, R and stack bytes; the ROM runs the last instructions to the limit itself and the hook takes over again after the interrupt.
+Two faults were found by the cut test during this step and fixed before this run: the dot collector changed register E before it knew the round would not fit, and the colour routine left a wrong internal WZ value when it handed over at 24EB / 24F7. The first full run before the fixes had 1,217 + 484 + 78 + 99 cut differences and 2 real-state differences; this run has none.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2419 0, 241F 0, 2448 0, 245C 0, 2487 0, 2498 0, 24C9 0, 24D7 0, 24E7 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 2419 0 of 15000, 241F 8479 of 15000, 2448 239880 of 300000, 245C 252877 of 300000, 2487 239968 of 300000, 2498 252657 of 300000, 24C9 261023 of 300000, 24D7 297773 of 300000, 24E7 300000 of 300000
+part 3b: cut test from random states, 75000 cases of each routine, the frame ends at a random place inside it, 3 frames compared (memory, I/O writes, registers, cycles): differences 2419 0, 241F 0, 2448 0, 245C 0, 2487 0, 2498 0, 24C9 0, 24D7 0, 24E7 0
+  cases in which the native routine really ran up to the end of the frame and left the rest to the ROM (a cut): 272316 of 540000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  2419: 104 / 104 / 0
+  241F: 31096 / 8 / 0
+  2448: 104 / 104 / 0
+  245C: 24960 / 9 / 0
+  2487: 52 / 52 / 0
+  2498: 12480 / 5 / 0
+  24C9: 77 / 77 / 0
+  24D7: 518 / 518 / 0
+  24E7: 2072 / 691 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 5267
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 3 variant(s)
+VARIANT A: native starts 2419, 2448, 2487, 24C9, 24D7 only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native starts 2419, 2448, 2487, 24C9, 24D7 only (calls counted): routines replaced 5 of 282 in the map (instructions 143 of 5439 = 2.63 percent); entered in this run 5; calls 3830
+VARIANT B: all readable rules + N12 to N18: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N18: routines replaced 68 of 282 in the map (instructions 1563 of 5439 = 28.74 percent); entered in this run 68; calls 63422347
+VARIANT C: only the loop heads 241F, 245C, 2498, 24E7 (the starts run in the ROM), calls counted: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS C: only the loop heads 241F, 245C, 2498, 24E7 (the starts run in the ROM), calls counted: routines replaced 4 of 282 in the map (instructions 0 of 5439 = 0.00 percent); entered in this run 4; calls 505167
+REFERENCE distinct ROM instruction addresses run: 5643
+  2419: original machine entered it 681 times; native version (A or C) ran 681 times  (equal)
+  241F: original machine entered it 203619 times; native version (A or C) ran 2043 times  (not compared: see above)
+  2448: original machine entered it 681 times; native version (A or C) ran 681 times  (equal)
+  245C: original machine entered it 163440 times; native version (A or C) ran 873 times  (not compared: see above)
+  2487: original machine entered it 553 times; native version (A or C) ran 553 times  (equal)
+  2498: original machine entered it 132720 times; native version (A or C) ran 553 times  (not compared: see above)
+  24C9: original machine entered it 568 times; native version (A or C) ran 568 times  (equal)
+  24D7: original machine entered it 1347 times; native version (A or C) ran 1347 times  (equal)
+  24E7: original machine entered it 5388 times; native version (A or C) ran 1691 times  (not compared: see above)
+  maze, dots and colours in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "2419 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "241F HL one too far after a cut": caught (2188 of 3000 isolated cases differ)
+part 4: wrong version "2448 a stray tile written": caught (2987 of 3000 isolated cases differ)
+part 4: wrong version "245C IY one too far after a cut": caught (734 of 3000 isolated cases differ)
+part 4: wrong version "2487 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2498 C one too high after a cut": caught (1052 of 3000 isolated cases differ)
+part 4: wrong version "24C9 the RST's return address wrong": caught (2893 of 3000 isolated cases differ)
+part 4: wrong version "24D7 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "24E7 HL one too far after a cut": caught (1639 of 3000 isolated cases differ)
+part 4: lockstep with the maze drawing (one cycle too slow): caught at frame 422
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed): original ROM 5638; readable rules + N12 to N18 (before N18) 4447; with the N18 maze routines 4381
+PASS test_native_maze
+Fast checks run after the fixes (all PASS): tests/test_rules_all.sh 100000, test_native_sliced / status / helpers / text / numbers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).
+Progress meter: executed ROM instruction addresses in the coverage runs: 5,638 (original) -> 4,447 (readable rules + N12 to N17) -> 4,381 (with N18).

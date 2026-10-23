@@ -1,0 +1,130 @@
+N43 evidence: native sound effects, ROM 2D0C-2D43 (the effect driver: three voices), 2DEE-2F01 (the effect voice routine: start, step, end of an effect, the frequency and volume values written to the sound register block 4E8C-4E9B) and 2F22-2F54 (the volume steps used through the jump table 2F02).
+Scope notes (honest): (1) This is the FIRST sound group only: the effects driver and its voice routine. The tune driver 2CC1/2D44 and the tune command table 2F55-2FBA (jingle, death sound, intermission tunes) stay in the ROM until N44. (2) The sound registers are compared in every frame: the lockstep compares all memory (the sound register block 4E8C-4E9B and the voice records 4E9C-4EFF) and every I/O write (the sound chip registers at 5040-505F) and the cycle count of every frame. (3) The entries 2F2B, 2F3C, 2F43 and 2F4A-2F54 (volume steps used only by some effects) are never reached by the coverage players: they are proved by the random cases only (zero differences). (4) The wave and frequency tables read by the code (3B30-3BD0) stay in the player's ROM (read at run time); no ROM bytes are in the source.
+Date: 2026-10-19
+Command: sh tests/test_native_snd.sh 1000000 20000 100000   (1,000,000 scripted frames, coverage players A, B, C of 20,000 frames and D of 4,000, 100,000 isolated random cases per entry; random registers incl. IX and IY, R, WZ, stack bytes and RAM; IX / IY mostly set to real voice records / register blocks with small counts and single bits)
+New instruction kinds in the runner (src/game/attract.h): LD E,n / LD H,n / LD A,E|H|L / LD L,A / LD (IX+d),B / LD (IY+d),A|H|L / ADD A,(IX+d) / AND (IX+d) / AND E / DEC (IX+d) / BIT, SET, RES n,(IX+d) / NEG / SRL E / RLCA / CPL / ADD HL,HL / PUSH HL, IX / POP DE, HL, each with the exact T-states, opcode fetches, flags and WZ of the core (the isolated test compares WZ, all registers and the cycle count).
+Fast regression (this step, not the full run_all.sh; that is for milestones): see the last section of this file.
+
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2F54 0, 2F53 0, 2F52 0, 2F51 0, 2F50 0, 2F4F 0, 2F4E 0, 2F4D 0, 2F4C 0, 2F4B 0, 2F4A 0, 2F43 0, 2F3C 0, 2F2B 0, 2F26 0, 2F22 0, 2EE8 0, 2EE4 0, 2DF4 0, 2DEE 0, 2D3C 0, 2D2B 0, 2D1A 0, 2D0C 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 2F54 80141 of 100000, 2F53 80282 of 100000, 2F52 80437 of 100000, 2F51 79881 of 100000, 2F50 79845 of 100000, 2F4F 80109 of 100000, 2F4E 80347 of 100000, 2F4D 80149 of 100000, 2F4C 79685 of 100000, 2F4B 79476 of 100000, 2F4A 79445 of 100000, 2F43 79979 of 100000, 2F3C 80204 of 100000, 2F2B 80214 of 100000, 2F26 80177 of 100000, 2F22 80462 of 100000, 2EE8 79936 of 100000, 2EE4 79864 of 100000, 2DF4 79996 of 100000, 2DEE 80365 of 100000, 2D3C 80257 of 100000, 2D2B 79666 of 100000, 2D1A 79668 of 100000, 2D0C 79323 of 100000
+part 2: real entry states from the coverage players A, B, C, D (20000 frames each, D a fifth): entries / compared / differences
+  2F54: 0 / 0 / 0   (never entered in these runs)
+  note: 2F54 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F53: 0 / 0 / 0   (never entered in these runs)
+  note: 2F53 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F52: 0 / 0 / 0   (never entered in these runs)
+  note: 2F52 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F51: 0 / 0 / 0   (never entered in these runs)
+  note: 2F51 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F50: 0 / 0 / 0   (never entered in these runs)
+  note: 2F50 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F4F: 0 / 0 / 0   (never entered in these runs)
+  note: 2F4F was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F4E: 0 / 0 / 0   (never entered in these runs)
+  note: 2F4E was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F4D: 0 / 0 / 0   (never entered in these runs)
+  note: 2F4D was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F4C: 0 / 0 / 0   (never entered in these runs)
+  note: 2F4C was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F4B: 0 / 0 / 0   (never entered in these runs)
+  note: 2F4B was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F4A: 0 / 0 / 0   (never entered in these runs)
+  note: 2F4A was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F43: 0 / 0 / 0   (never entered in these runs)
+  note: 2F43 was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F3C: 0 / 0 / 0   (never entered in these runs)
+  note: 2F3C was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F2B: 0 / 0 / 0   (never entered in these runs)
+  note: 2F2B was never entered with the real game states in these runs (proved by the random cases and the lockstep only)
+  2F26: 8467 / 1210 / 0
+  2F22: 37784 / 5398 / 0
+  2EE8: 46251 / 6608 / 0
+  2EE4: 45941 / 6563 / 0
+  2DF4: 306937 / 43849 / 0
+  2DEE: 177501 / 25358 / 0
+  2D3C: 58862 / 8409 / 0
+  2D2B: 58862 / 8409 / 0
+  2D1A: 58862 / 8409 / 0
+  2D0C: 58862 / 8409 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3409
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (20000 frames each) and D (a fifth): 1064000 frames compared
+LOCKSTEP 1064000 frames compared; 2 variant(s)
+VARIANT A: native sound-effects code only (calls counted): IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native sound-effects code only (calls counted): routines replaced 24 of 282 in the map (instructions 178 of 5439 = 3.27 percent); entered in this run 10; calls 14721412
+VARIANT B: all readable rules + N12 to N43: IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N43: routines replaced 466 of 282 in the map (instructions 3658 of 5439 = 67.26 percent); entered in this run 447; calls 168561600
+REFERENCE distinct ROM instruction addresses run: 5640
+  2F54: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F53: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F52: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F51: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F50: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F4F: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F4E: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F4D: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F4C: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F4B: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F4A: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F43: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F3C: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F2B: original machine entered it 0 times; native version (A or C) ran 0 times  (equal)
+  2F26: original machine entered it 30055 times; native version (A or C) ran 30055 times  (equal)
+  2F22: original machine entered it 445605 times; native version (A or C) ran 445605 times  (equal)
+  2EE8: original machine entered it 475660 times; native version (A or C) ran 475660 times  (equal)
+  2EE4: original machine entered it 475133 times; native version (A or C) ran 475133 times  (equal)
+  2DF4: original machine entered it 5875896 times; native version (A or C) ran 5875896 times  (equal)
+  2DEE: original machine entered it 3184815 times; native version (A or C) ran 3184815 times  (equal)
+  2D3C: original machine entered it 1058562 times; native version (A or C) ran 1058562 times  (equal)
+  2D2B: original machine entered it 1058562 times; native version (A or C) ran 1058562 times  (equal)
+  2D1A: original machine entered it 1058562 times; native version (A or C) ran 1058562 times  (equal)
+  2D0C: original machine entered it 1058562 times; native version (A or C) ran 1058562 times  (equal)
+  sound-effects code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "2D0C one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2EE8 an undocumented flag bit wrong": caught (2429 of 3000 isolated cases differ)
+part 4: wrong version "2D1A the sound register byte 4E91 wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2F22 the return address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2DEE register BC wrong": caught (2423 of 3000 isolated cases differ)
+part 4: lockstep with the effect driver 2D0C (one cycle too slow): caught at frame 295
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N43 (before N43) 2506; with the N43 sound-effects code 2289
+PASS test_native_snd
+PASS test_native_snd.sh (report in build/n43/report.txt)
+
+FAST REGRESSION (2026-10-19, after the step; the full run_all.sh was NOT run, it is for milestones; run_all.sh now also lists this step's test):
+PASS tests/test_native_attract.sh 30000 10000 2000
+PASS tests/test_native_demo.sh 30000 10000 2000
+PASS tests/test_native_game.sh 30000 10000 2000
+PASS tests/test_native_level.sh 30000 10000 2000
+PASS tests/test_native_frame.sh 30000 10000 2000
+PASS tests/test_native_meet.sh 30000 10000 2000
+PASS tests/test_native_eaten.sh 30000 10000 2000
+PASS tests/test_native_death.sh 30000 10000 2000
+PASS tests/test_native_clear.sh 30000 10000 2000
+PASS tests/test_native_fruit.sh 30000 10000 2000
+PASS tests/test_native_over.sh 30000 10000 2000
+PASS tests/test_native_inter1.sh 30000 10000 2000
+PASS tests/test_native_inter2.sh 30000 10000 2000
+PASS tests/test_native_inter3.sh 30000 10000 2000
+PASS tests/test_native_players.sh 30000 10000
+PASS tests/test_native_helpers.sh 30000 10000 20000
+PASS tests/test_native_screen.sh 30000 10000 20000
+PASS tests/test_native_numbers.sh 30000 10000 20000
+PASS tests/test_native_text.sh 30000 10000 20000
+PASS tests/test_native_status.sh 30000 10000 20000
+PASS tests/test_native_sliced.sh 30000 10000 20000
+PASS tests/test_native_maze.sh 30000 10000 20000
+PASS tests/test_native_scan.sh 30000 10000 20000
+PASS tests/test_native_sprites.sh 30000 10000 20000
+PASS tests/test_native_pics.sh 30000 10000 20000
+PASS tests/test_native_clocks.sh 30000 10000 20000
+PASS tests/test_native_mode.sh 20000 5000 10000
+PASS tests/test_native_events.sh 20000 5000 10000
+PASS tests/test_native_handler.sh 20000 5000 10000
+PASS tests/test_native_labels.sh 20000 5000 10000
+PASS tests/test_native_coins.sh 20000 5000 10000
+PASS tests/test_rules_all.sh 100000
+PASS tests/test_rules_file.sh 20000
+PASS tests/test_purist.sh
+PASS tests/test_replay.sh
+All 35 PASS, no FAIL.

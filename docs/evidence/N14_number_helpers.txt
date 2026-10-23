@@ -1,0 +1,38 @@
+N14 evidence: native number helpers 2ACE, 2ABE, 2AAF, 2B0B, 02DF (src/game/numbers.h; adapters src/rules/rules.h namespace numbers; hooks in rules::table())
+Date: 2026-10-16
+Command: sh tests/test_native_numbers.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated cases per routine)
+Note: 2C44 (a BCD conversion routine) is never called anywhere in the ROM (dead code), so it was not replaced. 2ACE is only entered from 2ABE, so it has its own lockstep variant C.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2ACE 0, 2ABE 0, 2AAF 0, 2B0B 0, 02DF 0
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  2ACE: 13956 / 1994 / 0
+  2ABE: 6978 / 6978 / 0
+  2AAF: 1433 / 1433 / 0
+  2B0B: 2290 / 2290 / 0
+  02DF: 12 / 12 / 0
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 3 variant(s)
+VARIANT A: native number helpers only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native number helpers only (calls counted): routines replaced 5 of 282 in the map (instructions 51 of 5439 = 0.94 percent); entered in this run 5; calls 110516
+VARIANT B: all readable rules + N12, N13 and N14 helpers: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12, N13 and N14 helpers: routines replaced 42 of 282 in the map (instructions 1133 of 5439 = 20.83 percent); entered in this run 42; calls 61806993
+VARIANT C: native 2ACE alone (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS C: native 2ACE alone (calls counted): routines replaced 1 of 282 in the map (instructions 12 of 5439 = 0.22 percent); entered in this run 1; calls 60996
+REFERENCE distinct ROM instruction addresses run: 5643
+  2ACE: original machine entered it 60996 times; native version C ran 60996 times  (equal)
+  2ABE: original machine entered it 30498 times; native version A ran 1200 times  (not compared: see above)
+  2AAF: original machine entered it 8966 times; native version A ran 8966 times  (equal)
+  2B0B: original machine entered it 9960 times; native version A ran 9960 times  (equal)
+  02DF: original machine entered it 96 times; native version A ran 96 times  (equal)
+  number helpers in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "2ACE one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2ABE DE one too far": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2AAF a stack leftover wrong": caught (2662 of 3000 isolated cases differ)
+part 4: wrong version "2B0B pointer one too far": caught (2981 of 3000 isolated cases differ)
+part 4: wrong version "02DF credits limit 98": caught (1358 of 3000 isolated cases differ)
+part 4: lockstep with the wrong 2ACE (one cycle too slow): caught at frame 296
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed): original ROM 5638; readable rules + N12 and N13 helpers (before N14) 4686; with the N14 number helpers 4645
+PASS test_native_numbers

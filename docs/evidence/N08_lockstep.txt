@@ -1,0 +1,32 @@
+N08: Reusable lockstep harness  (2026-10-16)
+Tools: tests/lockstep.h (the harness), tests/test_lockstep.sh (in tests/run_all.sh), tests/test_rules_random.cpp/.sh (the T02a test, now a user of the harness).
+What the harness compares after EVERY frame: work RAM (stack included), video RAM, colour RAM, sprite RAM and coordinates, sound registers, latches, interrupt vector, watchdog count, the I/O writes of the frame, the cycle count of the frame, and the CPU registers (first difference reported). Garbage mode fills the registers an adapter leaves alone. Coverage players drive it: inputs and RAM pokes are copied to the variants, and the variants start afresh whenever the player starts a new machine.
+
+VERIFY 1: the same T02a result as before. The old test (own comparison, three machines) was rebuilt from its source and run beside the new one for 30,000 frames: old = 784 entries of 2A23, 784 rule calls, 5282 blue-ghost frames, no difference in B or C, wrong adapter caught at frame 1227; new = the same four numbers (784, 784, 5282, caught at 1227).
+VERIFY 2: a deliberately wrong routine (seed * 5 + 3) is caught (frame 7328 in the run below).
+Run below: sh-equivalent of 'test_rules_random PROG.BIN 1000000 60000' (1,000,000 frames as the plan says; the T02a evidence run used 3,000,000).
+Also run: sh tests/test_lockstep.sh (100,000 + 30,000 frames) PASS; sh tests/test_rules_random.sh 20000 (replay checks, window program, Purist) PASS.
+Not run in this step: the full regression (the game program is unchanged; only test code was changed).
+
+part 1: 1000000 frames, original machine entered ROM 2A23 33519 times; the readable rule ran 33519 times (frames with blue ghosts: 216285)
+  readable rules vs original: identical on every frame (all memory, I/O writes, cycle count of every frame)
+  CPU registers at the end of every frame: identical too
+part 2: garbage in F, DE, HL after every call: identical on every frame
+LOCKSTEP 1000000 frames compared; 2 variant(s)
+VARIANT B: readable rules (2A23 counted): IDENTICAL on every frame (1000000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: readable rules (2A23 counted): routines replaced 24 of 282 in the map (instructions 957 of 5439 = 17.60 percent); entered in this run 24; calls 15087845
+VARIANT C: all readable rules, garbage in F, DE, HL: IDENTICAL on every frame (1000000 frames: all memory, I/O writes, cycle count of every frame); garbage in the scratch registers after every call
+  registers at the end of every frame: identical too
+PROGRESS C: all readable rules, garbage in F, DE, HL: routines replaced 24 of 282 in the map (instructions 957 of 5439 = 17.60 percent); entered in this run 24; calls 15087845
+REFERENCE distinct ROM instruction addresses run: 4972
+part 3: a wrong adapter (seed * 5 + 3): caught
+  first difference at frame 7328
+part 4: coverage players A and B through the harness, 60000 frames each
+LOCKSTEP 120000 frames compared; 1 variant(s)
+VARIANT readable rules (2A23 counted): IDENTICAL on every frame (120000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS readable rules (2A23 counted): routines replaced 24 of 282 in the map (instructions 957 of 5439 = 17.60 percent); entered in this run 24; calls 1399202
+REFERENCE distinct ROM instruction addresses run: 5370
+  coverage players in lockstep: identical on every frame
+PASS test_rules_random: 1000000 frames, 33519 calls of the readable rule, 0 differences required

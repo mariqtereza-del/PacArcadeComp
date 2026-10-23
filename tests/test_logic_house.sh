@@ -6,7 +6,7 @@
 cd "$(dirname "$0")/.." || exit 2
 [ -f build/rom/prog.bin ] || python3 tools/check_rom.py >/dev/null || exit 2
 mkdir -p build/t01
-B="g++ -O2 -std=c++17 -Wall -Wextra -Isrc/core"
+B="g++ -O2 -std=c++17 -Wall -Wextra -Itests/oracle"
 SRC="src/board/machine.cpp src/board/bus.cpp"
 $B tests/test_logic_house.cpp $SRC -o build/t01/test_logic_house || { echo "FAIL: build"; exit 1; }
 build/t01/test_logic_house build/rom/prog.bin "${1:-300000}" "${2:-100000}" || exit 1

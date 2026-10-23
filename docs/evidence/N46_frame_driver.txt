@@ -1,0 +1,42 @@
+N46 evidence: the main loop and the fill / table routines, native: ROM 238D-23A7 (the task-queue polling loop), 0008-000B (block fill), 0018-001F (table word), 1291-1294, 5 entry addresses; with the frame-end cut of N45j the readable rules now run them without any ROM instruction.
+Scope notes (honest): (1) Only the readable-rules mode uses the native code; original-rules and Purist modes still run the ROM. (2) The machine's frame loop and the interrupt routine 008D were already C++ (earlier steps), so N46 adds the queue-polling main loop and the ROM fallbacks that remained at 0008, 0018, 000C and 24E8; the boot (N47) and the self test / test screen (N47a, N47b) still run in the ROM. (3) The idle loop is run one native pass per iteration, as the ROM does; cycles are identical.
+Date: 2026-10-21
+Command: sh tests/test_native_f46.sh 1000000 20000 100000 (1,064,000 frames compared)
+Fast regression (per-step check, not a milestone): 51 PASS lines (all native tests f45k/f46 included, test_cheat_invincible), no FAIL.
+Progress meter (20,000 frames): 435 -> 404 unhooked ROM addresses, 0 ROM-instruction fallbacks (was 2).
+
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 238D 0, 1291 0, 001B 0, 0018 0, 0008 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 238D 100000 of 100000, 1291 100000 of 100000, 001B 100000 of 100000, 0018 100000 of 100000, 0008 100000 of 100000
+part 1b: cut test (started 0 to 800 cycles before the end of the frame, then the interrupt and 2 more frames), 10000 cases per routine: differences 238D 0, 1291 0, 001B 0, 0018 0, 0008 0
+  cut cases run 50000
+part 2: real entry states from the coverage players A, B, C, D (20000 frames each, D a fifth): entries / compared / differences
+  238D: 58734084 / 8390584 / 0
+  1291: 61246 / 8750 / 0
+  001B: 12655 / 1808 / 0
+  0018: 12655 / 1808 / 0
+  0008: 486290 / 69470 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 1759
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (20000 frames each) and D (a fifth): 1064000 frames compared
+LOCKSTEP 1064000 frames compared; 2 variant(s)
+VARIANT A: native frame-update code only (calls counted): IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native frame-update code only (calls counted): routines replaced 5 of 282 in the map (instructions 13 of 5439 = 0.24 percent); entered in this run 5; calls 1001756888
+VARIANT B: all readable rules + N12 to N46: IDENTICAL on every frame (1064000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N46: routines replaced 912 of 282 in the map (instructions 5351 of 5439 = 98.38 percent); entered in this run 893; calls 4318768948
+REFERENCE distinct ROM instruction addresses run: 5640
+  238D: original machine entered it 996872130 times; native version (A or C) ran 996872130 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  1291: original machine entered it 1625508 times; native version (A or C) ran 1625508 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  001B: original machine entered it 603353 times; native version (A or C) ran 603353 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  0018: original machine entered it 603353 times; native version (A or C) ran 603353 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  0008: original machine entered it 2052544 times; native version (A or C) ran 12659 times  (reached only after a hand-over of the older model: not more than the ROM; compared with the ROM in part 2)
+  frame-update code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "238D one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0018 an undocumented flag bit wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "0008 a tile byte wrong": caught (2549 of 3000 isolated cases differ)
+part 4: wrong version "001B the stack pointer wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "1291 register BC wrong": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the main loop 238D (one cycle too slow): caught at frame 294
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N46 (before N46) 409; with the N46 frame-update code 404
+PASS test_native_f46
+PASS test_native_f46.sh (report in build/n46/report.txt)

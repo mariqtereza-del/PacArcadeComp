@@ -1,0 +1,8 @@
+N01: Routine map: what the original program consists of  (2026-10-16)
+Tools: tests/rom_coverage.h (records every ROM instruction address that runs), tests/rom_map.cpp (runs the S27 replay, 7,273 frames, and the T01a scripted player, 60,000 frames), tests/rom_map.py (builds the map from docs/disasm/blocks.txt and pacman.asm), tests/test_rom_map.sh (runs all and checks). Result: docs/notes/rom_routines.md (generated; addresses and counts only).
+Results (sh tests/test_rom_map.sh):
+- blocks.txt: 262 blocks, 131 code blocks; all 131 covered exactly once; 5,439 instructions; 282 routines (entry points).
+- Raw executed addresses (prefix steps counted separately): replay 4,357, T01a player (60,000 frames) 4,947 = the planning measurement (4,947), together 4,987. Counted per instruction (the core runs the prefix bytes DD, FD, ED, CB as their own step; they are folded into their instruction): replay 3,974, player 4,533, together 4,565 of 5,439 (83.9 percent). Executed addresses outside every instruction: 0.
+- Routines never entered in these runs: 62; partly run: 36. These are the areas for N05 (code no test situation reaches).
+- One entry point is not on an instruction: 0066 (the NMI vector, in padding; the board has no NMI).
+- The map is repeatable (a second run gives an identical file); the notes file holds no run of 16 ROM bytes; the GitHub export scan stays clean (581 files).

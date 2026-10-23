@@ -1,0 +1,5 @@
+N00: Track D (the game without the emulator, Option A) started, 2026-10-16.
+N00 is the umbrella step: it fixes the goal, method and risks (docs/steps/N00.md); the work itself is done in the sub-steps N01 to N55, one routine family per step.
+Preconditions checked: T02 (all sub-steps T02a to T02k) VERIFIED by the user on 2026-10-16 (T02k reported ok, T02 ok by proxy). Release 1.1.0 / PacArcadeComp built (docs/evidence/T02k_release_1_1.txt).
+Regression: the full run_all.sh of T02k (ALL TESTS PASSED, 0 FAIL) covers the current source; no source file changed in N00 (only status files).
+Status: N00 PARTIAL until N55; next step N01 (routine map).

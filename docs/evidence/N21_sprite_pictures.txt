@@ -1,0 +1,63 @@
+N21 evidence: native sprite pictures (which picture and colour each sprite shows): src/game/sprite_pics.h; adapters src/rules/rules.h namespace pics; 16 hooks in rules::table() (readable rules only): 141F and 1490 (actor positions -> sprite position bytes, two screen orientations), 14FE (choose ghosts only / blue version / Pac-Man by direction 4D30), 168C 16B1 16D6 16F7 (Pac-Man's mouth picture for the four directions), 151C (flip bits of byte +0Ah), 154B (the four ghosts: colour step, blue, flashing, eyes), 15B4 15B7 15BA (the three CALLs), 15BD (top bits of the sprite bytes), 15E6 (fruit picture and colour), 162D (score numbers after eating), 1652 (Pac-Man's death animation pictures).
+Note: 141F and 1490 (positions to the sprite position bytes) belong to the objective of N20 as written ('the 4C12.. pairs with the +6/+7 offsets'); N20 replaced only the staging block of the interrupt handler (009D to 018B). They are in the same routine chain as the pictures, so they are done and proved in this step. Nothing else of that kind is left in this chain.
+Date: 2026-10-17
+Command: sh tests/test_native_pics.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated random cases per entry)
+How it works: every block is written instruction by instruction (T-states, opcode fetches, flags incl. the undocumented ones, WZ, the bytes the RST 20h / CALL leave on the stack: 151C at sp-2 and 1514 at sp-4 for the direction table; return addresses of the three CALLs); after each block the machine goes on at the next ROM address, so the chain 141F/1490 -> 14FE -> table (RST 20h) -> 151C -> 154B -> 15B4 .. 15BD runs through the hooks and the existing dispatch hook.
+Honest notes: (1) no cut test: the blocks run inside the interrupt handler at the start of a frame; when the machine is so late in the frame that a block might not fit (only in the tests) the hook hands over to the ROM instruction, and part 1 compares that too (a fifth of the cases); (2) in the real coverage runs the fruit (15E6), score number (162D) and death (1652) pictures mostly return at their first test; their other branches were proved with the random states, whose flag bytes are mixed on purpose; (3) the progress meter counts as in N19/N20; (4) the first full comparison passed; the only change after it was a deliberately wrong version in part 4 that could not show a difference (a wrong WZ in a block that ends with RET, which sets WZ anyway) and was replaced by a wrong ghost picture.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 141F 0, 1490 0, 14FE 0, 151C 0, 154B 0, 15B4 0, 15B7 0, 15BA 0, 15BD 0, 15E6 0, 162D 0, 1652 0, 168C 0, 16B1 0, 16D6 0, 16F7 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 141F 240151 of 300000, 1490 239814 of 300000, 14FE 240257 of 300000, 151C 239858 of 300000, 154B 239953 of 300000, 15B4 239907 of 300000, 15B7 240130 of 300000, 15BA 239943 of 300000, 15BD 240114 of 300000, 15E6 239884 of 300000, 162D 239888 of 300000, 1652 240206 of 300000, 168C 239961 of 300000, 16B1 239864 of 300000, 16D6 240062 of 300000, 16F7 239787 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  141F: 90111 / 12873 / 0
+  1490: 90111 / 12873 / 0
+  14FE: 90111 / 12873 / 0
+  151C: 72235 / 10320 / 0
+  154B: 89005 / 12715 / 0
+  15B4: 90111 / 12873 / 0
+  15B7: 90111 / 12873 / 0
+  15BA: 90111 / 12873 / 0
+  15BD: 90111 / 12873 / 0
+  15E6: 90111 / 12873 / 0
+  162D: 90111 / 12873 / 0
+  1652: 90111 / 12873 / 0
+  168C: 14233 / 2034 / 0
+  16B1: 12829 / 1833 / 0
+  16D6: 35776 / 5111 / 0
+  16F7: 9397 / 1343 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3652
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native sprite pictures only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native sprite pictures only (calls counted): routines replaced 16 of 282 in the map (instructions 363 of 5439 = 6.67 percent); entered in this run 16; calls 13493743
+VARIANT B: all readable rules + N12 to N21: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N21: routines replaced 103 of 282 in the map (instructions 1944 of 5439 = 35.74 percent); entered in this run 99; calls 85382304
+REFERENCE distinct ROM instruction addresses run: 5643
+  141F: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  1490: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  14FE: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  151C: original machine entered it 780571 times; native version (A or C) ran 780571 times  (equal)
+  154B: original machine entered it 1034511 times; native version (A or C) ran 1034511 times  (equal)
+  15B4: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  15B7: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  15BA: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  15BD: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  15E6: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  162D: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  1652: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  168C: original machine entered it 189848 times; native version (A or C) ran 189848 times  (equal)
+  16B1: original machine entered it 128107 times; native version (A or C) ran 128107 times  (equal)
+  16D6: original machine entered it 330643 times; native version (A or C) ran 330643 times  (equal)
+  16F7: original machine entered it 131973 times; native version (A or C) ran 131973 times  (equal)
+  sprite pictures in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "141F one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "154B one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "15E6 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "168C a picture bit wrong": caught (2441 of 3000 isolated cases differ)
+part 4: wrong version "154B a ghost picture wrong": caught (677 of 3000 isolated cases differ)
+part 4: wrong version "15E6 A and carry wrong": caught (2630 of 3000 isolated cases differ)
+part 4: lockstep with the ghost pictures (one cycle too slow): caught at frame 297
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N21 (before N21) 4206; with the N21 sprite pictures 3881
+PASS test_native_pics
+Fast checks run after this step (all PASS): tests/test_rules_all.sh 100000, test_native_sprites / scan / maze / sliced / helpers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).

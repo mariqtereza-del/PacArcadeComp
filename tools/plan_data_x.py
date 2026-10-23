@@ -2,11 +2,11 @@
 # Rules shared by every X step (written into each step file):
 #  - Nothing here may change the emulated machine. An extra either only READS memory, or lives outside the machine, or is an ASSIST (it changes the machine's state on purpose)
 #    and then the game stops counting for the high score, achievements, personal bests, daily challenges and the leaderboard (the S33 "assisted" rule, one shared rule from X03).
-#  - Purist mode switches the extra off, unless the step says otherwise. After every step tests/test_purist.sh and tests/test_replay.sh must still give identical hashes.
+#  - Every new extra must be switchable off (its default), and the Reset to defaults button (S34D) must put it back to its default, unless the step says otherwise. After every step tests/test_purist.sh and tests/test_replay.sh must still give identical hashes.
 #  - Small steps: one file or two, one test, one user test. Write the new code in a new file where possible; main.cpp only gets the wiring.
 
 COMMON_DONT = ["No change to the emulation: the extra only reads memory, lives outside the machine, or is an assist (the game then stops counting for records).",
-               "Purist mode switches it off unless this step says otherwise; replay hashes must stay identical (tests/test_purist.sh, tests/test_replay.sh)."]
+               "The Reset to defaults button puts it back to its default unless this step says otherwise; replay hashes must stay identical (tests/test_purist.sh, tests/test_replay.sh)."]
 COMMON_TEST = "Scripted replay and Purist hashes unchanged"
 
 # (key, name, [dep keys or step ids], objective, why, do, tests, user test, may-touch)
@@ -305,11 +305,11 @@ RAW = [
  ["Decision recorded with sources"], ["If a test program is needed I will send it with one click-by-click instruction."], "docs/notes/hdr.md (new)"),
 # ---------------- K. Integration gate (offline features)
 ("integ", "Extras integration check", ["glyphs", "led3", "resume", "slow", "frameadv", "trn_chain", "trn_fruit", "pb", "ach5", "rep3", "rep4", "ghost2", "daily4", "crt4", "art2", "wide", "autopause", "mouse2", "hdr"],
- "All the offline extras together: Purist mode removes every one of them and the 7,273-frame hash is still identical; help panel and Controls page list every new key and pad command; settings file is tidy; frame time with everything on is measured; the S34-era user tests are repeated quickly.",
+ "All the offline extras together: with every one of them at its default (after Reset to defaults) the 7,273-frame hash is still identical; help panel and Controls page list every new key and pad command; settings file is tidy; frame time with everything on is measured; the S34-era user tests are repeated quickly.",
  "Many small steps need one check that they do not interfere.",
  ["Run every test; update key help and README text; record the settings table.", "Purist proof with all extras compiled in; replay hashes; measure CPU and frame time."],
  ["tests/run_all.sh and every C++ test", "Purist 7,273 hashes equal the prototype", "Frame time with all extras on stays inside the 16.5 ms budget at 1080p"],
- ["Play ten minutes with everything on, then ten in Purist mode: Purist must feel exactly as before."], "tests, docs, wiring only"),
+ ["Play ten minutes with everything on, then press Reset to defaults and play ten more: it must feel exactly as before."], "tests, docs, wiring only"),
 ]
 
 # Online steps: they need hosting and safety decisions and come after release 1.0 (S36).

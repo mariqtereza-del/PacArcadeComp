@@ -1,0 +1,57 @@
+N16 evidence: native score, life, credit and fruit pictures 2AE0, 2B33, 2B4A, 2B6A, 2B7E, 2B80, 2B8F, 2BA1, 2BCD, 2BEA (src/game/status.h; adapters src/rules/rules.h namespace status; hooks in rules::table())
+Date: 2026-10-16
+Command: sh tests/test_native_status.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated cases per routine)
+Notes: the fruit table, the strings and the inline data are read from the player's ROM image at run time (no ROM bytes in the source). When a routine does not fit into the rest of the frame the hook lets the ROM run instruction by instruction (always exact); the line 'cases in which the native version ran the whole routine' shows how often that did not happen. 2B33 is entered by the ROM only through the CALL at 2A83; with the readable 2A5A hook the game goes straight to 2B4A, which has its own hook. Variants C and D run the routines that sit inside the others (2B4A, 2B7E, 2B80, 2B8F, 2BCD) with their parents in the ROM.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2AE0 0, 2B33 0, 2B4A 0, 2B6A 0, 2B7E 0, 2B80 0, 2B8F 0, 2BA1 0, 2BCD 0, 2BEA 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 2AE0 239804 of 300000, 2B33 240034 of 300000, 2B4A 239833 of 300000, 2B6A 240084 of 300000, 2B7E 295224 of 300000, 2B80 295449 of 300000, 2B8F 295060 of 300000, 2BA1 240190 of 300000, 2BCD 268329 of 300000, 2BEA 233656 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  2AE0: 18 / 18 / 0
+  2B33: 527 / 527 / 0
+  2B4A: 134 / 134 / 0
+  2B6A: 128 / 128 / 0
+  2B7E: 995 / 995 / 0
+  2B80: 2136 / 2136 / 0
+  2B8F: 816 / 816 / 0
+  2BA1: 9326 / 9326 / 0
+  2BCD: 127 / 127 / 0
+  2BEA: 169 / 169 / 0
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 4 variant(s)
+VARIANT A: native status pictures only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native status pictures only (calls counted): routines replaced 5 of 282 in the map (instructions 157 of 5439 = 2.89 percent); entered in this run 5; calls 537231
+VARIANT B: all readable rules + N12 to N16 helpers: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N16 helpers: routines replaced 53 of 282 in the map (instructions 1399 of 5439 = 25.72 percent); entered in this run 53; calls 62907950
+VARIANT C: only the tile blocks 2B7E, 2B80, 2B8F and the rectangle fill 2BCD (inside the others), calls counted: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS C: only the tile blocks 2B7E, 2B80, 2B8F and the rectangle fill 2BCD (inside the others), calls counted: routines replaced 4 of 282 in the map (instructions 55 of 5439 = 1.01 percent); entered in this run 4; calls 18995
+VARIANT D: only the life pictures 2B4A (inside 2B33 and 2B6A), calls counted: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS D: only the life pictures 2B4A (inside 2B33 and 2B6A), calls counted: routines replaced 1 of 282 in the map (instructions 0 of 5439 = 0.00 percent); entered in this run 1; calls 721
+REFERENCE distinct ROM instruction addresses run: 5643
+  2AE0: original machine entered it 103 times; native version (A, C or D) ran 103 times  (equal)
+  2B33: original machine entered it 527 times; native version (A, C or D) ran 527 times  (equal)
+  2B4A: original machine entered it 721 times; native version (A, C or D) ran 721 times  (equal)
+  2B6A: original machine entered it 873 times; native version (A, C or D) ran 873 times  (equal)
+  2B7E: original machine entered it 5352 times; native version (A, C or D) ran 5352 times  (equal)
+  2B80: original machine entered it 4662 times; native version (A, C or D) ran 4662 times  (equal)
+  2B8F: original machine entered it 2915 times; native version (A, C or D) ran 2915 times  (equal)
+  2BA1: original machine entered it 534733 times; native version (A, C or D) ran 534733 times  (equal)
+  2BCD: original machine entered it 714 times; native version (A, C or D) ran 714 times  (equal)
+  2BEA: original machine entered it 995 times; native version (A, C or D) ran 995 times  (equal)
+  status pictures in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "2AE0 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2B33 an undocumented flag bit wrong": caught (2389 of 3000 isolated cases differ)
+part 4: wrong version "2B4A one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2B6A one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2B7E one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2B80 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2B8F a byte wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2BA1 IX one too far": caught (2406 of 3000 isolated cases differ)
+part 4: wrong version "2BCD a stack leftover wrong": caught (2689 of 3000 isolated cases differ)
+part 4: wrong version "2BEA one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the wrong 2B8F (one cycle too slow): caught at frame 424
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed): original ROM 5638; readable rules + N12 to N15 (before N16) 4623; with the N16 pictures 4461
+PASS test_native_status

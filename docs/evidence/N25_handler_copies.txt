@@ -1,0 +1,63 @@
+N25 evidence: native rest of the interrupt handler's own code: src/game/handler.h; adapters src/rules/rules.h namespace hnd; 16 hooks in rules::table() (readable rules only) that CONTINUE at the next ROM address (the second kind of adapter; the first was the return-like-RET kind).
+Scope note: the blocks named in the step (copies of the sound registers, waveform choices and sprite data: ROM 009D to 018B) were already made native in N20 (docs/evidence/N20_sprite_staging.txt), with the same continue-at-the-next-address kind of hook, and the label writers and bonus positions in N22 and N24. What was left of the handler's own code is done here: 008D (entry: PUSH AF, the watchdog write 50C0, the interrupt latch 5000, DI, PUSH BC DE HL IX IY; continues at 009D), the eleven CALL instructions of the handler body (018C 018F 0192 019B 019E 01A1 01A4 01A7 01AA 01B9 01BC; each pushes its return address and continues at the called routine), 0195 (A = (4E00), AND A, JR Z; continues at 019B or 01AD), 01AD (state 1: clear 4EAC and 4EBC; continues at 01B9), 01BF (POP IY IX HL DE BC, the state and reset-switch tests, JP Z,0000; continues at 0000 or 01D4) and 01D4 (A = 1 into 5000, EI, POP AF, RET). With these the handler from its first to its last instruction runs without ROM instructions except in the routines it calls that are not native yet (0221 timed events N26, 03C8 mode dispatch N27, 1490/141F and the sound routines 2D0C, 2CC1 N43).
+Date: 2026-10-17
+Command: sh tests/test_native_handler.sh 1000000 30000 300000   (1,000,000 scripted frames, coverage players A, B, C of 30,000 frames and D of 6,000, 300,000 isolated random cases per entry; the isolated cases randomise all registers, the stack bytes, the game state 4E00, the reset switch input and the interrupt flip-flops)
+How it works: every block is written instruction by instruction (T-states, opcode fetches, flags incl. the undocumented ones, WZ, the bytes pushed on the stack, the interrupt flip-flops: DI clears them, EI sets them). A block ends at a listed exit (address and stack change) instead of a RET; the test stops both machines there. No ROM bytes in the source.
+Honest notes: (1) no cut test: the code is the handler itself, which starts at the beginning of a frame; when the machine is so late in the frame that a block might not fit (only in the tests) the hook hands over to the ROM instruction by instruction. (2) EI: the hook ends at the interrupted address with interrupts on; the ROM would accept an interrupt after the POP AF only at the very end of a frame, which the 400-cycle fit check excludes. (3) the first run showed 'differences' only in 008D; the cause was the test (it expected 5 pushes, the code does 6, stack change 12), the native code was right. (4) Progress meter rule as in N19; comparable only from N19 on.
+
+part 1: 300000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 008D 0, 018C 0, 018F 0, 0192 0, 0195 0, 019B 0, 019E 0, 01A1 0, 01A4 0, 01A7 0, 01AA 0, 01AD 0, 01B9 0, 01BC 0, 01BF 0, 01D4 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 008D 283981 of 300000, 018C 283955 of 300000, 018F 284043 of 300000, 0192 284006 of 300000, 0195 283974 of 300000, 019B 284062 of 300000, 019E 284006 of 300000, 01A1 283951 of 300000, 01A4 284034 of 300000, 01A7 283993 of 300000, 01AA 283892 of 300000, 01AD 284012 of 300000, 01B9 283971 of 300000, 01BC 284106 of 300000, 01BF 283956 of 300000, 01D4 283988 of 300000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  008D: 90165 / 12881 / 0
+  018C: 90165 / 12881 / 0
+  018F: 90165 / 12881 / 0
+  0192: 90165 / 12881 / 0
+  0195: 90165 / 12881 / 0
+  019B: 90111 / 12873 / 0
+  019E: 90111 / 12873 / 0
+  01A1: 90111 / 12873 / 0
+  01A4: 90111 / 12873 / 0
+  01A7: 90111 / 12873 / 0
+  01AA: 90111 / 12873 / 0
+  01AD: 90165 / 12881 / 0
+  01B9: 90165 / 12881 / 0
+  01BC: 90165 / 12881 / 0
+  01BF: 90165 / 12881 / 0
+  01D4: 90165 / 12881 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 3652
+part 3: lockstep, scripted player 1000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 1096000 frames compared
+LOCKSTEP 1096000 frames compared; 2 variant(s)
+VARIANT A: native handler blocks only (calls counted): IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native handler blocks only (calls counted): routines replaced 16 of 282 in the map (instructions 138 of 5439 = 2.54 percent); entered in this run 16; calls 17437504
+VARIANT B: all readable rules + N12 to N25: IDENTICAL on every frame (1096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N25: routines replaced 128 of 282 in the map (instructions 2275 of 5439 = 41.83 percent); entered in this run 124; calls 110431029
+REFERENCE distinct ROM instruction addresses run: 5643
+  008D: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  018C: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  018F: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  0192: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  0195: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  019B: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  019E: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  01A1: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  01A4: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  01A7: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  01AA: original machine entered it 1089809 times; native version (A or C) ran 1089809 times  (equal)
+  01AD: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  01B9: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  01BC: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  01BF: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  01D4: original machine entered it 1089865 times; native version (A or C) ran 1089865 times  (equal)
+  handler blocks in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 1000000 frames)
+part 4: wrong version "008D one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "01BF one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "008D a pushed byte wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "01D4 interrupts left off after EI": caught (2830 of 3000 isolated cases differ)
+part 4: wrong version "01AD a cleared byte wrong": caught (2963 of 3000 isolated cases differ)
+part 4: wrong version "01BF a popped register wrong": caught (2851 of 3000 isolated cases differ)
+part 4: lockstep with the handler entry 008D (one cycle too slow): caught at frame 295
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N25 (before N25) 3676; with the N25 handler blocks 3627
+PASS test_native_handler
+Fast checks run after this step (all PASS): tests/test_rules_all.sh 100000, test_native_labels / coins / clocks / pics / sprites / scan / maze / helpers (20000 5000 10000), test_rules_file.sh 20000, test_purist.sh, test_replay.sh. The full tests/run_all.sh was not run (only at milestones).

@@ -1,8 +1,8 @@
 # PacArcadeComp
 
-**An arcade-accurate Windows player for the original Pac-Man, with modern extras you can switch off.**
+**An arcade-accurate Windows player for a classic 1980 maze game, with modern extras you can switch off.**
 
-PacArcadeComp contains a software copy of the arcade machine's computer (a Z80 processor, the memory map, the video and sound chips). It runs the game's **original program** instead of a re-creation, so the game behaves like the arcade board: same ghost behaviour, same speeds, same bugs (including the famous level 256). Around that machine sits a modern front end: menus, save states, rewind, game-pad support, screen effects and more.
+PacArcadeComp contains a software copy of the arcade machine's board (the memory map, the video and sound chips) and the game itself written as native C++ that reproduces the **original program** exactly (from your own pacman.zip it reads only the data tables: maze, text, levels, graphics and sound data). It does not contain a Z80 processor: every frame of the game, including its exact timing, was proved identical to the real program running on a Z80 (millions of frames, see docs/evidence/N48 and N49a), so the game behaves like the arcade board: same ghost behaviour, same speeds, same bugs (including the famous level 256). Around that machine sits a modern front end: menus, save states, rewind, game-pad support, screen effects and more.
 
 > **This repository does not contain the game.** No ROM, no artwork, no sound and nothing made from them is included. You supply your own copy of the ROM set (a file named `pacman.zip`). The name "PacArcadeComp" is a working title. The project is not affiliated with, authorised by or endorsed by the owners of the original game or its trademarks.
 
@@ -14,7 +14,7 @@ PacArcadeComp contains a software copy of the arcade machine's computer (a Z80 p
 1. [Download and run (Windows)](#download-and-run-windows)
 2. [Features](#features)
 3. [Controls](#controls)
-4. [Purist mode](#purist-mode)
+4. [Reset to defaults and achievements](#reset-to-defaults-and-achievements)
 5. [Troubleshooting and FAQ](#troubleshooting-and-faq)
 6. [For people who want to look inside or change the game](#for-people-who-want-to-look-inside-or-change-the-game)
 7. [How the project was made](#how-the-project-was-made)
@@ -26,7 +26,7 @@ PacArcadeComp contains a software copy of the arcade machine's computer (a Z80 p
 
 You need: a Windows 10 or 11 PC (64-bit) and your own `pacman.zip` ROM set (the file you may legally use; the program checks that it is the right one and never changes, copies or uploads it).
 
-1. Open the **[Releases](../../releases)** page of this repository and download `PacArcadeComp-1.1.0-win64.zip` (under "Assets").
+1. Open the **[Releases](../../releases)** page of this repository and download `PacArcadeComp-2.0.0-win64.zip` (under "Assets").
 2. Right-click the downloaded zip, choose **Extract All...** and extract it somewhere (your Desktop is fine). Do **not** run the program from inside the zip.
 3. Copy your `pacman.zip` into the extracted `PacArcadeComp` folder, **next to `PacArcadeComp.exe`**.
 4. Double-click `PacArcadeComp.exe`.
@@ -39,7 +39,7 @@ The release folder also contains `REPORT-A-PROBLEM.bat`: start the game with it 
 ## Features
 
 **Accuracy**
-- Runs the original Z80 program: every rule, speed table and quirk comes from the real code, not from a guess.
+- Plays exactly like the original program: every rule, speed table and quirk was proved identical, frame by frame, against the real code running on a Z80 (that Z80 emulator is kept only in tests/oracle for the tests, not in the game).
 - Frame-exact timing (60.6 Hz like the arcade board), the original sound chip (three-voice wave generator) and the original video layout.
 - Checked by an automated test suite against reference values and a second, independent prototype; many tests replay recorded play and compare the whole machine state frame by frame (`tests/`).
 - High levels, including level 256, are tested against the arcade program ([docs/evidence/S30A_level256_full.txt](docs/evidence/S30A_level256_full.txt)).
@@ -62,7 +62,7 @@ The release folder also contains `REPORT-A-PROBLEM.bat`: start the game with it 
 
 **Modding**
 - Esc > GAME OPTIONS > **RULES**: ORIGINAL (the arcade program's own routines, the standard) or READABLE (the same rules written as C++, proved frame-for-frame identical).
-- A text file `rules.cfg` changes the game's numbers without programming: speeds, scatter/chase and blue-ghost times, Cruise Elroy and ghost-house limits, points, the extra-life score. Three ready-made example mods in [mods/](mods/). Modded games are marked MODDED and never count for records; Purist mode ignores the file. See [MODDING.md](MODDING.md).
+- A text file `rules.cfg` changes the game's numbers without programming: speeds, scatter/chase and blue-ghost times, Cruise Elroy and ghost-house limits, points, the extra-life score. Three ready-made example mods in [mods/](mods/). Modded games are marked MODDED and never count for records; the Reset to defaults button on the GAME OPTIONS page puts RULES back to ORIGINAL. See [MODDING.md](MODDING.md).
 
 **Statistics and records**
 - Per-run statistics, personal bests for each level, achievements (taken from the public RetroAchievements list for this game, none invented by us), recorder for replays used by the tests.
@@ -90,9 +90,11 @@ Everything can be changed in Esc > CONTROLS. The complete list of settings and w
 
 Settings, controls, records and your high score are stored in `%APPDATA%\PacmanPort` (Windows key + R, type `%APPDATA%\PacmanPort`, Enter). Delete that folder to start fresh.
 
-## Purist mode
+## Reset to defaults and achievements
 
-Esc > **PURIST MODE** switches every extra off (overlay, scanlines, fill scaling, smooth pacing, one-button start, save states, rewind and the saved high score), leaving only the arcade board. The test suite proves that in Purist mode the machine state is identical to the plain emulator, frame for frame ([docs/evidence/S34_purist.txt](docs/evidence/S34_purist.txt)).
+There is no Purist item in the menu. Instead two buttons called **RESET TO DEFAULTS** exist (press Enter twice: the first press only asks). On the **DISPLAY** page it puts the look back to the standard (overlay, scanlines, scaling, window frame, key panel, CRT effects, surround) at once, without touching the game. On the **GAME OPTIONS** page it puts lives, bonus life, difficulty, ghost names and RULES back to the standard and restarts the game so they take effect. Neither touches your key and pad bindings, the saved high score, records, achievements or save slots. Lives, bonus life, difficulty and ghost names are put into the running game at the attract screen; otherwise they apply from the next game. **Achievements** can unlock only while every game setting is at its standard value; display settings and save states have no effect on them. The test suite proves that the standard state is identical to the plain emulator, frame for frame ([docs/evidence/S34_purist.txt](docs/evidence/S34_purist.txt), docs/evidence/S34D_reset_to_defaults.txt, docs/evidence/S34E_two_resets.txt).
+
+**Cheats.** The first menu page has its own **CHEATS** page (it is not part of GAME OPTIONS). It holds **INVINCIBLE**: ghosts that are not blue cannot catch Pac-Man; after a power pellet the blue ghosts are eaten as usual. While a game is played with it on, that game does not count for records, statistics or achievements (nothing unlocks, even if you switch it off again later in the same game; a new game counts again). It is never saved: every start of the program begins with it off, and RESET TO DEFAULTS does not switch it on or off.
 
 ## Troubleshooting and FAQ
 
@@ -112,13 +114,13 @@ Esc > **PURIST MODE** switches every extra off (overlay, scanlines, fill scaling
 
 **The game crashed or looks wrong.** Start with `REPORT-A-PROBLEM.bat`, reproduce it, close the game with Esc > QUIT GAME, and open an [issue](../../issues) with the `problem_report.txt` and the questions in [docs/BUG_REPORT_TEMPLATE.md](docs/BUG_REPORT_TEMPLATE.md).
 
-**Is it really exactly the arcade game?** The game logic is the arcade program itself running on a software model of the machine, and every part of the model was tested against references ([docs/evidence/](docs/evidence/)). The honest limits are listed in [PROJECT_STATUS.md](PROJECT_STATUS.md) ("Known limitations").
+**Is it really exactly the arcade game?** The game logic is native C++ that was proved identical to the original program (running on a Z80 emulator in the tests) frame by frame, including the exact cycle count of every frame, over millions of frames ([docs/evidence/](docs/evidence/), summary in [ARCHITECTURE.md](ARCHITECTURE.md)). The honest limits are listed in [PROJECT_STATUS.md](PROJECT_STATUS.md) ("Known limitations").
 
 ## For people who want to look inside or change the game
 
 - **[BUILDING.md](BUILDING.md)**: build the program yourself (Windows and Linux) and run the tests.
 - **[MODDING.md](MODDING.md)**: change the game's numbers with a text file (`rules.cfg`, three example mods in [mods/](mods/)), change the readable rules in C++ (with a worked example), change the menus and the look, and the honest list of what is still original arcade code.
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: a map of every folder and file and how the emulator, video, audio and app fit together.
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: a map of every folder and file, how the native game, video, audio and app fit together, how it was proved, and what the ROM is still needed for.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: how to report a problem or send a change.
 - **[CHANGELOG.md](CHANGELOG.md)**: what changed in each version.
 - [MACHINE_NOTES.md](MACHINE_NOTES.md): everything we learned about how the arcade machine works (memory map, video, sound, timing, inputs, routines).
@@ -131,9 +133,10 @@ The project was built step by step by a non-programmer working with an AI assist
 1. **Study** (S01 to S13): identify the ROM, study how the machine works from public sources, disassemble and label the game program, map its memory, and cross-check the numbers against the published *Pac-Man Dossier* (everything matched). Written up in [MACHINE_NOTES.md](MACHINE_NOTES.md).
 2. **Emulator** (S14 to S24): bring in a Z80 core, then build the board, video and input, proving each against a Python reference prototype until the first playable build.
 3. **Sound, replay and behaviour tests** (S25 to S30A): sound chip, recorded replays that prove the machine is deterministic, timing/speed/ghost/scoring behaviour tests, level 256.
-4. **Front end** (S31 to S34, X-steps): display options, controls and pads, save states, rewind, Purist mode, mouse, lightbar, statistics, achievements, CRT effects, cabinet look, ultrawide.
+4. **Front end** (S31 to S34, X-steps): display options, controls and pads, save states, rewind, the two Reset to defaults buttons, mouse, lightbar, statistics, achievements, CRT effects, cabinet look, ultrawide.
 5. **Release** (S35 to S37): package the Windows exe, release testing, this repository.
-6. **Readable rewrite, optional** (T01a to T01f): the game's rules as readable C++, proved identical to the ROM routines (not yet used by the game).
+6. **Readable rules** (T01a to T02k): the game's rules as readable C++, proved identical to the ROM routines, and switchable in the game (RULES READABLE, modding).
+7. **Native game** (N01 to N53): the original program rewritten as C++ routine by routine, each step proved identical frame by frame against the original on a Z80 reference; the Z80 emulator was then removed from the program and kept only as a test tool (`tests/oracle/`), and the game state was given names (`src/game/state.h`, `src/game/output.h`). The ROM's instructions are no longer used; only its data tables are read. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Legal
 

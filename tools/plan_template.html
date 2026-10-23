@@ -90,7 +90,7 @@ footer{color:var(--muted);font-size:.88rem}
 <header class="top">
   <span class="eyebrow" id="ver"></span>
   <h1>Pac-Man PC Port Plan</h1>
-  <p>The authoritative roadmap from your arcade ROM to a finished Windows .exe. Rewritten in small, separately tested steps. Statuses here are set by Claude from test evidence, not by ticking.</p>
+  <p>The authoritative record of the project, from your arcade ROM to a finished native Windows game: what each step was, what was proved, what was removed on the way. Statuses are set by Claude from test evidence, not by ticking.</p>
 </header>
 <div class="bar"><div class="bar-in">
   <div class="track" aria-hidden="true"><div class="pellets" id="pellets"></div><div class="pac" id="pac"></div></div>
@@ -127,26 +127,28 @@ document.getElementById("ver").textContent = "Plan version " + D.version;
 
 /* counts */
 const cnt = {}; D.steps.forEach(s => cnt[s.status] = (cnt[s.status]||0)+1);
-const verified = cnt["VERIFIED"]||0, total = D.steps.filter(s => s.lane !== "OPTIONAL").length;
+const verified = cnt["VERIFIED"]||0, total = D.steps.length;
 const okDep = d => { const x = D.steps.find(y => y.id === d) || {}; return x.status === "VERIFIED" || x.status === "UNVERIFIED"; };
-const nextStep = D.steps.find(s => s.status === "NOT STARTED" && s.id[0] === "S" && s.deps.every(okDep));
+const nextStep = D.steps.find(s => s.status === "NOT STARTED" && s.deps.every(okDep));
 
-/* 1. what changed */
+/* 1. what the project is, and how it went */
 let p = $("section","panel");
-p.innerHTML = `<h2>What changed in version 2</h2>
-<ul><li>The old plan had <b>13 phases</b>. This one has <b>${D.steps.filter(s=>s.id[0]==="S").length} steps</b> plus one optional track. Each step has one objective, one test and one checkpoint, so it fits inside a single working session.</li>
-<li>The prompt for every step is now <b>one short line</b>. The details live in the project file <code>docs/steps/Sxx.md</code>, which Claude reads first.</li>
-<li>Statuses are honest: <b>VERIFIED</b> (tested, with evidence), <b>PARTIAL</b>, <b>UNVERIFIED</b> (written, not yet cross-checked), <b>BROKEN</b>, <b>NOT STARTED</b>.</li>
-<li>An earlier session left a working <b>Python prototype</b> that boots your ROM and draws the attract mode on a real Z80. It is now locked in as the <b>reference</b> that every C++ step is compared against. The C++ port itself so far contains only the Phase 2 test program.</li></ul>`;
+p.innerHTML = `<h2>What this project is</h2><ul>${D.summary.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
 main.append(p);
+
+p = $("section","panel"); p.append($("h2",null,"How the project went"),
+ $("p","note","In order, from the first session to the last step. Step ids are explained in the lanes below; removed steps are in \"Scrapped steps\"."));
+const hw = $("div","table-scroll"); let ht = "<table><thead><tr><th>Phase</th><th>When</th><th>Steps</th><th>What happened</th><th>Result</th></tr></thead><tbody>";
+D.history.forEach(([a,b,c,d,e]) => ht += `<tr><td><b>${esc(a)}</b></td><td>${esc(b)}</td><td>${esc(c)}</td><td>${esc(d)}</td><td>${esc(e)}</td></tr>`);
+hw.innerHTML = ht + "</tbody></table>"; p.append(hw); main.append(p);
 
 /* 2. stats */
 p = $("section","panel");
 const g = $("div","grid2");
-[["VERIFIED","Verified with evidence"],["UNVERIFIED","Captured, awaiting cross-check"],["NOT STARTED","Not started"],["BROKEN","Known broken"]].forEach(([k,l])=>{
-  g.append($("div","stat",`<b>${cnt[k]||0}</b><span>${l}</span>`)); });
+[[cnt["VERIFIED"]||0,"Steps verified with evidence"],[(cnt["PARTIAL"]||0)+(cnt["UNVERIFIED"]||0),"Partly done"],[cnt["NOT STARTED"]||0,"Not started"],[D.scrapped.length,"Scrapped or replaced (listed below)"]].forEach(([n,l])=>{
+  g.append($("div","stat",`<b>${n}</b><span>${l}</span>`)); });
 p.append($("h2",null,"Where things stand"), g,
- $("p","note",`Done and re-checkable: ROM identification, the Windows toolchain, and the Python prototype baseline. Next up: <b>${nextStep ? nextStep.id + " " + esc(nextStep.name) : "all core steps verified"}</b>.`));
+ $("p","note",`Everything from the first ROM check to the documentation of the native game is done and verified. Left: <b>${nextStep ? nextStep.id + " " + esc(nextStep.name) : "nothing: the project is finished"}</b>.`));
 main.append(p);
 
 /* 3. rules */
@@ -197,6 +199,17 @@ D.lanes.forEach(([lane, desc]) => {
   chips.append(a);
 });
 
+/* 5b. scrapped */
+p = $("section","panel"); p.id = "scrapped"; p.append($("h2",null,"Scrapped steps"),
+ $("p","note","Steps that were planned and then removed by you or replaced by something else. They are not part of the project and are not counted above. Their ids stay unused on purpose, so every other step keeps its number."));
+const sw = $("div","table-scroll"); let stb = "<table><thead><tr><th>Step</th><th>Name</th><th>What happened</th><th>When</th><th>Why / what became of it</th></tr></thead><tbody>";
+D.scrapped.forEach(([a,b,c,d,e]) => stb += `<tr><td>${esc(a)}</td><td>${esc(b)}</td><td>${esc(c)}</td><td>${esc(d)}</td><td>${esc(e)}</td></tr>`);
+sw.innerHTML = stb + "</tbody></table>"; p.append(sw);
+p.append($("h3",null,"Other changes of plan (nothing removed)"));
+const cl = $("ul"); D.changes.forEach(([a,b]) => cl.append($("li",null,`<b>${esc(a)}</b>: ${esc(b)}`))); p.append(cl);
+main.append(p);
+const sa = $("a",null,"SCRAPPED"); sa.href = "#scrapped"; chips.append(sa);
+
 /* 6. old to new */
 p = $("section","panel"); p.append($("h2",null,"Old plan to new plan"));
 const tw = $("div","table-scroll"); let t = "<table><thead><tr><th>Old phase</th><th>New steps</th></tr></thead><tbody>";
@@ -204,13 +217,13 @@ D.old.forEach(([a,b]) => t += `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`); 
 
 /* 7. behaviours */
 p = $("section","panel"); p.append($("h2",null,"Arcade behaviours checklist"),
- $("p","note","For steps S28 to S30. Values are from The Pac-Man Dossier as I know it; step S12 re-checks each against the live pages before it becomes a test."),
+ $("p","note","The behaviours of the arcade game that the port had to keep. Step S12 checked them against the Pac-Man Dossier and the ROM; steps S28 to S30A turned them into tests, and the native game (Track D) is proved to keep every one frame by frame."),
  checkList("q", D.quirks.map(esc))); main.append(p);
 
 /* 8. sources */
 p = $("section","panel"); p.append($("h2",null,"Sources"));
 const su = $("ul"); D.sources.forEach(([n,u,d]) => su.append($("li",null,`<a href="${u}" target="_blank" rel="noopener">${esc(n)}</a>. ${esc(d)}`))); p.append(su);
-p.append($("p","note","The ROM is never bundled. The program loads your own file and checks it. The game's code, art and sound remain their rights holders' property; not bundling the ROM is the common approach, but I am not a lawyer, so check before publishing anything, and use a different project name than the original game's.")); main.append(p);
+p.append($("p","note","The ROM is never bundled. The program loads your own file and checks it. The game's code, art and sound remain their rights holders' property. The project does not bundle the ROM and uses its own name; Claude is not a lawyer, so check before publishing anything.")); main.append(p);
 
 /* 9. bug report */
 p = $("section","panel"); p.append($("h2",null,"Bug report template"), prompt("Step or build: \nWhat I did: \nWhat happened: \nWhat I expected: \nHow often: always / sometimes / once\nWindows version (Windows key + R, type winver): "));

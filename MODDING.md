@@ -135,12 +135,12 @@ How we know this works: `tests/test_mods.sh` makes a **copy** of `src/logic/` in
 - **After you change `src/logic/`** these tests are *meant* to fail where your change matters (`tests/test_logic_*.sh` and `tests/test_rules_*.sh` compare with the arcade routine). That is how you see exactly what you changed. Keep a copy of the unchanged `src/logic/` folder to get back to the proved state.
 
 ### 2.5 The honest list of what is still original arcade code
-Even with RULES READABLE these parts of the game are still the arcade program running on the emulator:
+Even with RULES READABLE these parts of the game are still the translation of the arcade program (native C++ in `src/game/`, run from the generated instruction list `attract_prog.h`; there is no processor emulator in the program, but this part is not written as readable rules):
 - The **game flow**: the attract mode and demo, the intro screens, the intermissions (cutscenes), the death sequence, the level-end flashing and the switch between states, the credit and start handling.
 - **Drawing**: the maze, the score and high score text, the little Pac-Man life icons, the fruit pictures of the level (ROM 2BEA) and the sprite setup. The readable rules write only the game's data, not the pictures.
 - **Sound**: all sound sequencing.
 - A few small steps inside the replaced routines: Pac-Man eating the bonus fruit (ROM 19A1-19C4) and the redrawing after a score change.
-- Rare cases: when one of the 24 replaced routines would run over the end of a video frame, the adapter lets the arcade routine run for that one call (less than one call in a hundred), which gives the same result.
+- Rare cases: when one of the 24 replaced routines would run over the end of a video frame, the adapter lets the native translation of the arcade routine run for that one call (less than one call in a hundred), which gives the same result.
 
 ---
 

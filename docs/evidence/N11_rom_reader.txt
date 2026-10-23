@@ -1,0 +1,13 @@
+N11 evidence: ROM data reader (src/data/rom_data.h, rom_data.cpp)
+Date: 2026-10-16
+Command: sh tests/test_rom_reader.sh   (uses the N10 report build/n10/data_map.txt from the full N10 run)
+
+part 1: 23 tables, 2973 bytes compared with the ROM file, 0 different
+part 2: 270 data-read runs of the coverage runs checked (540 jump-table / inline runs belong to the routines, not to this reader); not inside a reader table: 0; wrong byte: 0
+part 3: special reads (checksum end 3000, vector 3FFA-3FFD, random source over all 16384 addresses): ok
+part 3b: a wrong ROM image (shifted by one byte): caught, 2523 of 2973 bytes differ
+PASS test_rom_reader (0)
+
+Export scan (sh tools/export_github.sh): Scan clean, 625 files scanned, src/data included; the reader holds addresses and sizes only.
+Not covered by this reader (by design): the jump-table and inline blocks (540 runs in 119 blocks): they are part of the routines (RST 20 / 28 / 42 data) and go away with the routines that are replaced natively.
+Not run: the full sh tests/run_all.sh (fast-check policy); the game itself is unchanged and the reader is not linked into the program yet.

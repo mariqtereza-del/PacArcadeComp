@@ -1,0 +1,64 @@
+N44 evidence (milestone): native tune driver, the second sound group: ROM 2CC1-2D0B (the three tune voices: jingle, death sound, intermission tunes), 2D44-2DED (the tune voice routine: note, length, commands) and 2F55-2FB9 (the tune commands: jump, set wave, set frequency step, set volume, set effect, end of tune). With N43 (the effects) the whole sound driver 2CC1-2FB9 is native; the sound chip registers 5040-505F are written by the interrupt handler (N25).
+Scope notes (honest): (1) The wave and tune tables (3B30-3FFF) stay in the player's ROM and are read at run time; no ROM bytes are in the source. (2) The sound registers are compared in every frame (all memory incl. the register block 4E8C-4E9B and the voice records, every I/O write to the sound chip, the cycle count and the registers). (3) The command 2F55 (jump) is never used by the coverage runs: random cases only. (4) The commands 5 to 14 of the table 2D85 point into the ROM at 000C (unused by the tunes) and stay ROM.
+Date: 2026-10-19
+Command: sh tests/test_native_tune.sh 3000000 30000 100000   (milestone size)
+New instruction kinds in the runner: LD H,(IX+d) / LD C,(IX+d) / LD (IX+d),L|H|C. Generator change: RST 10h return addresses (the instruction after) are entry points; 2D6C (the return address the tune code pushes for its commands) is an entry point.
+Milestone checks: the FULL regression sh tests/run_all.sh was run after the step was built: ALL TESTS PASSED (106 PASS lines, no FAIL). The test package PacArcadeCompTest-N44-win64.zip passed the package scan (no ROM bytes). Waiting for the user's listen / play test.
+
+part 1: 100000 random whole calls of each routine (all registers incl. IX and IY, R, WZ and memory random): differences 2FAD 0, 2F9B 0, 2F89 0, 2F77 0, 2F65 0, 2F55 0, 2DD7 0, 2DD4 0, 2DC6 0, 2DA5 0, 2D6C 0, 2D64 0, 2D44 0, 2D01 0, 2CE8 0, 2CCF 0, 2CC1 0
+  cases in which the native version ran the whole routine (no fall back to the ROM near the end of the frame): 2FAD 80029 of 100000, 2F9B 80026 of 100000, 2F89 79970 of 100000, 2F77 80011 of 100000, 2F65 80011 of 100000, 2F55 79998 of 100000, 2DD7 80011 of 100000, 2DD4 79998 of 100000, 2DC6 79976 of 100000, 2DA5 79998 of 100000, 2D6C 80005 of 100000, 2D64 80011 of 100000, 2D44 79947 of 100000, 2D01 80058 of 100000, 2CE8 80007 of 100000, 2CCF 80008 of 100000, 2CC1 79968 of 100000
+part 2: real entry states from the coverage players A, B, C, D (30000 frames each, D a fifth): entries / compared / differences
+  2FAD: 24 / 4 / 0
+  2F9B: 72 / 11 / 0
+  2F89: 72 / 11 / 0
+  2F77: 72 / 11 / 0
+  2F65: 72 / 11 / 0
+  2F55: 24 / 4 / 0
+  2DD7: 20258 / 2894 / 0
+  2DD4: 4205 / 601 / 0
+  2DC6: 4300 / 615 / 0
+  2DA5: 4300 / 615 / 0
+  2D6C: 4588 / 656 / 0
+  2D64: 48 / 7 / 0
+  2D44: 270495 / 38643 / 0
+  2D01: 90165 / 12881 / 0
+  2CE8: 90165 / 12881 / 0
+  2CCF: 90165 / 12881 / 0
+  2CC1: 90165 / 12881 / 0
+part 3: native cuts in the lockstep runs (a routine run up to the end of the frame, the ROM does the rest, all variants together): 9590
+part 3: lockstep, scripted player 3000000 frames, then the coverage players A, B, C (30000 frames each) and D (a fifth): 3096000 frames compared
+LOCKSTEP 3096000 frames compared; 2 variant(s)
+VARIANT A: native tune-driver code only (calls counted): IDENTICAL on every frame (3096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS A: native tune-driver code only (calls counted): routines replaced 17 of 282 in the map (instructions 532 of 5439 = 9.78 percent); entered in this run 17; calls 21878478
+VARIANT B: all readable rules + N12 to N44: IDENTICAL on every frame (3096000 frames: all memory, I/O writes, cycle count of every frame)
+  registers at the end of every frame: identical too
+PROGRESS B: all readable rules + N12 to N44: routines replaced 483 of 282 in the map (instructions 4190 of 5439 = 77.04 percent); entered in this run 464; calls 514745153
+REFERENCE distinct ROM instruction addresses run: 5643
+  2FAD: original machine entered it 524 times; native version (A or C) ran 524 times  (equal)
+  2F9B: original machine entered it 1072 times; native version (A or C) ran 1072 times  (equal)
+  2F89: original machine entered it 1072 times; native version (A or C) ran 1072 times  (equal)
+  2F77: original machine entered it 1072 times; native version (A or C) ran 1072 times  (equal)
+  2F65: original machine entered it 1072 times; native version (A or C) ran 1072 times  (equal)
+  2F55: original machine entered it 24 times; native version (A or C) ran 24 times  (equal)
+  2DD7: original machine entered it 146758 times; native version (A or C) ran 146758 times  (equal)
+  2DD4: original machine entered it 23205 times; native version (A or C) ran 23205 times  (equal)
+  2DC6: original machine entered it 23300 times; native version (A or C) ran 23300 times  (equal)
+  2DA5: original machine entered it 23300 times; native version (A or C) ran 23300 times  (equal)
+  2D6C: original machine entered it 27588 times; native version (A or C) ran 27588 times  (equal)
+  2D64: original machine entered it 548 times; native version (A or C) ran 548 times  (equal)
+  2D44: original machine entered it 9269547 times; native version (A or C) ran 9269547 times  (equal)
+  2D01: original machine entered it 3089849 times; native version (A or C) ran 3089849 times  (equal)
+  2CE8: original machine entered it 3089849 times; native version (A or C) ran 3089849 times  (equal)
+  2CCF: original machine entered it 3089849 times; native version (A or C) ran 3089849 times  (equal)
+  2CC1: original machine entered it 3089849 times; native version (A or C) ran 3089849 times  (equal)
+  tune-driver code in lockstep: identical on every frame, all variants; the native versions ran in every routine (scripted part 3000000 frames)
+part 4: wrong version "2CC1 one cycle too slow": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2D44 an undocumented flag bit wrong": caught (2409 of 3000 isolated cases differ)
+part 4: wrong version "2CCF the sound register byte 4E91 wrong": caught (2402 of 3000 isolated cases differ)
+part 4: wrong version "2F55 the return address wrong": caught (3000 of 3000 isolated cases differ)
+part 4: wrong version "2D64 register BC wrong": caught (3000 of 3000 isolated cases differ)
+part 4: lockstep with the tune driver 2CC1 (one cycle too slow): caught at frame 295
+part 5: progress meter (coverage players A, B, C of 20000 frames and D of a fifth; distinct ROM instruction addresses executed; an address handled by a native hook does not count unless the hook ran the ROM instruction): original ROM 5638; readable rules + N12 to N44 (before N44) 2289; with the N44 tune-driver code 2101
+PASS test_native_tune
+PASS test_native_tune.sh (report in build/n44/report.txt)

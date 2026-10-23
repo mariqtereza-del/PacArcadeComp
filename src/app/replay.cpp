@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
         if (!std::strcmp(argv[i], "--rules")) readable = !std::strcmp(argv[i + 1], "readable");
     }
     static Machine m(prog);
-    if (readable) m.rules = rules::table();
+    m.rules = rules::table_for(readable);
     Recorder rec(rp.dip);
     FILE *log = std::fopen(argv[3], "wb");
     if (!log) {

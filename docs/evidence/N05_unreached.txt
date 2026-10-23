@@ -1,0 +1,45 @@
+N05: Coverage report: what is never executed  (2026-10-16)
+Tools: tests/rom_unreached.py (builds docs/notes/rom_unreached.md), tests/rom_unreached_reasons.txt (the reason and the decision for each group), tests/test_rom_unreached.sh, tests/test_coverage_d.sh. Situations added in this step:
+- player B (run_b): a cocktail-table cabinet (IN1 bit 7 low; player 2 steers with the second joystick), many coins and the second coin slot (IN0 bit 6), 14 credits (a tens digit shows) and the 99-credit cap;
+- player C (run_c): the dot counter is put at 69, 169, 190, 215 and 235 in turn in every round (second fruit, the steps of the siren speed, the fruit of levels 21 and up), and the rack-advance switch (IN0 bit 4) is pressed during play;
+- player D (run_d, new): the service switch (IN1 bit 4): held at power-on, released for 45 frames with both START buttons held and pressed again (this is how the ROM enters its input test, 3298 to 32EA), every input bit pressed in turn; pressed in the middle of a game (the machine restarts). The ROM reads the switch only in these places.
+Result:
+Result: 5314 of 5439 instructions are executed (97.7 percent). 125 are not; every one of them is listed below with a reason and a decision.
+
+Decision words: PORT = the native game contains it; it is proved either by a play situation or, when no situation reaches it, by the isolated random-state test of its routine (as in T02b to T02h). LEAVE OUT = the native game does not contain it (dead code). N47 = decided in step N47 (power-on self test). PORT AS DATA = it is data, not code.
+
+## Summary by decision
+- LEAVE OUT: 24 instructions
+- N47: 62 instructions
+- PORT: 34 instructions
+- PORT AS DATA: 5 instructions
+
+## The groups
+| First | Last | Instructions | Kind | Reason | Decision |
+|---|---|---|---|---|---|
+| 0038 | 003F | 4 | dead code | RST 38h vector: kicks the watchdog and loops; nothing in the program calls RST 38h and the board raises no such interrupt (the interrupt vector is a ROM table entry) | LEAVE OUT |
+| 005A | 005A | 1 | loop end | end of the slot search of the task queue (RST 28h/30h): reached only when all 16 slots are in use, which the game never does | PORT (one instruction) |
+| 1B31 | 1B35 | 3 | needs a rare game state | branch of the ghost-house dot counting (1B08 to 1B35): when the flag at 4DA1 is zero the counter 4E0F is incremented; no run produced that combination of flags | PORT; proved with random states in the step of the ghost-house routine |
+
+Coverage of the five sets together (S27 replay + T01a player, A, B, C, D):
+Coverage by routine (tests/rom_map.py --report). Instruction counts; a routine is "reached" when at least one of its instructions ran.
+set A: 4799 of 5439 instructions, 246 of 282 routines reached
+set B: 4894 of 5439 instructions, 236 of 282 routines reached
+set C: 4887 of 5439 instructions, 255 of 282 routines reached
+set D: 4296 of 5439 instructions, 213 of 282 routines reached
+together: 5314 of 5439 instructions (97.7 percent)
+
+Runs of the players (two complete runs each, identical checksums):
+run 1: 300000 frames, 42 games started, 210 lives lost, 41 game overs, 155 rounds cleared, highest level 16, 0 cut short
+  191 ghosts eaten in the scripted meetings, 82 fruits eaten, 52 extra lives, 85 player switches, highest credit counter 99 (BCD)
+  checksum run 1 6e88eec9f865e2b9009885ca63948af517515c78
+  checksum run 2 6e88eec9f865e2b9009885ca63948af517515c78
+  deterministic: YES (identical frames and coverage); distinct instruction addresses run: 5342
+run 1: 300000 frames, 29 games started, 170 lives lost, 28 game overs, 226 rounds cleared, highest level 256, 0 cut short
+  checksum run 1 8d5c9f745d2761cccc3bef884a8d318152c2838e
+  checksum run 2 8d5c9f745d2761cccc3bef884a8d318152c2838e
+  deterministic: YES (identical frames and coverage); distinct instruction addresses run: 5333
+run 1: 54000 frames, 6 games started, 0 lives lost, 0 game overs, 0 rounds cleared, highest level 0, 0 cut short
+  checksum run 1 c264ae1ffc41d290550f717e197fb7707fc1cbc2
+  checksum run 2 c264ae1ffc41d290550f717e197fb7707fc1cbc2
+  deterministic: YES (identical frames and coverage); distinct instruction addresses run: 4686

@@ -1,0 +1,11 @@
+N49b evidence (2026-10-22): the window program without the Z80 core.
+
+Z80 core in the window program: 0 lines after the preprocessor, 0 symbols, 0 names in the binary (control: the Z80 test program has 23 symbols)
+PASS test_no_z80_symbols (the window program has no Z80 core)
+
+Build: tools/build_app.sh, build_windows.sh, package.sh and package_test.sh compile src/app with -DPAC_NO_Z80 (the machine is src/board/cpuregs.h plus the native routine table; src/core is not compiled).
+RULES: ORIGINAL and Purist run the same native table with the standard tuning (rules::standard_only); READABLE/MODDED the same table with the user's rules file (rules::user_tuning).
+Replay and Purist hashes against the Python prototype with the native-only program: tests/test_replay.sh, test_purist.sh, test_rules_file.sh (7273 frame hashes identical for original, readable and the standard file; the slow-ghost mod differs from frame 561 and is MODDED; Purist ignores a mod file): PASS.
+Found and fixed on the way: (1) src/app/dipnow.h ran ROM 26D0 with the Z80 step on a copy: now runs through the table; (2) Purist / original rules must not see a rules file: rules::tuning() is the standard tuning unless the program sets readable; (3) tests/test_padbuttons.sh looked for an old Purist message text (not in run_all before; now added).
+Known, not caused by this step: tests/test_mouse.sh 'row 10 first and last pixel' fails the same way with the Z80 build (old test, not in run_all).
+Full regression (sh tests/run_all.sh): ALL TESTS PASSED.
