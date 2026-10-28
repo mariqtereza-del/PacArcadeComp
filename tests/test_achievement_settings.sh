@@ -32,7 +32,7 @@ n() { grep -c "Achievement unlocked" $T/$1/out.txt; }
 run s1 $T/script.replay
 run s2 $T/script5.replay
 run s3 $T/script.replay --rules readable
-run s4 $T/script.replay --overlay --scanlines --surround ambient --curve strong --glow strong --crt-mask strong
+run s4 $T/script.replay --fps 144 --scanlines --surround ambient --curve strong --glow strong --crt-mask strong
 run s5 $T/late3.replay --cmd-at 1000:lives,1010:lives,1020:lives,1030:lives
 run s6 $T/late3.replay --cmd-at 1000:lives
 N1=$(n s1)

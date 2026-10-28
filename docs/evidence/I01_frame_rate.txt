@@ -1,0 +1,58 @@
+I01: frame rate 30, 60, 75, 100, 120, 144, unlocked (2026-10-28)
+Command: sh tests/test_fps_hdr.sh   (unit test of the sprites between ticks, the replay hash logs at five frame rate settings, the DISPLAY menu in a window)
+
+  800 random sprite situations (both rule sets): alpha 1 differs in 0, alpha 0 differs in 0, whole-pixel middle differs in 0
+34 checks, 0 failed
+RESULT: PASS
+
+  replay input file: build/x211/script.replay (the S27 replay, 7,273 frames)
+  ok: hash log with --fps 60 (e082692bbb7869e36353dbdc014ce84c09fcec67)
+  ok: hash log with --fps 30 (e082692bbb7869e36353dbdc014ce84c09fcec67)
+  ok: hash log with --fps 144 (e082692bbb7869e36353dbdc014ce84c09fcec67)
+  ok: hash log with --fps unlocked (e082692bbb7869e36353dbdc014ce84c09fcec67)
+  ok: hash log with --fps 144 --hdr on --hdr-level 10 (e082692bbb7869e36353dbdc014ce84c09fcec67)
+  log: Frame rate: 60, classic (a picture on every machine tick, shown on every screen refresh); sprite motion between ticks of
+  log: Frame rate: 75, as often as the screen refreshes (60 Hz is the most this screen can show); sprite motion between ticks o
+  log: Frame rate: 100, as often as the screen refreshes (60 Hz is the most this screen can show); sprite motion between ticks 
+  ok: frame rate in the log (1)
+  ok: HDR in the log (1)
+  ok: HDR intensity in the log (1)
+  ok: settings.cfg frame_rate (frame_rate 100)
+  ok: settings.cfg hdr (hdr on)
+  ok: settings.cfg hdr_intensity (hdr_intensity 7)
+  ok: a restart starts at 100 (1)
+RESULT: PASS
+
+Frame-rate log lines on the Linux test display (software OpenGL, 60 Hz, vsync on):
+== --fps 60
+Frame rate: 60, classic (a picture on every machine tick, shown on every screen refresh); sprite motion between ticks off
+Ran 3.01 s: 180 machine ticks, 177 pictures drawn
+Pacing: time between presents average 16.207 ms, longest 102.967 ms
+== --fps 144
+Frame rate: 144, as often as the screen refreshes (60 Hz is the most this screen can show); sprite motion between ticks off
+Ran 3.01 s: 181 machine ticks, 182 pictures drawn
+Pacing: time between presents average 15.740 ms, longest 16.944 ms
+== --fps 30
+Frame rate: 30, locked to the screen refresh (every 2 refreshes); sprite motion between ticks off
+Ran 3.01 s: 181 machine ticks, 90 pictures drawn
+Pacing: time between presents average 15.822 ms, longest 17.136 ms
+== --fps unlocked
+Frame rate: unlocked, unlocked (no waiting for the screen, as fast as this computer can draw); sprite motion between ticks on
+Ran 3.00 s: 181 machine ticks, 1958 pictures drawn
+Pacing: time between presents average 1.532 ms, longest 12.254 ms
+== --fps 100
+Frame rate: 100, as often as the screen refreshes (60 Hz is the most this screen can show); sprite motion between ticks off
+Ran 3.01 s: 181 machine ticks, 181 pictures drawn
+Pacing: time between presents average 15.741 ms, longest 16.947 ms
+
+Windows exe under Wine (Direct3D renderer, window 60 Hz):
+build/x211/wine/w144.txt:Renderer: direct3d (vsync on), first window 448x576
+build/x211/wine/w144.txt:Frame rate: 144, as often as the screen refreshes (60 Hz is the most this screen can show); sprite motion between ticks off
+build/x211/wine/w144.txt:Ran 4.00 s: 242 machine ticks, 239 pictures drawn
+build/x211/wine/w144.txt:Pacing: time between presents average 3.335 ms, longest 45.869 ms
+build/x211/wine/wunlocked.txt:Renderer: direct3d (vsync on), first window 448x576
+build/x211/wine/wunlocked.txt:Frame rate: unlocked, unlocked (no waiting for the screen, as fast as this computer can draw); sprite motion between ticks on
+build/x211/wine/wunlocked.txt:Ran 4.00 s: 241 machine ticks, 919 pictures drawn
+build/x211/wine/wunlocked.txt:Pacing: time between presents average 4.325 ms, longest 53.423 ms
+
+Not verified here: a real 120/144 Hz monitor and a real Windows PC. The user's play test covers that.

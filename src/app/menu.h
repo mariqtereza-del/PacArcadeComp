@@ -1,7 +1,7 @@
 // S34: the pause menu (Esc), the key-help panel and the saved settings, plus the --purist test flag's locks (the menu itself has no Purist item since S34E).
 // The menu only decides WHAT the player asked for (it returns a command); the program (main.cpp) carries it out. Nothing here can touch the machine.
 // Every setting that has a function key is also in the menu, and the help panel lists every key, so the two always agree.
-// Drawing uses the debug overlay's helpers (overlay.cpp must be included before menu.cpp) and the game's own tile font: capital letters, digits, '-'.
+// Drawing uses the helpers in overlay.cpp (overlay.cpp must be included before menu.cpp) and the game's own tile font: capital letters, digits, '-'.
 #pragma once
 #include "stats.h"
 #include "achievements.h"
@@ -29,7 +29,7 @@ enum class Cmd {
     Pad,
     ResetControls,
     OneButton,
-    Overlay,
+    FrameRate,
     Scanlines,
     Pacing,
     Frame,
@@ -67,7 +67,8 @@ const char *pad_type_word(PadType t); // "XBOX", "PS4", "PS5", "PAD", "" for non
 // X12: pages 4 (SAVE STATE) and 5 (LOAD STATE) list the eight save slots; Enter on a slot returns Cmd::SaveSlot / LoadSlot with delta = the slot number 1..8.
 // What the menu shows (the program fills it from its real state before every key and every drawing).
 struct Model {
-    bool purist = false, overlay = false, scanlines = false, smooth = false, frame = true, fill = false, fullscreen = false, one_button = true, help_pin = false;
+    bool purist = false, scanlines = false, smooth = false, frame = true, fill = false, fullscreen = false, one_button = true, help_pin = false;
+    int fps = 1;                        // 2.1.0: index in fps_table(): 0 30, 1 60, 2 75, 3 100, 4 120, 5 144, 6 unlocked (display only; the game always runs at 60.606 ticks per second)
     int vibration = 2;                  // S34R: 0 off, 1 light, 2 full
     bool pause_focus = true;            // X06: pause by itself when the window loses focus
     int hints = 0;                      // X08: 0 auto (follow the last device), 1 keyboard, 2 pad
@@ -94,7 +95,6 @@ struct Model {
     int ach_have[24] = {0}, ach_need[24] = {0}; // X29: progress of the achievements that have a count (need 0 = none), in the game that is running
     bool cheat_invincible = false;              // the INVINCIBLE test cheat is on (session only)
     unsigned long long ach_mask = 0;            // X25: which achievements are unlocked (bit = achievements::Id)
-    std::string rec_line[21];                   // X24: the Records page (records::line for levels 1 to 21)
     std::string slot_line[8];                   // X12: the eight save slots as the pickers show them (state::slot_line), "" = not filled in
     std::string bind_line[7];                   // S34A: one line per command for the help panel ("COIN  5"), from binding_lines()
 };
@@ -105,7 +105,8 @@ struct Result {
 
 // Settings kept between runs (settings.cfg next to controls.cfg).
 struct Settings {
-    bool purist = false, overlay = false, scanlines = false, fill = false, smooth = false, frame = true, help_pin = false;
+    bool purist = false, scanlines = false, fill = false, smooth = false, frame = true, help_pin = false;
+    int fps = 1;             // 2.1.0: see Model::fps
     int lives = 2, bonus = 0;
     bool diff_normal = true, names_normal = true;
     int vibration = 2;       // S34R: 0 off, 1 light, 2 full
@@ -124,6 +125,8 @@ bool load_settings(const std::string &path, Settings &s, std::string *problems);
 bool save_settings(const std::string &path, const Settings &s, std::string *error);
 
 // Purist mode: the game runs exactly like the arcade board. These are the additions it switches off.
+const int kFpsCount = 7;
+int fps_value(int index); // 30, 60, 75, 100, 120, 144, 0 (= unlocked)
 bool locked(Cmd c, const Model &m);
 std::string value_text(Cmd c, const Model &m);
 std::string label_of(Cmd c);
@@ -189,7 +192,6 @@ void draw_toast(const Gfx &g, uint32_t *out, PadType t, bool connected); // "PS4
 void draw_help(const Gfx &g, uint32_t *out, const Model &m);
 void draw_focus_pause(const Gfx &g, uint32_t *out);
 void draw_achievement_popup(const Gfx &g, uint32_t *out, int id);                                    // X25: the unlock pop-up at the top of the picture
-void draw_new_best(const Gfx &g, uint32_t *out, const std::string &line1, const std::string &line2); // X24: the banner shown when a level is cleared with a record
 void draw_run_summary(const Gfx &g, uint32_t *out, const stats::Summary &s);                         // X22: the game-over statistics page (224x288 picture)
 // X08: a key cap drawn in code (a box around the key name; the four arrows are a small triangle). Returns the width drawn; the cap is 10 pixels high, its text row at y.
 int keycap_width(const std::string &label);

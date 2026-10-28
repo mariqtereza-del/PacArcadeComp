@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     // navigation: main page items in order, Down wraps, Enter on GAME OPTIONS opens page 1, Back returns, Back on the main page resumes
     expect(mn.page() == 0 && mn.cursor() == 0, "opens on the first item of the main page");
     expect(mn.key(Key::Enter, m).cmd == Cmd::Resume, "Enter on RESUME resumes");
-    expect(mn.key(Key::Up, m).cmd == Cmd::None && mn.cursor() == 10, "Up from the first item wraps to the last (QUIT GAME)");
+    expect(mn.key(Key::Up, m).cmd == Cmd::None && mn.cursor() == 9, "Up from the first item wraps to the last (QUIT GAME)");
     expect(mn.key(Key::Enter, m).cmd == Cmd::Quit, "Enter on QUIT GAME quits");
     mn.key(Key::Down, m);
     for (int i = 0; i < 3; ++i) mn.key(Key::Down, m);
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     struct FK {
         Cmd c;
         const char *k;
-    } fks[] = {{Cmd::SaveState, "F2"}, {Cmd::LoadState, "F4"}, {Cmd::Overlay, "F3"}, {Cmd::Scanlines, "F5"},   {Cmd::Pacing, "F6"},        {Cmd::Frame, "F7"},
+    } fks[] = {{Cmd::SaveState, "F2"}, {Cmd::LoadState, "F4"}, {Cmd::Scanlines, "F5"},   {Cmd::Pacing, "F6"},        {Cmd::Frame, "F7"},
                {Cmd::Scaling, "F8"},   {Cmd::Keys, "F9"},      {Cmd::Pad, "F10"},    {Cmd::FullScreen, "F11"}, {Cmd::ResetControls, "F12"}};
     for (const FK &f : fks) expect(label_of(f.c).find(f.k) != std::string::npos, std::string("menu item for ") + f.k + " is labelled with it (" + label_of(f.c) + ")");
     // values
@@ -108,16 +108,16 @@ int main(int argc, char **argv) {
     }
     // Purist: the additions are locked, the arcade's own options and the pause are not
     m.purist = true;
-    Cmd locks[] = {Cmd::SaveState, Cmd::LoadState, Cmd::OneButton, Cmd::Vibration, Cmd::Overlay, Cmd::Scanlines, Cmd::Pacing, Cmd::Scaling};
+    Cmd locks[] = {Cmd::SaveState, Cmd::LoadState, Cmd::OneButton, Cmd::Vibration, Cmd::FrameRate, Cmd::Scanlines, Cmd::Pacing, Cmd::Scaling};
     for (Cmd c : locks) expect(locked(c, m), "locked in Purist: " + label_of(c));
     Cmd frees[] = {Cmd::Resume, Cmd::Lives, Cmd::Bonus, Cmd::Difficulty, Cmd::Names, Cmd::Restart, Cmd::Keys, Cmd::Frame, Cmd::FullScreen, Cmd::ResetDisplay, Cmd::ResetGame, Cmd::Quit};
     for (Cmd c : frees) expect(!locked(c, m), "still free in Purist: " + label_of(c));
-    m.overlay = true;
+    m.fps = 5;
     m.scanlines = true;
     m.smooth = true;
     m.fill = true;
     m.one_button = true;
-    expect(value_text(Cmd::Overlay, m) == "OFF" && value_text(Cmd::Scanlines, m) == "OFF" && value_text(Cmd::Pacing, m) == "EXACT" &&
+    expect(value_text(Cmd::FrameRate, m) == "60" && value_text(Cmd::Scanlines, m) == "OFF" && value_text(Cmd::Pacing, m) == "EXACT" &&
                value_text(Cmd::Scaling, m) == "WHOLE" && value_text(Cmd::OneButton, m) == "OFF",
            "Purist shows the additions as off whatever was chosen");
     m.vibration = 2;
@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
     // settings file
     Settings s;
     s.purist = true;
-    s.overlay = true;
+    s.fps = 3;
     s.lives = 3;
     s.bonus = 2;
     s.diff_normal = false;
@@ -386,7 +386,7 @@ int main(int argc, char **argv) {
     Settings t;
     std::string pr;
     expect(load_settings(path, t, &pr) && pr.empty(), "settings loaded without problems");
-    expect(!t.purist && t.overlay && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal && t.help_pin && !t.frame && t.fill && t.smooth && t.scanlines &&
+    expect(!t.purist && t.fps == 3 && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal && t.help_pin && !t.frame && t.fill && t.smooth && t.scanlines &&
                t.vibration == 1 && t.pad_symbols == 1,
            "settings round trip");
     {   // S34D: Purist is not a saved setting any more: a line "purist on" from an old file is reported and ignored, and nothing is written for it
@@ -559,7 +559,7 @@ int main(int argc, char **argv) {
         Menu pm;
         pm.open();
         Model m;
-        for (int i = 0; i < 7; ++i) pm.key(Key::Down, m);
+        for (int i = 0; i < 6; ++i) pm.key(Key::Down, m);
         pm.key(Key::Enter, m);
         for (int i = 0; i < achievements::kFiveFruits; ++i) pm.key(Key::Down, m);
         static uint32_t a[overlay::kOutW * 300], b[overlay::kOutW * 300];
@@ -609,38 +609,23 @@ int main(int argc, char **argv) {
         Settings a3;
         expect(a3.run_summary, "RUN SUMMARY defaults to on");
     }
-    // X24: RECORDS page
+    // 2.1.0: the RECORDS page and its main-menu item are gone (the records are kept inside, for the achievements)
     {
         Menu rm;
         Model v;
         rm.open();
-        for (int i = 0; i < 6; ++i) rm.key(Key::Down, v);
-        bool onit = false;
-        for (const std::string &l : rm.visible_lines(v)) (void)l;
-        onit = rm.visible_lines(v)[rm.cursor()] == "RECORDS";
-        expect(onit, "the main page has a RECORDS item after DISPLAY");
-        rm.key(Key::Enter, v);
-        expect(rm.page() == 6, "Enter on RECORDS opens page 6");
-        expect(rm.visible_lines(v).size() == 1 && rm.visible_lines(v)[0] == "BACK", "the Records page has only BACK as a menu row (the table is drawn separately)");
-        rm.key(Key::Enter, v);
-        expect(rm.page() == 0, "Enter on BACK leaves the Records page");
-        rm.key(Key::Enter, v);
-        rm.key(Key::Back, v);
-        expect(rm.page() == 0, "Esc leaves the Records page");
-        v.purist = true;
-        Menu pm;
-        pm.open();
-        for (int i = 0; i < 6; ++i) pm.key(Key::Down, v);
-        pm.key(Key::Enter, v);
-        expect(pm.page() == 6, "the Records page can be looked at in Purist mode (it is only a view)");
+        bool any = false;
+        for (const std::string &l : rm.visible_lines(v)) if (l == "RECORDS") any = true;
+        expect(!any, "the main page has no RECORDS item");
+        expect(rm.visible_lines(v).size() == 10, "the main page has ten rows");
     }
     // X25: ACHIEVEMENTS page
     {
         Menu am;
         Model v;
         am.open();
-        for (int i = 0; i < 7; ++i) am.key(Key::Down, v);
-        expect(am.visible_lines(v)[am.cursor()] == "ACHIEVEMENTS", "the main page has an ACHIEVEMENTS item after RECORDS");
+        for (int i = 0; i < 6; ++i) am.key(Key::Down, v);
+        expect(am.visible_lines(v)[am.cursor()] == "ACHIEVEMENTS", "the main page has an ACHIEVEMENTS item after DISPLAY");
         am.key(Key::Enter, v);
         expect(am.page() == 7, "Enter opens page 7");
         auto ls = am.visible_lines(v);

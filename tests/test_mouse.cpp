@@ -22,12 +22,12 @@ int main() {
     Model m;
     Menu mn;
     mn.open();
-    // the rows of the main page (11 items): row i spans picture y from 46 + 14 i to 59 + 14 i, x from 12 to 211
-    for (int i = 0; i < 11; ++i) {
+    // the rows of the main page (10 items): row i spans picture y from 46 + 14 i to 59 + 14 i, x from 12 to 211
+    for (int i = 0; i < 10; ++i) {
         int y0 = 20 + 28 - 2 + 14 * i;
         expect(mn.item_at(100, y0) == i && mn.item_at(100, y0 + 13) == i, "row " + std::to_string(i) + " first and last pixel");
     }
-    expect(mn.item_at(100, 45) == -1 && mn.item_at(100, 46 + 14 * 11) == -1, "above the first and below the last row: nothing");
+    expect(mn.item_at(100, 45) == -1 && mn.item_at(100, 46 + 14 * 10) == -1, "above the first and below the last row: nothing");
     expect(mn.item_at(11, 60) == -1 && mn.item_at(12, 60) >= 0 && mn.item_at(211, 60) >= 0 && mn.item_at(212, 60) == -1, "left and right edge of the rows");
     bool rh = true;
     mn.item_at(20, 60, &rh);

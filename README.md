@@ -53,7 +53,8 @@ The release folder also contains `REPORT-A-PROBLEM.bat`: start the game with it 
 - Window or full screen (F11), integer or fill scaling (F8), optional window frame (F7), ultrawide screens.
 - Screen effects: scanlines (F5), CRT shadow mask, glow, curved screen with vignette, and four ready-made CRT presets.
 - Surround: plain black, an original arcade-cabinet look, or an "ambient" glow; or your own picture (`surround.png` next to the exe).
-- Smooth pacing at 180 Hz (F6), debug overlay (F3), help panel with every key, run summary after a game.
+- **Frame rate** (new in 2.1.0): 30, 60, 75, 100, 120, 144 or unlocked. The game itself always runs at the arcade's own speed; a higher frame rate only makes the sprites move more smoothly on your screen, like a modern game. 60 is the classic setting. Details: [docs/notes/frame_rate.md](docs/notes/frame_rate.md).
+- Smooth pacing at 180 Hz (F6; only at frame rate 60), help panel with every key, run summary after a game.
 
 **Controls (Esc > CONTROLS)**
 - Remap every key; use Xbox, PlayStation 4 and PlayStation 5 pads with matching button pictures; vibration; lightbar colours on PlayStation pads (yellow while playing, red near a ghost, blue when ghosts are blue).
@@ -65,7 +66,7 @@ The release folder also contains `REPORT-A-PROBLEM.bat`: start the game with it 
 - A text file `rules.cfg` changes the game's numbers without programming: speeds, scatter/chase and blue-ghost times, Cruise Elroy and ghost-house limits, points, the extra-life score. Three ready-made example mods in [mods/](mods/). Modded games are marked MODDED and never count for records; the Reset to defaults button on the GAME OPTIONS page puts RULES back to ORIGINAL. See [MODDING.md](MODDING.md).
 
 **Statistics and records**
-- Per-run statistics, personal bests for each level, achievements (taken from the public RetroAchievements list for this game, none invented by us), recorder for replays used by the tests.
+- Per-run statistics, achievements (taken from the public RetroAchievements list for this game, none invented by us), recorder for replays used by the tests.
 
 ![Controls screen with an Xbox pad](docs/images/bindings_xbox_pad.png)
 ![The keyboard bindings screen](docs/images/bindings_keyboard.png)
@@ -80,11 +81,10 @@ The release folder also contains `REPORT-A-PROBLEM.bat`: start the game with it 
 | **5** | Insert coin | **Esc** | Menu |
 | **1** / **2** | Start 1 / 2 players | **F1** | Pause |
 | Arrows or **W A S D** | Move | **F2** / **F4** | Save / load state |
-| **Backspace** | Rewind | **F3** | Overlay |
-| **F5** | Scanlines | **F6** | Smooth pacing |
-| **F7** | Window frame | **F8** | Scaling |
-| **F9** / **F10** | Keys page / pad page | **F11** | Full screen |
-| **F12** | Reset controls to standard | | |
+| **Backspace** | Rewind | **F5** | Scanlines |
+| **F6** | Smooth pacing | **F7** | Window frame |
+| **F8** | Scaling | **F9** / **F10** | Keys page / pad page |
+| **F11** | Full screen | **F12** | Reset controls to standard |
 
 Everything can be changed in Esc > CONTROLS. The complete list of settings and where to find them is in [docs/notes/settings_table.md](docs/notes/settings_table.md).
 
@@ -92,7 +92,7 @@ Settings, controls, records and your high score are stored in `%APPDATA%\PacmanP
 
 ## Reset to defaults and achievements
 
-There is no Purist item in the menu. Instead two buttons called **RESET TO DEFAULTS** exist (press Enter twice: the first press only asks). On the **DISPLAY** page it puts the look back to the standard (overlay, scanlines, scaling, window frame, key panel, CRT effects, surround) at once, without touching the game. On the **GAME OPTIONS** page it puts lives, bonus life, difficulty, ghost names and RULES back to the standard and restarts the game so they take effect. Neither touches your key and pad bindings, the saved high score, records, achievements or save slots. Lives, bonus life, difficulty and ghost names are put into the running game at the attract screen; otherwise they apply from the next game. **Achievements** can unlock only while every game setting is at its standard value; display settings and save states have no effect on them. The test suite proves that the standard state is identical to the plain emulator, frame for frame ([docs/evidence/S34_purist.txt](docs/evidence/S34_purist.txt), docs/evidence/S34D_reset_to_defaults.txt, docs/evidence/S34E_two_resets.txt).
+There is no Purist item in the menu. Instead two buttons called **RESET TO DEFAULTS** exist (press Enter twice: the first press only asks). On the **DISPLAY** page it puts the look back to the standard (frame rate, scanlines, scaling, window frame, key panel, CRT effects, surround) at once, without touching the game. On the **GAME OPTIONS** page it puts lives, bonus life, difficulty, ghost names and RULES back to the standard and restarts the game so they take effect. Neither touches your key and pad bindings, the saved high score, records, achievements or save slots. Lives, bonus life, difficulty and ghost names are put into the running game at the attract screen; otherwise they apply from the next game. **Achievements** can unlock only while every game setting is at its standard value; display settings and save states have no effect on them. The test suite proves that the standard state is identical to the plain emulator, frame for frame ([docs/evidence/S34_purist.txt](docs/evidence/S34_purist.txt), docs/evidence/S34D_reset_to_defaults.txt, docs/evidence/S34E_two_resets.txt).
 
 **Cheats.** The first menu page has its own **CHEATS** page (it is not part of GAME OPTIONS). It holds **INVINCIBLE**: ghosts that are not blue cannot catch Pac-Man; after a power pellet the blue ghosts are eaten as usual. While a game is played with it on, that game does not count for records, statistics or achievements (nothing unlocks, even if you switch it off again later in the same game; a new game counts again). It is never saved: every start of the program begins with it off, and RESET TO DEFAULTS does not switch it on or off.
 

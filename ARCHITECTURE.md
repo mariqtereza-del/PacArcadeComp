@@ -28,7 +28,7 @@ The game is **native C++**. The program contains no processor emulator: the arca
 6. **Audio** (`src/audio/`): `wsg` is the 3-voice Namco sound generator (it turns the sound registers into samples); `audio_out` is the ring buffer and resampler that hands them to the sound card.
 7. **The app** (`src/app/`): everything a player sees around the machine: the window, menus, controls, pads, save states, effects, statistics. It only talks to the machine through the same inputs a player has and by *reading* its memory.
 
-**The rule that keeps the game accurate:** features live outside the machine. Overlay, statistics, achievements, lightbar and vibration only read memory after each frame. Save states, rewind and replays copy or restore the machine as a whole. Purist mode switches all of them off, and a test proves the machine then runs bit-for-bit like the reference.
+**The rule that keeps the game accurate:** features live outside the machine. Statistics, achievements, lightbar and vibration only read memory after each frame. Frame rate and HDR only change how the finished picture is drawn. Save states, rewind and replays copy or restore the machine as a whole. Purist mode switches all of them off, and a test proves the machine then runs bit-for-bit like the reference.
 
 ## The native engine
 
@@ -107,7 +107,7 @@ One file per part of the table above, plus `attract_prog.h` (generated), `state.
 | `menu.h/.cpp` | The Esc menu, key-help panel, settings file (`settings.cfg`) and the rules of Purist mode. It only returns commands; `main.cpp` carries them out. |
 | `controls.h/.cpp` | Key and pad bindings, `controls.cfg`, remap dialogue, one-button start. |
 | `display.h/.cpp` | Where the picture goes in the window (whole-number or fill scaling), smoothed pacing. No emulation here. |
-| `overlay.h/.cpp` | The F3 debug overlay (targets of the ghosts etc.). Reads memory only. |
+| `overlay.h/.cpp` | The picture layout constants and the small drawing helpers (boxes, text in the game's tile font) the menu uses. (The F3 debug overlay was removed in 2.1.0.) |
 | `state.h/.cpp` | Save states (8 slots), rewind, the saved high score. |
 | `replay.h/.cpp` | Records and replays inputs; the per-frame state hash used by the tests. |
 | `firstrun.h/.cpp` | Finds the ROM on the first run and shows friendly messages and the "Choose file" dialog. |

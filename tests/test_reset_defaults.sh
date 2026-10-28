@@ -1,6 +1,6 @@
 #!/bin/sh
 # S34D + S34E: the two RESET TO DEFAULTS items (DISPLAY page: look only, no restart; GAME OPTIONS page: game settings only, restarts) and the live DIP change, in the real program (no window needed beyond the Xvfb the other S34 tests use).
-#  1. the S27 replay (7,273 frames) with settings set to non-default by command-line options (rules READABLE, overlay, filters, ...) and the reset pressed twice at tick 3000: the frame hash log equals a plain run
+#  1. the S27 replay (7,273 frames) with settings set to non-default by command-line options (rules READABLE, frame rate, filters, ...) and the reset pressed twice at tick 3000: the frame hash log equals a plain run
 #     (the reset does not change the game, switching READABLE -> ORIGINAL in the middle is invisible), the log says the settings are back and that the game was NOT restarted
 #  2. the settings file after the reset is byte-identical to one written from the standard settings; the saved high score and the controls file are untouched
 #  3. lives changed at the attract screen (tick 1000) are put into the running game: from the coin on, the hashes equal a run that started with that setting
@@ -20,7 +20,7 @@ for d in a b c e ref f g h one; do printf "$HSTXT" > $T/$d/hs.txt; done
 run() { d=$1; shift; timeout 600 build/app/pacman-port --replay $T/script.replay --hashlog $T/$d/hash.log --fast --no-audio --config $T/$d/controls.cfg --hiscore $T/$d/hs.txt "$@" > $T/$d/out.txt 2>&1 || { echo "FAIL: run $d"; fail=1; }; }
 cat > $T/a/settings.cfg <<'S'
 # Pac-Man port settings (the menu writes this file; you may also edit it with Notepad)
-overlay on
+frame_rate 144
 scanlines on
 fill on
 smooth on
@@ -46,7 +46,7 @@ printf 'purist on\n' >> $T/a/settings.cfg    # an old file with the removed key:
 printf 'KEEP-THIS-CONTROLS-FILE\n' > $T/a/controls.cfg; cp $T/a/controls.cfg $T/a/controls.before
 cp $T/a/hs.txt $T/a/hs.before
 run ref
-run a --rules readable --overlay --scanlines --surround ambient --curve strong --glow strong --crt-mask strong --cmd-at 3000:resetdisplay,3000:resetdisplay
+run a --rules readable --fps 144 --scanlines --surround ambient --curve strong --glow strong --crt-mask strong --cmd-at 3000:resetdisplay,3000:resetdisplay
 cmp -s $T/a/hash.log $T/ref/hash.log && r=same || r=different
 chk "1. frame hashes with the DISPLAY reset in the middle equal the plain run ($(wc -l < $T/ref/hash.log) frames)" $r same
 chk "1. the log says the display settings are back to standard" "$(grep -c 'display settings are back to their standard values' $T/a/out.txt)" 1
@@ -66,10 +66,10 @@ sed -i 's/^lives 3/lives 5/' $T/a3/settings.cfg
 run2 a2 --cmd-at 100:resetdisplay,100:resetdisplay
 run2 a3 --cmd-at 100:resetgame,100:resetgame
 chk "2. the old 'purist on' line is reported and ignored" "$(grep -c 'ignored: purist on' $T/a2/out.txt)" 1
-chk "2. DISPLAY reset: display keys are standard in the file" "$(grep -c '^overlay off\|^scanlines off\|^fill off\|^smooth off\|^window_frame on\|^help_panel off\|^run_summary on\|^surround black\|^curve off\|^glow off\|^crt_mask off' $T/a2/settings.cfg)" 11
+chk "2. DISPLAY reset: display keys are standard in the file" "$(grep -c '^frame_rate 60\|^scanlines off\|^fill off\|^smooth off\|^window_frame on\|^help_panel off\|^run_summary on\|^surround black\|^curve off\|^glow off\|^crt_mask off' $T/a2/settings.cfg)" 11
 chk "2. DISPLAY reset: game keys and the other keys are kept" "$(grep -c '^rules readable\|^vibration off\|^pad_symbols xbox\|^pause_on_focus_loss off\|^hints keyboard\|^lightbar off' $T/a2/settings.cfg)" 6
 chk "2. GAME reset: rules and lives are standard in the file" "$(grep -c '^rules original\|^lives 3\|^bonus 10000\|^difficulty normal\|^ghost_names normal' $T/a3/settings.cfg)" 5
-chk "2. GAME reset: display and the other keys are kept" "$(grep -c '^overlay on\|^scanlines on\|^surround ambient\|^vibration off\|^lightbar off' $T/a3/settings.cfg)" 5
+chk "2. GAME reset: display and the other keys are kept" "$(grep -c '^frame_rate 144\|^scanlines on\|^surround ambient\|^vibration off\|^lightbar off' $T/a3/settings.cfg)" 5
 chk "2. GAME reset restarted the machine" "$(grep -c 'Game: restarted (game settings reset)' $T/a3/out.txt)" 1
 for d in a2 a3; do
   cmp -s $T/$d/controls.cfg $T/$d/controls.before && r=same || r=different

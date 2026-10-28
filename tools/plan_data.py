@@ -1,6 +1,6 @@
 # Single source of truth for the plan. Edit statuses here, then run: python3 tools/make_plan.py
 # Statuses: VERIFIED / PARTIAL / UNVERIFIED / BROKEN / NOT STARTED
-PLAN_VERSION = "3.0 (2026-10-23)"
+PLAN_VERSION = "4.0 (2026-10-28)"
 
 LANES = [
  ("FOUNDATION", "Done and re-checkable. Do not redo."),
@@ -17,6 +17,7 @@ LANES = [
  ("RELEASE", "Package and test."),
  ("OPTIONAL", "Track B (done): the main game rules rewritten as readable C++ in src/logic, each proved identical to the ROM routine."),
  ("MODDING", "Track C (done, release 1.1.0): the game can run the proven readable rules, so anyone can change them (user request 2026-10-15)."),
+ ("ITERATION", "Iteration 2.1.0 (user request 2026-10-28): frame rates 30 to unlocked with smooth sprite motion, the F3 debug overlay and the record messages removed, an HDR look setting. Display-only changes; the game logic and every hash stay identical."),
  ("NATIVE", "Track D, Option A (user request 2026-10-15): the game without the emulator (release 2.0.0). Native code replaced the ROM program routine by routine, proved identical frame by frame; the data still comes from the player's pacman.zip. Small steps of 10 to 20 minutes. Finished with release 2.0.0 (N55)."),
 ]
 
@@ -794,8 +795,45 @@ _NDONE = {"N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08", "N09", "N10", 
 for _x in N_STEPS:
     if _x["id"] in _NDONE: _x["status"] = "VERIFIED"
 
+_IST = "VERIFIED"
+_IDONT = ["Do not change the game: the machine, the rules, the sound, the scores, the saved states and every replay hash must stay identical (the same 7,273-frame hash log at every setting).",
+          "Do not put ROM bytes anywhere in the source, the export or the release."]
+_IUSER = ["Play with the new exe: Esc > DISPLAY > FRAME RATE (try 144 or UNLOCKED on your monitor) and HDR / HDR INTENSITY, then tell me OK."]
+I_STEPS = [
+ S("I01","ITERATION","Frame rate: 30, 60, 75, 100, 120, 144, unlocked","%s"%_IST,["N55"],
+   "DISPLAY > FRAME RATE with seven choices (and --fps). The machine keeps ticking at 60.606 Hz; above 60 the sprites are drawn between two ticks so the movement is smoother, like a modern game.",
+   "User request (2026-10-28): run smoother at higher frame rates without changing any game logic.",
+   "N55 VERIFIED (release 2.0.0).","src/app/main.cpp (main loop, render block), src/video/sprites.cpp, src/app/menu.cpp","src/app/main.cpp, src/video/sprites.cpp, src/app/menu.cpp, src/app/menu.h, tests/test_fps_hdr.*",
+   ["Setting frame_rate (30, 60, 75, 100, 120, 144, unlocked) in the menu and settings.cfg, --fps on the command line; Purist mode is always 60.",
+    "A limiter with four modes (classic 60 as before; vsync on with pictures built at the chosen rate; vsync off held by a timer; unlocked) chosen from the screen's refresh rate; the log says which one.",
+    "render_sprites_lerp: sprites drawn between the previous and the latest tick (same picture and at most 8 pixels moved, otherwise the latest place); the tile layer is the latest tick's. Whole-pixel places give exactly the old picture.",
+    "Smooth pacing (F6) is used only at frame rate 60 (kept both options as the user chose)."],
+   _IDONT,["sh tests/test_fps_hdr.sh (unit checks of the sprites between ticks, hash logs identical at 60, 30, 144, unlocked and with HDR; the menu in a window)","Full regression sh tests/run_all.sh"],
+   "All pass; the hash logs are byte-identical at every frame rate.",user=_IUSER,evidence="docs/evidence/I01_frame_rate.txt",doc=DOC,
+   ),
+ S("I02","ITERATION","Remove the F3 debug overlay and the record messages","%s"%_IST,["N55"],
+   "The F3 overlay (and the --overlay option, the OVERLAY menu item and the overlay setting) is removed; the NEW BEST banner, the Records page, the RECORDS menu item and the Records log lines are removed. The records stay as internal logic (records.cfg, the same level-clear events) so the achievements are not affected.",
+   "User request (2026-10-28).","N55 VERIFIED.","src/app/overlay.*, main.cpp, menu.*, tests","src/app/overlay.h, overlay.cpp, main.cpp, menu.cpp, menu.h, tests/",
+   ["overlay.h/.cpp keep only the picture layout constants and the drawing helpers the menu uses.","records.update and records.cfg are unchanged; nothing about records is drawn or logged.","--overlay is accepted and ignored with a note; an old overlay line in settings.cfg is ignored silently."],
+   _IDONT,["sh tests/test_menu.sh, test_integration.sh, test_records_window.sh, test_reset_defaults.sh, test_achievement_settings.sh","Full regression"],
+   "All pass; records.cfg is written as before; achievements unchanged.",user=_IUSER,evidence="docs/evidence/I02_removals.txt"),
+ S("I03","ITERATION","HDR: On/Off button and intensity slider","%s"%_IST,["I01"],
+   "DISPLAY > HDR (on/off) and HDR INTENSITY (a slider, 1 to 10). It is a picture effect on the ordinary signal: deeper darks, brighter highlights that keep their colour, soft bloom. Not a real HDR10 signal (SDL2 cannot send one); said so in the menu notes, the log, the README and docs/notes/hdr.md.",
+   "User request (2026-10-28): HDR support with an on/off button and an intensity slider; what it affects is left to the builder.",
+   "I01 VERIFIED.","docs/notes/hdr.md (X47), src/app/crt.h","src/app/hdr.h, main.cpp, menu.cpp, menu.h, docs/notes/hdr.md, tests/test_fps_hdr.*",
+   ["hdr.h: the effect, working on the finished picture only; Purist mode never uses it.","A slider row in the DISPLAY page (a bar and the number; Left/Right or a click on the half of the row).","Settings hdr and hdr_intensity; --hdr and --hdr-level."],
+   _IDONT,["Unit checks (black stays black, deterministic, darker maze and more bloom with intensity, hue kept, settings round trip, slider drawn)","Screenshots of off, 5 and 10 looked at"],
+   "All pass.",user=_IUSER,evidence="docs/evidence/I03_hdr.txt"),
+ S("I04","ITERATION","Release 2.1.0 and GitHub update","%s"%_IST,["I01","I02","I03"],
+   "Version 2.1.0: full regression, the Windows zip, a clean GitHub export (no ROM), release notes and the click-by-click update guide for the repository and the release.",
+   "Everyone gets the new options.","I01 to I03 VERIFIED.","docs/GITHUB_UPLOAD_GUIDE.md, tools/package.sh, tools/export_github.sh","tools/package.sh, dist/, CHANGELOG.md, README.md, docs/GITHUB_UPLOAD_GUIDE.md",
+   ["Version number 2.1.0 in the exe and zip; full regression; export scan; update guide for v2.1.0."],
+   _IDONT,["FULL regression passes","Export scan clean; a fresh copy of the export builds and its ROM-free tests pass"],"All pass; release ready.",
+   user=["Follow the update guide click by click to publish release v2.1.0."],evidence="docs/evidence/I04_release_2_1.txt"),
+]
 _iK=[i for i,x in enumerate(STEPS) if x["id"]=="T02k"][0]
 STEPS[_iK+1:_iK+1]=N_STEPS
+STEPS += I_STEPS
 
 OLD_MAP = [
  ("0 Folders","S01"),("1 ROM verified","S02"),("2 Toolchain proof","S03"),
@@ -835,7 +873,8 @@ SOURCES = [
 SUMMARY = [
  "A Windows player for the 1980 arcade maze game that plays exactly like the arcade board: every ghost rule, speed, quirk and bug, frame for frame, including level 256. It needs your own copy of the arcade ROM (pacman.zip); nothing from it is in the project.",
  "Release 1.0 (S36) was an emulator: the arcade program ran on a Z80 core. Release 1.1.0 added the readable rules and modding. Release 2.0.0 (N55) is native: the program has no Z80 inside; the game is C++ proved identical to the original, frame by frame and cycle by cycle. Your ROM is only read for data tables (maze, text, levels, graphics, sound).",
- "Around the game there are modern extras you can turn off or reset: menus, pads, save states, rewind, records, achievements, CRT looks, stats, a Cheats page (invincibility; using it switches records and achievements off).",
+ "Release 2.1.0 (I01 to I04) added the frame rates 30, 60, 75, 100, 120, 144 and unlocked (the machine still ticks at the arcade rate; only the picture is smoother), an HDR look setting (an effect on the normal picture, not a real HDR10 signal) and removed the F3 debug overlay and the record messages.",
+ "Around the game there are modern extras you can turn off or reset: menus, pads, save states, rewind, achievements, CRT looks, stats, a Cheats page (invincibility; using it switches records and achievements off). Personal bests are still kept inside for the achievements but are no longer shown.",
  "Honest limit: 24 of the original routines (random numbers, scoring, dots, ghost targeting, movement, timers, ghost house) are readable C++ you can edit (src/logic). Most of the rest of the game is an exact generated translation (src/game/attract_prog.h): correct and proved, but not written as readable rules.",
 ]
 
@@ -865,10 +904,15 @@ HISTORY = [
  ("The game without the emulator (release 2.0.0)", "2026-10-15 to 2026-10-23", "N00 to N55",
   "Track D, Option A: native C++ replaced the original program routine by routine, each step proved against the Z80 (memory, I/O writes, registers and the exact cycle count of every frame). Tools and test players first (N01 to N11), then helpers, drawing, the interrupt handler, game flow, intermissions, sound, scheduler and boot (N12 to N47b), proof that no ROM instruction runs (N48, 3.1 million frames), removal of the Z80 from the program (N49 to N49c), the emulator turned into a test tool (N50), names for the game state and output (N51 to N53), documentation (N54). A crash with the invincibility cheat found in your N49b test was fixed in N49c.",
   "The program you play contains no Z80. Release 2.0.0 (N55) was built, scanned and tested on 2026-10-23; what remains is your one-game play test and publishing it on GitHub."),
+ ("Iteration 2.1.0: frame rates, HDR look, removals", "2026-10-28", "I01 to I04",
+  "You asked for frame rates 30 to unlocked with smoother movement and no change to the game, the removal of the F3 debug overlay and the record messages (records kept inside for the achievements), and an HDR on/off button with an intensity slider. The machine still ticks at the arcade rate; sprites are drawn between two ticks above 60; the replay hash logs are identical at every rate. HDR is an honest look effect because SDL2 cannot send a real HDR signal.",
+  "Release 2.1.0 built and tested; what remains is your play test and publishing it on GitHub."),
 ]
 
 # Steps that were planned and then removed by the user (or replaced). (ids, name, kind, when, why / what became of it)
 SCRAPPED = [
+ ("S30 (overlay part)", "Debug overlay (F3)", "removed", "2026-10-28", "Removed at your request (I02). Its drawing helpers and layout constants stay in overlay.h/.cpp because the menu uses them; the level-256 split-screen proof stays (tests/test_level256_full.sh)."),
+ ("X24 (messages)", "Record messages: NEW BEST banner, Records page and menu item, Records log lines", "removed", "2026-10-28", "Removed at your request (I02). The personal bests are still counted and saved (records.cfg) as internal logic, because the achievements use the same level-clear events."),
  ("X13", "Save slots: thumbnails", "removed", "2026-10-14", "Removed with the other extras you did not want. Save slots (S33, X12) stay without thumbnails."),
  ("X14", "Resume where you left off", "removed", "2026-10-14", "Removed at your request."),
  ("X15", "Start at any level: how the ROM does it (research)", "removed", "2026-10-14", "Removed at your request."),
@@ -911,6 +955,7 @@ PLAN_CHANGES = [
  ("2026-10-14", "About half of the X steps were removed (see above); ids of the kept steps stayed fixed, so the X numbers have gaps on purpose."),
  ("2026-10-15", "Track B (T01a to T01f) and then Track C (T02, T02a to T02k, modding, release 1.1.0) were added after the GitHub release; Track D (N00 to N55) was added the same day (Option A: the game without the emulator)."),
  ("2026-10-19", "N45a to N45k inserted before N46: the measurement in N45 showed 11 groups of ROM routines that no step covered (per-frame update, ghost movers, Pac-Man mover, targeting, text printer and so on)."),
+ ("2026-10-28", "Iteration 2.1.0 added after the 2.0.0 release: I01 frame rates, I02 removal of the F3 overlay and the record messages, I03 HDR look, I04 release 2.1.0 (user request)."),
  ("2026-10-21", "S34D and S34E added (Purist switch replaced by two Reset buttons)."),
  ("2026-10-19", "N47 (boot) was split into N47a (power-on self test) and N47b (service-switch test screen) because it was more than 20 minutes."),
  ("2026-10-22", "The removal of the Z80 (N49) was split into N49, N49a, N49b and N49c because it was far more than 20 minutes."),

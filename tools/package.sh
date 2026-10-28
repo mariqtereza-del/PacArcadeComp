@@ -4,7 +4,7 @@ set -e
 SDL=${SDL2_MINGW:-/tmp/sdl2win/SDL2-2.32.10/x86_64-w64-mingw32}
 cd "$(dirname "$0")/.."
 sh tests/test_no_z80_symbols.sh >/dev/null || { echo "STOP: the program source still contains the Z80 core"; exit 1; }   # N49c: the release never contains the Z80 core
-VER=2.0.0; OUT=dist/PacArcadeComp; ZIP=dist/PacArcadeComp-$VER-win64.zip
+VER=2.1.0; OUT=dist/PacArcadeComp; ZIP=dist/PacArcadeComp-$VER-win64.zip
 sh tools/build_windows.sh >/dev/null 2>&1          # (re)builds the object files for miniz
 mkdir -p build/app/win; rm -rf $OUT $ZIP; mkdir -p $OUT
 ( cd dist/res && x86_64-w64-mingw32-windres app.rc -O coff -o ../../build/app/win/app_res.o )

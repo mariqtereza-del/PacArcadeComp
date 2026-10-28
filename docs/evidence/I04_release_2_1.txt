@@ -1,0 +1,7 @@
+I04 release 2.1.0 evidence (2026-10-28)
+Full regression (tests/run_all.sh) on final code: ALL TESTS PASSED, EXIT 0 (build/x211/run_all2.txt)
+Hash logs identical at 60/30/144/unlocked and HDR on (e082692bbb7869e36353dbdc014ce84c09fcec67)
+Package: dist/PacArcadeComp-2.1.0-win64.zip rebuilt, tests/test_package.sh PASS, no ROM files inside
+GitHub export: tools/export_github.sh ROM-byte scan clean (924 files + release zip)
+Fresh copy of export builds (tools/build_app.sh); ROM tests need the user's own pacman.zip, as designed
+Not verified: real 120/144 Hz monitor, real Windows PC

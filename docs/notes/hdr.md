@@ -1,4 +1,4 @@
-# HDR: what is possible (X47, researched 2026-10-15)
+# HDR: what is possible (X47, researched 2026-10-15; the HDR LOOK added in 2.1.0, see the last section)
 
 ## Decision
 **Drop HDR output for now. Do not change library for it.** The program stays on SDL2 (2.32.10 for the Windows build) and keeps its SDR glow from X41.
@@ -24,3 +24,15 @@ SDR glow (X41), mask (X40), curve (X42), presets (X43) and the Ambient surround 
 
 ## If the user wants HDR anyway
 Next step would be named "Move to SDL3 (prerequisite for HDR)": port the window/renderer/audio/input/gamepad code from SDL2 to SDL3, re-run the full regression, then add an HDR option that is only offered when the display reports HDR. Estimated as a large step; it touches every file that includes SDL.
+
+
+## 2.1.0: the HDR setting (DISPLAY > HDR and HDR INTENSITY)
+The user asked (2026-10-28) for an HDR On/Off button and an intensity slider in the display settings, with what it affects left to the builder. The decision above still holds: **SDL2 cannot send an HDR signal**, and the library was not changed. So the setting is an honest, clearly named **HDR look**: a picture effect on the ordinary SDR picture that imitates what an HDR screen gives this game (bright things really bright against dark things). It is **not** an HDR10 / scRGB signal and it does not switch the monitor into HDR mode. The menu, the log line, README and this note all say so.
+
+What it does (source: `src/app/hdr.h`; only on the finished picture, like glow, mask and curve; Purist mode never uses it; the machine, the replay hashes and the achievements are not touched):
+1. dark and middle tones get darker (up to 35 % in linear light at intensity 10): deeper blacks, a darker maze;
+2. bright tones (pellets, text, Pac-Man, the ghosts) get brighter and slightly more colourful, but only as far as the colour keeps its hue (pink does not turn white, yellow stays yellow);
+3. a soft bloom (box blurs of radius 1 and 3 picture pixels) of the brightest parts is added, up to 0.55 at intensity 10.
+Intensity 1 to 10 scales all three; pure black stays pure black. The slider is the row HDR INTENSITY (Left / Right, or click the left / right half of the row); the value is also shown as a number. `settings.cfg` keys: `hdr on|off`, `hdr_intensity 1..10`. Test aids: `--hdr on|off`, `--hdr-level N`. Tests: tests/test_fps_hdr.sh (unit checks of the effect: black stays black, deterministic, darker maze and bigger bloom with rising intensity, hue kept; menu rows and slider; settings round trip).
+
+If a real HDR output is wanted later, the route is still "Move to SDL3" (see above); this setting would then switch from the look to the real signal.

@@ -1,0 +1,15 @@
+I03: HDR look (2026-10-28)
+Decision: SDL2 cannot send an HDR signal (docs/notes/hdr.md, X47), so HDR in the DISPLAY menu is an honest HDR LOOK on the normal picture: deeper darks, brighter highlights that keep their colour, soft bloom. Not an HDR10 signal; the menu says so (footer line 'HDR LOOK NOT TRUE HDR' when the row is highlighted), the log says so, README, the package README and docs/notes/hdr.md say so.
+
+Unit checks (tests/test_fps_hdr.cpp, section 3 and 5): 35 CHECK lines in the file; result:
+  800 random sprite situations (both rule sets): alpha 1 differs in 0, alpha 0 differs in 0, whole-pixel middle differs in 0
+34 checks, 0 failed
+RESULT: PASS
+
+Pictures looked at (attract mode, tick 1700, window x2):
+  docs/evidence/I03_hdr_off.png   HDR off
+  docs/evidence/I03_hdr_10.png    HDR on, intensity 10 (darker maze, soft glow around pellets and text, ghost and Pac-Man colours unchanged)
+  docs/evidence/I03_display_menu.png  the DISPLAY page with HDR on and HDR INTENSITY 7 highlighted (slider bar and number)
+
+Replay hash logs with HDR on equal those with HDR off (tests/test_fps_hdr.sh, last line of the hash section).
+Not verified here: how it looks on a real HDR monitor (it does not use the HDR mode of Windows or the monitor, by design).

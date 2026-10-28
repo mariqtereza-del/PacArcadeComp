@@ -2,7 +2,7 @@
 // at the arcade rate of 60.606 Hz. Keyboard and gamepad play it (S24). Sound plays live through the sound card (S26).
 //
 //   pacman-port [--rom PATH] [--scale N] [--dump N OUT.png [--tiles-only | --no-mame-sprites]] [--measure SECONDS] [--report FILE]
-//               [--fit] [--scanlines] [--borderless] [--overlay] [--pacing exact|smooth] [--ticks N] [--sim-refresh HZ] [--keys F3@1000,...]
+//               [--fit] [--scanlines] [--borderless] [--pacing exact|smooth] [--ticks N] [--sim-refresh HZ] [--keys F5@1000,...]
 //
 //   --rom PATH        the player's own pacman.zip. Without it the program looks next to itself, then in roms/, then in the current folder.
 //   --scale N         first window size = N x the arcade picture (default 3). The picture is always drawn at a whole-number size.
@@ -17,11 +17,10 @@
 //   --report FILE     also write the text messages to FILE (a program built for Windows has no console).
 //   --fit             fill the window (aspect kept, any size) instead of whole-number sizes only. --scanlines: dark lines between the arcade's pixel columns
 //                     (the monitor stood on its side, so its scan lines run up and down in the upright picture). --borderless: no window frame.
-//   --overlay         start with the debug overlay on (F3 toggles it; it only reads memory and adds a 128-pixel panel to the right of the picture).
 //   --pacing smooth   one machine tick every N display refreshes when N refreshes are within 3 % of the arcade rate (180 Hz: N = 3 = 60.000 ticks/s,
 //                     1.00 % slower than 60.606), so every picture is shown equally long. exact (default): 60.606 ticks per second, some pictures stay one refresh longer.
 //   --ticks N         stop after exactly N machine ticks and print a hash of the machine's memory (the same N ticks must give the same hash whatever the options).
-//   --sim-refresh HZ  pretend the screen refreshes at HZ (for pacing tests where no real screen is available); --keys: press keys at tick numbers (F3, F5, F6, F7, F8, F11).
+//   --sim-refresh HZ  pretend the screen refreshes at HZ (for pacing tests where no real screen is available); --keys: press keys at tick numbers (F5, F6, F7, F8, F11).
 //   S33: F1 = pause / resume, F2 = quick save (also written to quicksave.sav next to controls.cfg), F4 = quick load, hold Backspace = rewind (the last 30 seconds).
 //        The high score is kept in highscore.txt next to controls.cfg: put into the game once when the attract screen first appears, written when a game ends
 //        with a record. After F4 the saved high score is the one the state had when it was saved; scores made after a load or rewind never count. --no-hiscore turns the file off, --hiscore FILE moves it.
@@ -40,7 +39,7 @@
 //         are reachable by pad without any extra binding. Purist mode locks save, load and rewind on the pad too. Test aid: --pad-buttons MS:BUTTON,... pushes real SDL pad-button events
 //         (BUTTON = SDL name such as rightstick, dpdown, a; a leading - releases the button) MS milliseconds after start.
 //   Keys: arrows or W A S D move, 5 inserts a coin, 1 starts one player, 2 starts two players, Esc opens the menu (in --scripted runs it closes the window), F11 toggles full screen,
-//         F3 debug overlay, F5 scanlines, F6 pacing exact/smooth, F7 window frame on/off, F8 whole-number / fill scaling.
+//         F5 scanlines, F6 pacing exact/smooth, F7 window frame on/off, F8 whole-number / fill scaling.
 //   Gamepad: d-pad or left stick moves, Back/Select/Share inserts a coin, Start/Options starts one player.
 //   S32 controls (src/app/controls.*): F9 = change the keys (the window title asks for each key in turn; Esc cancels), F10 = change the pad buttons
 //         (coin, start 1, start 2; Backspace = none), F12 = back to the standard controls. The choices are kept in controls.cfg in your AppData folder
@@ -93,6 +92,8 @@
 
 void render_tilemap(const Gfx &g, const uint8_t *videoram, const uint8_t *colorram, uint32_t *out);
 void render_sprites(const Gfx &g, const uint8_t *lookup, const uint8_t *spriteram, const uint8_t *coords, uint32_t *out, bool mame_rules);
+void render_sprites_lerp(const Gfx &g, const uint8_t *lookup, const uint8_t *ram_prev, const uint8_t *crd_prev, const uint8_t *ram_cur, const uint8_t *crd_cur, float alpha,
+                         uint32_t *out, bool mame_rules); // 2.1.0: sprites between two ticks (display only)
 
 static const int W = 224, H = 288;
 static const double TICK_HZ = 3072000.0 / 50688.0; // 60.60606 Hz: CPU clock divided by cycles per frame (hardware_facts.md section 1)
@@ -150,7 +151,8 @@ struct Options {
     bool tiles_only = false, mame_sprites = true, scripted = false, no_audio = false;
     std::string audio_capture;
     int crt_mask = -1, glow = -1, curve = -1, surround_mode = -1;
-    bool fit = false, scanlines = false, borderless = false, overlay_on = false, smooth = false;
+    int fps = -1; // 2.1.0: --fps 30|60|75|100|120|144|unlocked (index in menu::fps_value)
+    bool fit = false, scanlines = false, borderless = false, smooth = false;
     std::string hiscore;
     bool no_hiscore = false; // S33: high-score file (default: next to the controls file)
     std::string
@@ -210,8 +212,16 @@ int main(int argc, char **argv) {
         else if (a == "--glow" && i + 1 < argc) o.glow = crt::from_name(argv[++i]);
         else if (a == "--crt-mask" && i + 1 < argc) o.crt_mask = crt::from_name(argv[++i]);
         else if (a == "--borderless") o.borderless = true;
-        else if (a == "--overlay") o.overlay_on = true;
-        else if (a == "--pacing" && i + 1 < argc) {
+        else if (a == "--overlay") say("Note: --overlay was removed in version 2.1.0 (the F3 debug overlay is gone); the option is ignored");
+        else if (a == "--fps" && i + 1 < argc) {
+            const std::string v = argv[++i];
+            o.fps = v == "30" ? 0 : v == "60" ? 1 : v == "75" ? 2 : v == "100" ? 3 : v == "120" ? 4 : v == "144" ? 5 : v == "unlocked" ? 6 : -2;
+            if (o.fps == -2) {
+                say("--fps must be 30, 60, 75, 100, 120, 144 or unlocked");
+                write_report();
+                return 2;
+            }
+        } else if (a == "--pacing" && i + 1 < argc) {
             std::string v = argv[++i];
             if (v == "smooth") o.smooth = true;
             else if (v != "exact") {
@@ -421,7 +431,6 @@ int main(int argc, char **argv) {
         " (run as native code, proved equal to the ROM frame by frame)"
 #endif
         );
-    o.overlay_on = o.overlay_on || st.overlay;
     o.scanlines = o.scanlines || st.scanlines;
     o.fit = o.fit || st.fill;
     o.smooth = o.smooth || st.smooth;
@@ -467,7 +476,7 @@ int main(int argc, char **argv) {
         }
     }
     say(purist ? "Purist mode: ON (no overlay, filters, one-button start, save states, rewind or saved high score)" : "Purist mode: off");
-    const bool panel0 = (o.overlay_on && !purist) || help_pin;
+    const bool panel0 = help_pin;
 
     // ---- window
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK | SDL_INIT_EVENTS) != 0) {
@@ -970,6 +979,7 @@ int main(int argc, char **argv) {
     int glow_level = o.glow >= 0 ? o.glow : st.glow;                          // X41: 0 off, 1 light, 2 strong
     int surround_mode = o.surround_mode >= 0 ? o.surround_mode : st.surround; // X44: 0 black, 1 cabinet
     int curve_level = o.curve >= 0 ? o.curve : st.curve;                      // X42: 0 off, 1 light, 2 strong (curve and vignette)
+    int fps_idx = o.fps >= 0 ? o.fps : st.fps;                                 // 2.1.0: frame rate, index in menu::fps_value (display only)
     std::vector<crt::MeshVertex> curve_vert;
     std::vector<int> curve_idx;
     int curve_dw = -1, curve_dh = -1, curve_dx = -1, curve_dy = -1, curve_built = -1; // the table, rebuilt only when the size or the setting changes
@@ -1016,10 +1026,25 @@ int main(int argc, char **argv) {
     // ---- X24: personal bests per level (records.h, records.cfg next to controls.cfg). Only counted games, never in Purist mode.
     const std::string records_path = cfg_path.empty() ? std::string() : (fsx::path(cfg_path).parent_path() / "records.cfg").string();
     records::Table recs;
-    if (!records_path.empty() && recs.load(records_path)) say("Records: loaded " + records_path);
-    Uint32 best_until = 0;
-    std::string best_l1, best_l2;
-    std::string records_log;
+    // ---- 2.1.0: the sprite bytes of the last two machine ticks (index 0 = the tick before, 1 = the latest). Used only to draw sprites between ticks at frame rates above 60.
+    uint8_t spr_ram[2][16] = {}, spr_crd[2][16] = {};
+    auto spr_grab = [&](int k) {
+        game::Output go = game::output_view(m.bus);
+        std::memcpy(spr_ram[k], (const uint8_t *)&go.sprites, 16);
+        std::memcpy(spr_crd[k], (const uint8_t *)&go.coords, 16);
+    };
+    auto spr_push = [&]() {
+        std::memcpy(spr_ram[0], spr_ram[1], 16);
+        std::memcpy(spr_crd[0], spr_crd[1], 16);
+        spr_grab(1);
+    };
+    auto spr_sync = [&]() { // the machine was set to another state (load, rewind): no movement between the old and the new
+        spr_grab(1);
+        std::memcpy(spr_ram[0], spr_ram[1], 16);
+        std::memcpy(spr_crd[0], spr_crd[1], 16);
+    };
+    spr_sync();
+    if (!records_path.empty()) recs.load(records_path); // internal only (achievements use the same clears)
     // ---- X25: achievements (achievements.h, achievements.cfg next to controls.cfg): only counted games, player 1, 3 lives; never in Purist mode.
     const std::string ach_path = cfg_path.empty() ? std::string() : (fsx::path(cfg_path).parent_path() / "achievements.cfg").string();
     achievements::Engine ach;
@@ -1082,6 +1107,7 @@ int main(int argc, char **argv) {
             flash("could not load: " + err);
             return false;
         }
+        spr_sync();
         keeper.note_state_loaded(m, tag, state::high_score_ram(m.bus));
         rewind.clear();
         force_redraw = true;
@@ -1136,6 +1162,7 @@ int main(int argc, char **argv) {
         sample_inputs();
         m.run_frame();
         make_sound();
+        spr_push();
         ++ticks;
         ++steps_this_pass;
         rumble_frame();
@@ -1188,25 +1215,8 @@ int main(int argc, char **argv) {
                 if (ach.dirty() && !ach_path.empty() && !ach.save(ach_path)) say("Achievements: could not save " + ach_path);
             }
             for (const stats::Clear &c : cl) { // X24: a level was cleared in a game that still counts
-                const records::Result rr = recs.update(c.level, c.score, c.frames);
-                char b[200];
-                std::snprintf(b, sizeof b, "Records: level %d cleared, score %d, time %s (%u frames): %s", c.level, c.score, records::time_text(c.frames).c_str(),
-                              c.frames,
-                              rr.first                      ? "first record"
-                              : rr.new_score && rr.new_time ? "NEW BEST score and time"
-                              : rr.new_score                ? "NEW BEST score"
-                              : rr.new_time                 ? "NEW BEST time"
-                                                            : "no record");
-                say(b);
-                records_log += std::string(b) + "\n";
-                if (rr.first || rr.new_score || rr.new_time) {
-                    if (!records_path.empty() && !recs.save(records_path)) say("Records: could not save " + records_path);
-                    best_l1 = rr.first ? "RECORD SET" : "NEW BEST";
-                    const std::string lv = rr.level == records::kLevels ? "LEVEL 21+" : "LEVEL " + std::to_string(rr.level);
-                    best_l2 = rr.first ? lv : lv + (rr.new_score && rr.new_time ? " SCORE+TIME" : rr.new_score ? " SCORE" : " TIME");
-                    best_until = SDL_GetTicks() + 3500;
-                    force_redraw = true;
-                }
+                const records::Result rr = recs.update(c.level, c.score, c.frames); // kept as internal logic; nothing about records is shown or logged
+                if ((rr.first || rr.new_score || rr.new_time) && !records_path.empty()) recs.save(records_path);
             }
         }
         if (hashlog) std::fprintf(hashlog, "%llu %s\n", (unsigned long long)ticks, state_hash(m.bus).c_str()); // S34: "frame sha1" as in tools/replay
@@ -1215,6 +1225,7 @@ int main(int argc, char **argv) {
     auto rewind_tick = [&]() { // one frame backwards: the machine is put back to the state before its last frame (no sound while rewinding)
         std::vector<uint8_t> s2;
         if (!rewind.pop(s2) || !state::restore(m, wsg, s2, nullptr)) return;
+        spr_sync();
         keeper.note_assist();
         keeper.note_state_replaced(m);
         stc.invalidate();
@@ -1225,7 +1236,7 @@ int main(int argc, char **argv) {
     };
     // display state (none of it can reach the emulation)
     display::Fit fit = o.fit ? display::Fit::Fill : display::Fit::Integer;
-    bool scanlines = o.scanlines, overlay_on = o.overlay_on, bordered = !o.borderless, smooth = false, smooth_pref = o.smooth;
+    bool scanlines = o.scanlines, bordered = !o.borderless, smooth = false, smooth_pref = o.smooth;
     int smooth_n = 0;
     double smooth_hz = 0;
     double smooth_next = 0;
@@ -1253,7 +1264,61 @@ int main(int argc, char **argv) {
         smooth_next = (double)SDL_GetPerformanceCounter();
         smooth_since = smooth_n;
     };
-    set_pacing(smooth_pref && !purist);
+    // ---- 2.1.0: FRAME RATE (30, 60, 75, 100, 120, 144, unlocked). DISPLAY ONLY: the machine always runs 60.606 ticks per second whatever is chosen, so the game logic, the sound and
+    // every hash are the same. What changes is how often a picture is drawn and, above 60, whether sprites are drawn BETWEEN two ticks (render_sprites_lerp: a sprite is shown on the
+    // way from where it was one tick ago to where it is now, so the picture runs one tick behind the machine at most, about 16 ms; the tile layer is the latest tick's).
+    //   cap_mode 0 classic (60): a picture is built on every machine tick and shown on every screen refresh, exactly as in version 2.0.0
+    //            1 vsync on, pictures built at the chosen rate (30, or a rate that fits the screen: 144 on a 144 Hz screen, 60 or 72 on 144 ...)
+    //            2 vsync off, a timer holds the rate (75, 100, 120 ... on a screen that does not divide it)
+    //            3 unlocked: vsync off, no limit
+    int cap_mode = 0;
+    bool vsync_now = vsync, interp_ok = false;
+    double pic_period = 0, pic_next = 0, vs_period = (double)pf / 60.0;
+    bool dirty = true, bg_dirty = true;
+    auto fps_effective = [&]() { return purist ? 60 : menu::fps_value(fps_idx); };
+    auto apply_fps = [&]() {
+        const int T = fps_effective();
+        const double R = refresh_hz > 0 ? refresh_hz : 60.0;
+        const bool have_vsync = vsync || o.sim_refresh > 0;
+        bool want_vsync = have_vsync;
+        std::string how;
+        if (T == 60) {
+            cap_mode = 0;
+            how = "classic (a picture on every machine tick, shown on every screen refresh)";
+        } else if (T == 0) {
+            cap_mode = 3;
+            want_vsync = false;
+            how = "unlocked (no waiting for the screen, as fast as this computer can draw)";
+        } else {
+            const int d = std::max(1, (int)std::lround(R / T));
+            const bool divisor = std::fabs(R / d - T) / T < 0.03;
+            if (!have_vsync) {
+                cap_mode = 2;
+                want_vsync = false;
+                how = "held by a timer (this screen mode has no vsync)";
+            } else if (divisor || T >= R) {
+                cap_mode = 1;
+                how = T >= R ? "as often as the screen refreshes (" + std::to_string((int)(R + 0.5)) + " Hz is the most this screen can show)" : "locked to the screen refresh (every " + std::to_string(d) + " refreshes)";
+            } else if (T < 60) {
+                cap_mode = 1;
+                how = "pictures built " + std::to_string(T) + " times a second, shown on every screen refresh";
+            } else {
+                cap_mode = 2;
+                want_vsync = false;
+                how = "held by a timer, vsync off (the screen refreshes at " + std::to_string((int)(R + 0.5)) + " Hz, which does not fit " + std::to_string(T) + "; tearing is possible)";
+            }
+        }
+        if (vsync && (vsync && want_vsync) != vsync_now) SDL_RenderSetVSync(ren, want_vsync ? 1 : 0); // only when it really changes (the renderer was created with vsync)
+        vsync_now = vsync && want_vsync;
+        interp_ok = !purist && (T == 0 || (T > 60 && std::min<double>(T, want_vsync ? R : (double)T) > 62.0));
+        pic_period = T > 0 ? (double)pf / T : 0;
+        pic_next = (double)SDL_GetPerformanceCounter();
+        vs_period = (double)pf / R;
+        dirty = bg_dirty = true;
+        set_pacing(smooth_pref && !purist && T == 60); // smooth pacing is built for the classic 60
+        say(std::string("Frame rate: ") + (T == 0 ? "unlocked" : std::to_string(T)) + (purist && menu::fps_value(fps_idx) != 60 ? " (Purist mode is always 60)" : "") + ", " + how + "; sprite motion between ticks " + (interp_ok ? "on" : "off"));
+    };
+    apply_fps();
     hx.set_level(purist ? 0 : vib_pref);
     rumble_stop();
     say(std::string("Surround: ") + (purist ? "black (Purist)" : surround::name(surround_mode)));
@@ -1261,8 +1326,7 @@ int main(int argc, char **argv) {
     say(std::string("Glow: ") + (purist ? "off (Purist)" : crt::name(glow_level)));
     say(std::string("CRT mask: ") + (purist ? "off (Purist)" : crt::name(crt_mask)));
     say(std::string("Display: ") + (fit == display::Fit::Fill ? "fill" : "whole-number") + " scaling, scanlines " + (scanlines ? "on" : "off") + ", window frame " +
-        (bordered ? "on" : "off") + ", overlay " + (overlay_on ? "on" : "off"));
-    static uint32_t over[overlay::kOutW * overlay::kOutH];
+        (bordered ? "on" : "off") + "");
     display::PacingStats pst;
     uint64_t last_present = SDL_GetPerformanceCounter(), presents = 0;
     double sim_next = (double)SDL_GetPerformanceCounter();
@@ -1293,8 +1357,7 @@ int main(int argc, char **argv) {
             size_t at = it.find('@');
             if (at == std::string::npos) continue;
             std::string kn = it.substr(0, at);
-            SDL_Keycode kc = kn == "F3"    ? SDLK_F3
-                             : kn == "F5"  ? SDLK_F5
+            SDL_Keycode kc = kn == "F5"    ? SDLK_F5
                              : kn == "F6"  ? SDLK_F6
                              : kn == "F7"  ? SDLK_F7
                              : kn == "F8"  ? SDLK_F8
@@ -1322,7 +1385,7 @@ int main(int argc, char **argv) {
             const std::string n = it.substr(c + 1);
             using menu::Cmd;
             const Cmd cm = n == "resetdisplay" ? Cmd::ResetDisplay : n == "resetgame" ? Cmd::ResetGame : n == "lives" ? Cmd::Lives : n == "bonus" ? Cmd::Bonus : n == "difficulty" ? Cmd::Difficulty : n == "names" ? Cmd::Names
-                         : n == "overlay" ? Cmd::Overlay : n == "scanlines" ? Cmd::Scanlines : n == "rules" ? Cmd::Rules : n == "surround" ? Cmd::Surround : n == "restart" ? Cmd::Restart : Cmd::None;
+                         : n == "scanlines" ? Cmd::Scanlines : n == "rules" ? Cmd::Rules : n == "surround" ? Cmd::Surround : n == "restart" ? Cmd::Restart : Cmd::None;
             if (cm != Cmd::None) cmdat.push_back({std::atol(it.c_str()), cm, false});
         }
     }
@@ -1410,9 +1473,9 @@ int main(int argc, char **argv) {
     int reset_armed = 0;   // S34E: 0 nothing asked, 1 DISPLAY reset asked, 2 GAME OPTIONS reset asked (the first Enter on a RESET TO DEFAULTS item arms it, the second one does it (opening or closing the menu disarms it)
     auto fill_model = [&]() {
         model.purist = purist;
-        model.overlay = overlay_on;
         model.scanlines = scanlines;
-        model.smooth = smooth_pref;
+        model.smooth = smooth_pref && fps_effective() == 60;
+        model.fps = fps_idx;
         model.frame = bordered;
         model.fill = fit == display::Fit::Fill;
         model.fullscreen = (SDL_GetWindowFlags(win) & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
@@ -1423,7 +1486,6 @@ int main(int argc, char **argv) {
         model.pad_symbols = pad_symbols;
         if (mn.is_open() && mn.page() >= 4) refresh_slots(); // X12: the picker shows what the files say now
         for (int i = 0; i < state::kSlots; ++i) model.slot_line[i] = state::slot_line(i + 1, slot_nfo[i + 1]);
-        for (int i = 0; i < records::kLevels; ++i) { model.rec_line[i] = records::line(i + 1, recs.get(i + 1)); }
         model.hints = hints_pref;
         model.lightbar = lightbar_pref;
         model.run_summary = summary_pref;
@@ -1451,15 +1513,15 @@ int main(int argc, char **argv) {
         menu::pad_buttons(bind, model.pad_btn);
         model.pad_type = pad_type_now();
     };
-    auto panel_on = [&]() { return mn.is_open() || (overlay_on && !purist) || help_pin; };
+    auto panel_on = [&]() { return mn.is_open() || help_pin; };
     bool panel_was = panel0;
     auto persist = [&]() {
         if (!use_settings) return;
         menu::Settings x;
-        x.overlay = overlay_on;
         x.scanlines = scanlines;
         x.fill = fit == display::Fit::Fill;
         x.smooth = smooth_pref;
+        x.fps = fps_idx;
         x.frame = bordered;
         x.help_pin = help_pin;
         x.vibration = vib_pref;
@@ -1712,19 +1774,25 @@ int main(int argc, char **argv) {
             save_controls();
             say(std::string("Controls: one-button Start ") + (bind.one_button_start ? "on" : "off"));
             break;
-        case Cmd::Overlay:
-            overlay_on = !overlay_on;
-            persist();
-            say(std::string("Display: overlay ") + (overlay_on ? "on" : "off"));
-            break;
         case Cmd::Scanlines:
             scanlines = !scanlines;
             persist();
             say(std::string("Display: scanlines ") + (scanlines ? "on" : "off"));
             break;
         case Cmd::Pacing:
-            set_pacing(!smooth);
-            smooth_pref = smooth;
+            if (fps_effective() == 60) {
+                set_pacing(!smooth);
+                smooth_pref = smooth;
+            } else {
+                smooth_pref = !smooth_pref;
+                mn.note = "SMOOTH NEEDS RATE 60";
+                say(std::string("Pacing: smooth pacing is built for the classic 60 pictures a second; ") + (smooth_pref ? "it is saved as on and starts when FRAME RATE is 60" : "it is saved as off"));
+            }
+            persist();
+            break;
+        case Cmd::FrameRate:
+            fps_idx = (fps_idx + (delta < 0 ? menu::kFpsCount - 1 : 1)) % menu::kFpsCount;
+            apply_fps();
             persist();
             break;
         case Cmd::Frame:
@@ -1826,11 +1894,11 @@ int main(int argc, char **argv) {
             }
             reset_armed = 0;
             const menu::Settings d;   // the standard settings: the one list in docs/notes/settings_table.md
-            overlay_on = d.overlay;
             scanlines = d.scanlines;
             fit = d.fill ? display::Fit::Fill : display::Fit::Integer;
-            set_pacing(d.smooth);
             smooth_pref = d.smooth;
+            fps_idx = d.fps;
+            apply_fps(); // also sets the pacing
             if (bordered != d.frame) {
                 bordered = d.frame;
                 SDL_SetWindowBordered(win, bordered ? SDL_TRUE : SDL_FALSE);
@@ -1844,7 +1912,7 @@ int main(int argc, char **argv) {
             surround_mode = d.surround;
             persist();
             fill_model();
-            say("Settings: the display settings are back to their standard values (overlay, scanlines, pacing, scaling, window frame, key panel, run summary, CRT mask, glow, curve, surround); nothing else was changed and the game was not restarted");
+            say("Settings: the display settings are back to their standard values (frame rate, scanlines, pacing, scaling, window frame, key panel, run summary, CRT mask, glow, curve, surround); nothing else was changed and the game was not restarted");
             mn.note = "DISPLAY RESET";
             break;
         }
@@ -1882,7 +1950,6 @@ int main(int argc, char **argv) {
     };
     auto handle_key = [&](SDL_Keycode key) {
         if (key == SDLK_F11) do_cmd(menu::Cmd::FullScreen, 1);
-        else if (key == SDLK_F3) do_cmd(menu::Cmd::Overlay, 1);
         else if (key == SDLK_F5) do_cmd(menu::Cmd::Scanlines, 1);
         else if (key == SDLK_F6) do_cmd(menu::Cmd::Pacing, 1);
         else if (key == SDLK_F7) do_cmd(menu::Cmd::Frame, 1);
@@ -2315,15 +2382,54 @@ int main(int argc, char **argv) {
             toast_until = 0;
             force_redraw = true;
         }
-        if (steps || force_redraw || mn.is_open()) {
+        // ---- 2.1.0: frame rate (see apply_fps). dirty: the machine ticked since the picture was last built.
+        if (steps) dirty = bg_dirty = true;
+        const uint64_t t_gate = SDL_GetPerformanceCounter();
+        bool pic_due = true, present_now = true;
+        const bool final_pass = o.fast || (o.ticks_limit > 0 && (long)ticks >= o.ticks_limit);
+        if (!final_pass) {
+            const auto advance = [&]() {
+                pic_next += pic_period;
+                if (pic_next < (double)t_gate - pic_period) pic_next = (double)t_gate;
+            };
+            if (cap_mode == 1) {
+                pic_due = (double)t_gate >= pic_next - 0.5 * vs_period || mn.is_open() || force_redraw;
+                if (pic_due && !mn.is_open() && !force_redraw) advance();
+            } else if (cap_mode == 2) {
+                pic_due = present_now = (double)t_gate >= pic_next;
+                if (pic_due) advance();
+            }
+        }
+        if (!present_now) { // vsync is off and it is not yet time for the next picture: wait (sleep while there is time, then look again)
+            if (pic_next - (double)t_gate > (double)pf * 0.0025) SDL_Delay(1);
+            if (o.ticks_limit > 0 && (long)ticks >= o.ticks_limit) running = false;
+            if (o.measure > 0 && (double)(SDL_GetPerformanceCounter() - start) / pf >= o.measure) running = false;
+            continue;
+        }
+        const bool interp_now = interp_ok && !o.fast && !paused && !rewinding && !mn.is_open() && !bed.active() && !focus_paused;
+        if ((pic_due && (dirty || interp_now)) || force_redraw || mn.is_open()) {
             force_redraw = false;
-            compose(g, roms, m, o, fb);
-            const uint32_t *srcpix = over;
+            dirty = false;
+            if (interp_now) { // sprites between two ticks: the tile layer of the latest tick, the sprites on their way from the tick before to the latest one
+                static uint32_t bgfb[W * H];
+                game::Output go = game::output_view(m.bus);
+                if (bg_dirty) {
+                    render_tilemap(g, go.screen.tile, go.screen.colour, bgfb);
+                    bg_dirty = false;
+                }
+                std::memcpy(fb, bgfb, sizeof bgfb);
+                if (!o.tiles_only) {
+                    const double al = 1.0 - (next - (double)t_gate) / period;
+                    render_sprites_lerp(g, roms.palettes.data(), spr_ram[0], spr_crd[0], spr_ram[1], spr_crd[1], (float)std::max(0.0, std::min(1.0, al)), fb, o.mame_sprites);
+                }
+            } else {
+                compose(g, roms, m, o, fb);
+                bg_dirty = true;
+            }
             static uint32_t wide[overlay::kOutW * overlay::kOutH];
-            if (overlay_on && !purist && !mn.is_open()) overlay::compose(g, m.bus, fb, over); // reads memory only; the emulated picture in fb is not changed
-            else {
+            const uint32_t *srcpix = wide;
+            {
                 for (int y = 0; y < H; ++y) { std::memcpy(wide + y * TW, fb + y * W, W * 4); }
-                srcpix = wide; // the 224-wide picture, in the 352-wide texture
                 if (mn.is_open() && bed.active()) menu::draw_bindings(g, wide, bed, pad != nullptr || joy != nullptr, pad_type_now());
                 else if (mn.is_open()) {
                     fill_model();
@@ -2341,10 +2447,6 @@ int main(int argc, char **argv) {
                 const int pid = popup.update(pop_ok, SDL_GetTicks());
                 if (pid >= 0) menu::draw_achievement_popup(g, const_cast<uint32_t *>(srcpix), pid);
             }
-            if (best_until && !mn.is_open()) {
-                if (SDL_GetTicks() > best_until) best_until = 0;
-                else menu::draw_new_best(g, const_cast<uint32_t *>(srcpix), best_l1, best_l2);
-            } // X24
             if (summary_until && !mn.is_open()) {
                 if (SDL_GetTicks() > summary_until) summary_until = 0;
                 else menu::draw_run_summary(g, const_cast<uint32_t *>(srcpix), summary_data);
@@ -2551,7 +2653,7 @@ int main(int argc, char **argv) {
             while ((double)SDL_GetPerformanceCounter() < sim_next) {
                 if ((sim_next - (double)SDL_GetPerformanceCounter()) > pf * 0.002) SDL_Delay(1);
             }
-        } else if (!vsync) SDL_Delay(1);
+        } else if (!vsync_now && (cap_mode == 0 || (cap_mode == 3 && (paused || mn.is_open() || focus_paused)))) SDL_Delay(1); // unlocked still rests while nothing moves
         uint64_t t_now = SDL_GetPerformanceCounter();
         pst.ticks = ticks;
         pst.present(steps > 0, 1000.0 * (double)(t_now - last_present) / pf);
@@ -2589,7 +2691,6 @@ int main(int argc, char **argv) {
     if (!o.stats_file.empty()) { // X22
         if (purist) say("Stats: off in Purist mode");
         else {
-            stats_log += records_log;
             for (int p = 0; p < 2; ++p)
                 if (stc.run(p).active) stats_line("ACTIVE", p + 1, stc.run(p), state::score_ram(m.bus, p), (unsigned)ticks);
             FILE *sf = std::fopen(o.stats_file.c_str(), "w");

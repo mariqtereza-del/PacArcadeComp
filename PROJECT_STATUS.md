@@ -1,8 +1,8 @@
 # Project status (plan v2.0, 2026-10-06)
 
 **Authoritative plan:** docs/PLAN.md (user-facing page: docs/Pac-Man_PC_Port_Plan.html). Step files: docs/steps/SNN.md.
-**Next step:** none: the plan is finished once you have played the 2.0.0 exe once and published the release (docs/GITHUB_UPLOAD_GUIDE.md, "Update guide (version 2.0.0)"). Tell me OK or what you saw.
-**Last known-good checkpoint:** pacman-port_N55.zip (release 2.0.0: dist/PacArcadeComp-2.0.0-win64.zip).
+**Next step:** none: the plan is finished once you have played the 2.1.0 exe once (frame rate) and published the release (docs/GITHUB_UPLOAD_GUIDE.md, "Update guide (version 2.1.0)"). Tell me OK or what you saw.
+**Last known-good checkpoint:** pacman-port_I04.zip (release 2.1.0: dist/PacArcadeComp-2.1.0-win64.zip).
 
 ## How to work on this project (rules, short)
 1. Do only the step named as Next step. Read only that step's file and the files it names.
@@ -180,6 +180,10 @@
 | N53 | Named output state: screen, sprites and sound | VERIFIED | N52 | docs/evidence/N53_names_outputs.txt |
 | N54 | Documentation for the native game | VERIFIED | N53 | docs/evidence/N54_docs.txt |
 | N55 | Release 2.0.0 and GitHub update | VERIFIED | N54 | docs/evidence/N55_release_2_0.txt |
+| I01 | Frame rate: 30, 60, 75, 100, 120, 144, unlocked | VERIFIED | N55 | docs/evidence/I01_frame_rate.txt |
+| I02 | Remove the F3 debug overlay and the record messages | VERIFIED | N55 | docs/evidence/I02_removals.txt |
+| I03 | HDR: On/Off button and intensity slider | VERIFIED | I01 | docs/evidence/I03_hdr.txt |
+| I04 | Release 2.1.0 and GitHub update | VERIFIED | I01, I02, I03 | docs/evidence/I04_release_2_1.txt |
 <!-- STEPS-END -->
 
 ## Decisions so far
@@ -332,6 +336,10 @@ Checked against MAME listings (mdk.cab pages for `pacman` and `puckman`).
 - S37: the GitHub copy is made by `sh tools/export_github.sh` (scan for ROM bytes built in; the disassembly, the ROM-derived test tables, the screenshots of the game's graphics, the user's reports and the "## User" section of this file are left out; see docs/evidence/S37_github.txt). LICENSE is MIT for our own code (the user may change it before uploading). BUILDING.md labels the Windows-native builds (WSL, MSYS2) as untested. Formatting (clang-format) proved layout-only: 66 of 66 object files identical. src/logic/mode_timers.h tables are arranged by kind, not in ROM order (so the scan finds no ROM run). The readable game rules are proved but NOT used by the game; MODDING.md says so plainly. tests/run_rom_free.sh is the suite that needs no ROM. I cannot upload for the user (no GitHub login here): docs/GITHUB_UPLOAD_GUIDE.md is the click-by-click guide.
 
 - T02a: Machine::rules (a table by address, off by default and in Purist mode) lets an adapter in src/rules/rules.h run instead of a ROM routine; only the random numbers (2A23) are in use, switched on with --rules readable. src/logic/README.md and MODDING.md still describe the readable code as unused until T02j.
+
+- 2.1.0 (I01 to I04): the frame rate only changes how the finished picture is drawn. Above 60 the picture runs up to one machine tick (about 16.5 ms) behind the machine because sprites are drawn between the previous and the latest tick (docs/notes/frame_rate.md). Not verified on a real 120/144 Hz monitor or real Windows (only the Linux test display and Wine/Direct3D at 60 Hz): the play test must check it. UNLOCKED and rates that do not fit the screen's refresh switch vsync off (tearing is possible); 60 never touches vsync.
+- 2.1.0: the HDR setting is a picture effect on the SDR signal, not an HDR10 signal (SDL2 cannot send one; docs/notes/hdr.md). It does not switch Windows or the monitor into HDR mode.
+- 2.1.0: smooth pacing (F6) is used only at frame rate 60 (the menu shows EXACT at other rates; the saved choice is kept).
 
 ## Open questions
 - Whether to offer the Puck-Man version as a selectable option later (not blocking).
@@ -536,3 +544,6 @@ Checked against MAME listings (mdk.cab pages for `pacman` and `puckman`).
 - 2026-10-23: user request (outside the numbered plan): INVINCIBLE in its own CHEATS menu, outside GAME OPTIONS, and using cheats must switch achievements off. On inspection the source already had this (main menu item CHEATS > INVINCIBLE; the assist rule CHEAT HELP stops records, statistics and achievements for that game, tests/test_achievements.sh, test_progress_ach.sh, test_menu.sh 955 checks, test_cheat_invincible.sh pass). Fixed what was wrong: the N49c test text dist/README-TEST-N49c.txt still said GAME OPTIONS; README.md now describes the CHEATS page. Note: menu.cpp, menu.h, main.cpp, cheat.h and tests/test_menu.cpp changed on disk between 15:10 and 15:20 without an edit by this session; they were checked by the tests above and by a full regression.
 - 2026-10-23: the plan was rewritten for the finished version (plan v3.0): project summary, phase-by-phase history, a Scrapped steps section (30 removed or replaced steps and what became of them), other changes of plan, the lanes and the statistics text brought up to date (tools/plan_data.py, make_plan.py, plan_template.html).
 - 2026-10-23: N55 done and verified here (AWAITING the user's one-game play test of the new exe and the GitHub publishing): version 2.0.0 (package.sh, app.rc, package README, README, BUILDING, CHANGELOG), new GitHub update guide for 2.0.0, Windows package dist/PacArcadeComp-2.0.0-win64.zip built (no ROM), export scan clean, fresh export builds and its ROM-free tests pass, full regression ALL TESTS PASSED. Known limit: the Windows exe is cross-compiled here and only a Windows run by the user proves it starts. Evidence: docs/evidence/N55_release_2_0.txt.
+- 2026-10-28 (user request, iteration 2.1.0, steps I01 to I04): I01 FRAME RATE 30, 60, 75, 100, 120, 144, unlocked (display only; the machine ticks at 60.606 Hz whatever is chosen; sprites drawn between two ticks above 60 by render_sprites_lerp; limiter with four modes; --fps; Purist is always 60; smooth pacing only at 60; the replay hash log is byte-identical at 60, 30, 144, unlocked and with HDR on: tests/test_fps_hdr.sh). I02 the F3 debug overlay and the record messages (NEW BEST banner, Records page and menu item, Records log lines) removed; records.update and records.cfg kept as internal logic so achievements are unchanged (--overlay is accepted and ignored; an old overlay line in settings.cfg is ignored silently; tests/test_level256.cpp deleted with the feature). I03 DISPLAY > HDR and HDR INTENSITY (slider 1 to 10): an honest HDR look on the SDR picture (src/app/hdr.h), because SDL2 cannot send a real HDR signal. I04 version 2.1.0 (package.sh, app.rc, package README, README, CHANGELOG), GitHub update guide for 2.1.0, full regression (ALL TESTS PASSED) plus the display, menu, state, achievement and pad tests outside run_all (all PASS), Windows package built and scanned (no ROM), GitHub export scanned. One bug found by the tests and fixed on the way: a redundant SDL_RenderSetVSync(1) call at the classic 60 changed the pacing of the software renderer in tests/test_resize_audio.sh; the classic mode now never touches vsync. Settings: overlay replaced by frame_rate, hdr, hdr_intensity (23 settings). Evidence: docs/evidence/I01_frame_rate.txt, I02_removals.txt, I03_hdr.txt, I04_release_2_1.txt.
+
+- 2026-10-28 (user request): HDR removed again before release (the user found the look wrong): menu items, settings keys, hdr.h and its test are gone; old hdr lines in settings.cfg are ignored. Steps X47/I03 stay as history (scrapped by the user). Packages rebuilt; only the fast checks were run on request (test_fps, test_menu, test_reset_defaults, test_achievement_settings).

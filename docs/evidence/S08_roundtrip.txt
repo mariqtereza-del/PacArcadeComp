@@ -1,4 +1,4 @@
-S08 round-trip report, 2026-10-23
+S08 round-trip report, 2026-10-28
 ROM: build/rom/prog.bin sha1 a70bb25d643a594f5bd0114f54d40fab0901ef3b
 Re-assembled docs/disasm/pacman.asm with z80asm and compared with prog.bin (cmp): IDENTICAL, 16384 bytes
 Coverage of the 16384 bytes:

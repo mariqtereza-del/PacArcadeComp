@@ -2,6 +2,12 @@
 
 Version numbers follow `major.minor.patch`. The exe's version is set in `dist/res/app.rc` and `tools/package.sh`.
 
+## 2.1.0 (2026-10-28)
+- **Frame rate:** Esc > DISPLAY > FRAME RATE offers 30, 60, 75, 100, 120, 144 and UNLOCKED. Display only: the machine still ticks at 60.606 per second whatever is chosen, so the game logic, sound and every replay hash are identical (tests/test_fps_hdr.sh compares the hash logs at 30, 60, 144 and unlocked). Above 60 the sprites are drawn between two ticks (`render_sprites_lerp`, a sprite is shown on its way from where it was one tick ago to where it is now; the picture runs at most one tick, about 16 ms, behind the machine). Smooth pacing (F6) works only at 60. Standard stays 60 and unchanged from 2.0.0. Command line: `--fps 30|60|75|100|120|144|unlocked`. Purist mode is always 60.
+- **Removed:** the F3 debug overlay (the layout constants and drawing helpers it shared with the menu stay in `overlay.h/.cpp`); the record messages (the NEW BEST banner, the Records page and menu item, the Records log lines). The records are still kept inside (`records.cfg`) as before, because the achievements use the same level-clear events. `--overlay` is accepted and ignored; an old `overlay` line in settings.cfg is ignored silently.
+- settings.cfg: `overlay` replaced by `frame_rate` (21 settings).
+- The DISPLAY page has 17 rows (rows are 11 pixels high there).
+
 ## 2.0.0 (steps N01 to N55, 2026-10-23)
 - **The program no longer contains a Z80 emulator.** Everything below is why that is safe: the game is proved identical to the original, frame for frame.
 - The game is now native C++: the original program's routines were rewritten one by one (`src/game/`) and each step was proved identical, frame by frame and cycle by cycle, against the original running on a Z80 emulator. Zero ROM instructions are executed any more (3.1 million frames checked).

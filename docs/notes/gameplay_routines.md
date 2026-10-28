@@ -49,6 +49,6 @@ Target rules read from the code (confirmed only where the trace section says so)
 | 0E23 | toggles ghost animation flag 4DC0 every 8 frames | write trace | MED |
 
 ## 4. Open items and honest limits
-- Clyde's early release (frame 2302 in scenario A) is not explained by the personal-counter rule; look at 20D7 and 4D97 (inactivity timer, written at 13ED/13F5) in a later step.
+- Clyde's early release (frame 2302 in scenario A) is not explained by the personal-counter rule; look at 20D7 and 4D97 (inactivity timer, written at 13ED/13F5) in a later step. [Resolved in T02g: it is the inactivity timer at 13DD; see MACHINE_NOTES.md section 8.]
 - The ghost-kill branch, the frightened direction tasks 0D, 0E, 0F and Pinky's and Inky's chase targets were seen executing only a few times; their numbers have not been compared with the Dossier (the tables are read in S12).
 - Evidence comes only from the Python prototype; the C++ port will have to reproduce the same writes (S18 compares RAM every frame).

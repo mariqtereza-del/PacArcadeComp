@@ -7,7 +7,7 @@ chk() { if [ "$2" = "$3" ]; then echo "  ok: $1 ($2)"; else echo "  FAIL: $1 (go
 xd() { timeout 5 xdotool "$@"; }
 export DISPLAY=${DISPLAY:-:99}; xdpyinfo >/dev/null 2>&1 || { rm -f /tmp/.X99-lock /tmp/.X11-unix/X99; ( Xvfb :99 -screen 0 1280x800x24 >/dev/null 2>&1 & ); sleep 2; }
 sh tools/build_app.sh >/dev/null || { echo "FAIL: build app"; exit 1; }
-build/app/pacman-port --no-audio --crt-mask strong --glow strong --curve strong --surround ambient --scanlines --overlay --measure $SECS --report $D/r.txt --config $D/c.cfg --no-hiscore >/dev/null 2>&1 &
+build/app/pacman-port --no-audio --crt-mask strong --glow strong --curve strong --surround ambient --scanlines --fps 144 --measure $SECS --report $D/r.txt --config $D/c.cfg --no-hiscore >/dev/null 2>&1 &
 P=$!; sleep 4; W=$(xdotool search --pid $P | head -1); xd windowfocus $W; xd key 5; sleep 0.3; xd key 1; : > $D/rss.txt; T=0; N=0; T0=$(date +%s)
 while kill -0 $P 2>/dev/null && [ $T -lt $((SECS - 5)) ]; do
   RSS=$(awk '/VmRSS/ {print $2}' /proc/$P/status 2>/dev/null); [ -n "$RSS" ] && echo "$T $RSS" >> $D/rss.txt

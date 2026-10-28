@@ -1,10 +1,10 @@
 # Settings table (X48, 2026-10-15; T02i added `rules`)
 
-`settings.cfg` sits next to `controls.cfg` (the program's settings folder). The menu writes it; it can also be edited with Notepad. One comment line, then one `key value` line per setting (21 settings; S34E: every key is reset by exactly one of the two buttons, or by neither; S34D removed `purist`: an old `purist on` line is reported and ignored); a wrong value or unknown key is reported in the log and the other lines are still used. Checked by tests/test_integration.sh (round trip is byte-identical).
+`settings.cfg` sits next to `controls.cfg` (the program's settings folder). The menu writes it; it can also be edited with Notepad. One comment line, then one `key value` line per setting (21 settings; S34E: every key is reset by exactly one of the two buttons, or by neither; S34D removed `purist`: an old `purist on` line is reported and ignored); an old `overlay` line (the F3 overlay was removed in 2.1.0) is ignored without a message; a wrong value or unknown key is reported in the log and the other lines are still used. Checked by tests/test_integration.sh (round trip is byte-identical).
 
 | Key | Values (first = standard) | Menu place | Locked by --purist (test flag only)? | Reset by (S34E) |
 |---|---|---|---|---|
-| overlay | off, on | DISPLAY > OVERLAY F3 | yes | DISPLAY > RESET TO DEFAULTS (no restart) |
+| frame_rate | 60, 30, 75, 100, 120, 144, unlocked | DISPLAY > FRAME RATE | yes (always 60) | DISPLAY > RESET TO DEFAULTS (no restart) |
 | scanlines | off, on | DISPLAY > SCANLINES F5 | yes | DISPLAY > RESET TO DEFAULTS (no restart) |
 | fill | off, on | DISPLAY > SCALING F8 | yes | DISPLAY > RESET TO DEFAULTS (no restart) |
 | smooth | off, on | DISPLAY > SMOOTH PACING F6 | yes | DISPLAY > RESET TO DEFAULTS (no restart) |
@@ -29,7 +29,7 @@
 (Menu names are as shown on screen; the CRT LOOK row sets mask, glow, curve and scanlines together from four presets and has no key of its own.)
 
 ## Keys (every key the program handles is listed in the help panel)
-ESC menu, F1 pause, F2 save state, F4 load state, Backspace rewind, F3 overlay, F5 scanlines, F6 pacing, F7 window frame, F8 scaling, F9 keys page, F10 pad page, F11 full screen, F12 reset controls. The new extras after S34 (CRT mask, glow, curve, presets, surround, cabinet picture, Ambient) have no keys of their own: they live in the menu (Esc > DISPLAY) so that no new key could clash with the game's controls. Every pad command has a picture in the pad help panel.
+ESC menu, F1 pause, F2 save state, F4 load state, Backspace rewind, F5 scanlines, F6 pacing, F7 window frame, F8 scaling, F9 keys page, F10 pad page, F11 full screen, F12 reset controls. The new extras after S34 (CRT mask, glow, curve, presets, surround, cabinet picture, Ambient) have no keys of their own: they live in the menu (Esc > DISPLAY) so that no new key could clash with the game's controls. Every pad command has a picture in the pad help panel.
 
 ## Rules (T02i)
 `rules original` (the standard) runs the original ROM routines. `rules readable` runs the proved readable rules (src/logic, wired in src/rules): the game plays exactly the same, frame for frame (tests/test_rules_all.sh).

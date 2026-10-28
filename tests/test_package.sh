@@ -4,7 +4,7 @@
 cd "$(dirname "$0")/.." || exit 2
 fail=0; chk() { if [ "$2" = "$3" ]; then echo "  ok: $1 ($2)"; else echo "  FAIL: $1 (got \"$2\", wanted \"$3\")"; fail=1; fi; }
 sh tools/package.sh >/dev/null 2>&1 || { echo "FAIL: package build"; exit 1; }
-ZIP=$(ls dist/PacArcadeComp-*-win64.zip | head -1); echo "package: $ZIP"
+VER=$(sed -n "s/^VER=\([0-9.]*\);.*/\1/p" tools/package.sh); ZIP=dist/PacArcadeComp-$VER-win64.zip; echo "package: $ZIP"
 LIST=$(unzip -Z1 $ZIP | sort | tr '\n' ' '); echo "  listing: $LIST"
 chk "listing is exactly the folder, program, README, problem-report helper, licences" "$LIST" "PacArcadeComp/ PacArcadeComp/MODDING.txt PacArcadeComp/PacArcadeComp.exe PacArcadeComp/README.txt PacArcadeComp/REPORT-A-PROBLEM.bat PacArcadeComp/THIRD-PARTY-LICENSES.txt PacArcadeComp/mods/ PacArcadeComp/mods/README.md PacArcadeComp/mods/double_points.cfg PacArcadeComp/mods/long_blue_time.cfg PacArcadeComp/mods/slow_ghosts.cfg "
 chk "no zip, ROM or rom-like file inside" "$(unzip -Z1 $ZIP | grep -i -c '\.zip$\|\.rom$\|\.bin$\|pacman\.\|\.6[a-z]$\|\.5[a-z]$')" 0

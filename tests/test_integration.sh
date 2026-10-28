@@ -10,5 +10,5 @@ $D/t_int $D | tee $D/int_out.txt | tail -3; grep -q "RESULT: PASS" $D/int_out.tx
 # every function key and Backspace that main.cpp handles has a line in the help panel (menu.cpp draw_help)
 KEYS=$(grep -o "SDLK_F[0-9]*\|SDLK_BACKSPACE" src/app/main.cpp | sort -u | sed 's/SDLK_BACKSPACE/BKSP/; s/SDLK_//')
 for k in $KEYS ESC; do n=$(grep -c "{\"$k\", \"" src/app/menu.cpp); chk "help panel lists $k" "$([ "$n" -ge 1 ] && echo yes || echo no)" yes; done
-chk "number of keys handled (F1 to F12 and Backspace)" "$(echo $KEYS | wc -w)" 13
+chk "number of keys handled (F1, F2, F4 to F12 and Backspace; F3 was the debug overlay, removed in 2.1.0)" "$(echo $KEYS | wc -w)" 12
 [ $fail = 0 ] && echo "RESULT: PASS" || { echo "RESULT: FAIL"; exit 1; }

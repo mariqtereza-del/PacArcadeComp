@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     const std::string a = dir + "/int_a.cfg", b = dir + "/int_b.cfg";
     menu::Settings s;
     s.purist = true;
-    s.overlay = true;
+    s.fps = 3;
     s.scanlines = true;
     s.fill = true;
     s.smooth = true;
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     std::string prob;
     CHECK(menu::load_settings(a, t, &prob) && prob.empty(), "settings read back with no problems");
     CHECK(menu::save_settings(b, t, &err) && slurp(a) == slurp(b), "read back and written again: identical bytes");
-    CHECK(!t.purist && t.overlay && t.scanlines && t.fill && t.smooth && !t.frame && t.help_pin && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal &&
+    CHECK(!t.purist && t.fps == 3 && t.scanlines && t.fill && t.smooth && !t.frame && t.help_pin && t.lives == 3 && t.bonus == 2 && !t.diff_normal && !t.names_normal &&
               t.vibration == 1 && !t.pause_focus && t.hints == 2 && !t.lightbar && !t.run_summary && t.crt_mask == 2 && t.glow == 1 && t.curve == 2 && t.surround == 2 &&
               t.pad_symbols == 3 && t.rules_readable,
           "every value survived the round trip");
@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
                {menu::Cmd::Pad, "Pad", false},
                {menu::Cmd::ResetControls, "ResetControls", false},
                {menu::Cmd::OneButton, "OneButton", true},
-               {menu::Cmd::Overlay, "Overlay", true},
+               {menu::Cmd::FrameRate, "FrameRate", true},
                {menu::Cmd::Scanlines, "Scanlines", true},
                {menu::Cmd::Pacing, "Pacing", true},
                {menu::Cmd::Frame, "Frame", false},

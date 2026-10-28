@@ -20,8 +20,7 @@ struct Item {
 };
 static const Item kMain[] = {{"RESUME", Cmd::Resume, -1},        {"SAVE STATE F2", Cmd::SaveState, 4}, {"LOAD STATE F4", Cmd::LoadState, 5},
                              {"GAME OPTIONS", Cmd::None, 1},     {"CONTROLS", Cmd::None, 2},           {"DISPLAY", Cmd::None, 3},
-                             {"RECORDS", Cmd::None, 6},          {"ACHIEVEMENTS", Cmd::None, 7},
-                             {"CHEATS", Cmd::None, 8},
+                             {"ACHIEVEMENTS", Cmd::None, 7}, {"CHEATS", Cmd::None, 8},
                              {"RESTART GAME", Cmd::Restart, -1}, {"QUIT GAME", Cmd::Quit, -1}};
 static const Item kGame[] = {{"LIVES", Cmd::Lives, -1},       {"BONUS LIFE", Cmd::Bonus, -1},        {"DIFFICULTY", Cmd::Difficulty, -1},
                              {"GHOST NAMES", Cmd::Names, -1}, {"APPLY - RESTART", Cmd::Restart, -1}, {"RULES", Cmd::Rules, -1},
@@ -38,7 +37,7 @@ static const Item kControls[] = {{"BINDINGS", Cmd::Bindings, -1},
                                  {"HINTS", Cmd::Hints, -1},
                                  {"LIGHTBAR", Cmd::Lightbar, -1},
                                  {"BACK", Cmd::None, -1}};
-static const Item kDisplay[] = {{"OVERLAY F3", Cmd::Overlay, -1},
+static const Item kDisplay[] = {{"FRAME RATE", Cmd::FrameRate, -1},
                                 {"SCANLINES F5", Cmd::Scanlines, -1},
                                 {"SMOOTH PACING F6", Cmd::Pacing, -1},
                                 {"WINDOW FRAME F7", Cmd::Frame, -1},
@@ -57,7 +56,6 @@ static const Item kSaveSlots[] = {{"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -
                                   {"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -1}, {"", Cmd::SaveSlot, -1}, {"BACK", Cmd::None, -1}};
 static const Item kLoadSlots[] = {{"", Cmd::LoadSlot, -1}, {"", Cmd::LoadSlot, -1}, {"", Cmd::LoadSlot, -1}, {"", Cmd::LoadSlot, -1}, {"", Cmd::LoadSlot, -1},
                                   {"", Cmd::LoadSlot, -1}, {"", Cmd::LoadSlot, -1}, {"", Cmd::LoadSlot, -1}, {"BACK", Cmd::None, -1}};
-static const Item kRecords[] = {{"BACK", Cmd::None, -1}}; // X24: page 6 is drawn as a table of 21 levels (Menu::draw); Enter or Esc goes back
 static const Item *ach_items(int *n) {                    // X25: page 7: one row per achievement (the name) and BACK
     static Item it[achievements::kCount + 1];
     static bool init = false;
@@ -71,7 +69,6 @@ static const Item *ach_items(int *n) {                    // X25: page 7: one ro
 }
 static const Item *items_of(int page, int *n) {
     switch (page) {
-    case 6: *n = 1; return kRecords;
     case 7: return ach_items(n);
     case 8: *n = (int)(sizeof kCheats / sizeof *kCheats); return kCheats;
     case 4: *n = (int)(sizeof kSaveSlots / sizeof *kSaveSlots); return kSaveSlots;
@@ -82,13 +79,13 @@ static const Item *items_of(int page, int *n) {
     default: *n = (int)(sizeof kMain / sizeof *kMain); return kMain;
     }
 }
-static const char *kPageTitle[] = {"PAUSED", "GAME OPTIONS", "CONTROLS", "DISPLAY", "SAVE STATE", "LOAD STATE", "RECORDS", "ACHIEVEMENTS", "CHEATS"};
+static const char *kPageTitle[] = {"PAUSED", "GAME OPTIONS", "CONTROLS", "DISPLAY", "SAVE STATE", "LOAD STATE", "", "ACHIEVEMENTS", "CHEATS"};
 
 bool locked(Cmd c, const Model &m) {
     if (!m.purist) return false;
     return c == Cmd::SaveState || c == Cmd::LoadState || c == Cmd::SaveSlot || c == Cmd::LoadSlot || c == Cmd::OneButton || c == Cmd::Vibration || c == Cmd::FocusPause ||
            c == Cmd::Hints || c == Cmd::Lightbar || c == Cmd::RunSummary || c == Cmd::CrtMask || c == Cmd::Glow || c == Cmd::Curve || c == Cmd::CrtLook ||
-           c == Cmd::Surround || c == Cmd::Overlay || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Scaling || c == Cmd::Rules || c == Cmd::CheatInvincible;
+           c == Cmd::Surround || c == Cmd::FrameRate || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Scaling || c == Cmd::Rules || c == Cmd::CheatInvincible;
 }
 std::string label_of(Cmd c) {
     for (int p = 0; p < 9; ++p) {
@@ -98,6 +95,10 @@ std::string label_of(Cmd c) {
             if (it[i].cmd == c && it[i].label[0]) return it[i].label;
     }
     return "";
+}
+int fps_value(int index) {
+    static const int t[kFpsCount] = {30, 60, 75, 100, 120, 144, 0};
+    return t[index < 0 ? 1 : index >= kFpsCount ? 1 : index];
 }
 std::string value_text(Cmd c, const Model &m) {
     static const char *lives[] = {"1", "2", "3", "5"}, *bonus[] = {"10000", "15000", "20000", "NONE"};
@@ -121,7 +122,7 @@ std::string value_text(Cmd c, const Model &m) {
     case Cmd::Glow: return m.purist || m.glow == 0 ? "OFF" : m.glow == 1 ? "LIGHT" : "STRONG";
     case Cmd::CrtMask: return m.purist || m.crt_mask == 0 ? "OFF" : m.crt_mask == 1 ? "LIGHT" : "STRONG";
     case Cmd::Hints: return m.hints == 1 ? "KEYBOARD" : m.hints == 2 ? "PAD" : "AUTO";
-    case Cmd::Overlay: return onoff(m.overlay && !m.purist);
+    case Cmd::FrameRate: return m.purist ? "60" : fps_value(m.fps) == 0 ? "UNLOCKED" : std::to_string(fps_value(m.fps));
     case Cmd::Scanlines: return onoff(m.scanlines && !m.purist);
     case Cmd::Pacing: return (m.smooth && !m.purist) ? "SMOOTH" : "EXACT";
     case Cmd::Frame: return onoff(m.frame);
@@ -138,11 +139,11 @@ std::string value_text(Cmd c, const Model &m) {
 static bool is_choice(Cmd c) {
     return c == Cmd::Lives || c == Cmd::Bonus || c == Cmd::Difficulty || c == Cmd::Names || c == Cmd::OneButton || c == Cmd::Vibration || c == Cmd::PadSymbols ||
            c == Cmd::FocusPause || c == Cmd::Hints || c == Cmd::Lightbar || c == Cmd::RunSummary || c == Cmd::CrtMask || c == Cmd::Glow || c == Cmd::Curve ||
-           c == Cmd::CrtLook || c == Cmd::Surround || c == Cmd::Overlay || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Frame || c == Cmd::Scaling ||
+           c == Cmd::CrtLook || c == Cmd::Surround || c == Cmd::FrameRate || c == Cmd::Scanlines || c == Cmd::Pacing || c == Cmd::Frame || c == Cmd::Scaling ||
            c == Cmd::FullScreen || c == Cmd::HelpPin || c == Cmd::Rules || c == Cmd::CheatInvincible;
 }
 // The menu box as Menu::draw() puts it (keep these numbers in step with draw()).
-static int row_h(int n) { return n > 14 ? 13 : 14; }   // S34E: the DISPLAY page has 15 rows; they get one pixel less so that the box fits the 288-line picture
+static int row_h(int n) { return n > 16 ? 11 : n > 14 ? 13 : 14; }   // S34E: the DISPLAY page has 15 rows; they get one pixel less so that the box fits the 288-line picture
 static const int kRowH = 14, kBoxW = 208, kBoxX = 8, kBoxY = 20, kRow0 = 28;
 
 int Menu::item_at(int px, int py, bool *right_half) const {
@@ -265,23 +266,6 @@ void Menu::draw(const Gfx &g, uint32_t *out, const Model &m) const {
             uint32_t &p = out[y * kOutW + x];
             p = (p >> 1) & 0x7F7F7F;
         }
-    if (page_ == 6) { // X24: the records table: 21 levels, best score and fastest time
-        const int bx6 = kBoxX, by6 = 4, bw6 = kBoxW, bh6 = 262;
-        rect(out, bx6, by6, bw6, bh6, 0x000028);
-        frame_box(out, bx6, by6, bw6, bh6, 0xFFFF00);
-        text(g, out, bx6 + 8, by6 + 8, kPageTitle[6], 0xFFFFFF);
-        if (m.pad_type != PadType::None) draw_pad_icon(out, bx6 + bw6 - 8 - 16, by6 + 7, m.pad_type);
-        text(g, out, bx6 + 8, by6 + 22, "LV    SCORE      TIME", 0x00FFFF);
-        for (int i = 0; i < 21; ++i) {
-            const std::string &l = m.rec_line[i];
-            text(g, out, bx6 + 8, by6 + 34 + 9 * i, (l.empty() ? std::string(i == 20 ? "21+ -" : (i < 9 ? "0" : "") + std::to_string(i + 1) + " -") : l).c_str(),
-                 l.empty() || l.back() == '-' ? 0x808080 : 0xFFFFFF);
-        }
-        rect(out, bx6 + 4, by6 + 34 + 9 * 21 + 3, bw6 - 8, 11, 0x303090);
-        text(g, out, bx6 + 8, by6 + 34 + 9 * 21 + 5, "BACK", 0xFFFF00);
-        text(g, out, bx6 + 8, by6 + bh6 - 16, note.empty() ? "ESC GOES BACK" : note.c_str(), 0x909090);
-        return;
-    }
     if (page_ == 7) { // X25: the achievements list (scrolls with the cursor), the description of the highlighted one, the rule
         int na;
         const Item *ai = items_of(7, &na);
@@ -360,6 +344,7 @@ void Menu::draw(const Gfx &g, uint32_t *out, const Model &m) const {
     else if (page_ == 1 && m.pending) text(g, out, bx + 8, fy, "APPLIES NEXT GAME", 0xFF8040);
     else if (!m.assist.empty()) text(g, out, bx + 8, fy, ("ASSISTED " + m.assist).substr(0, 24).c_str(), 0xFF8040); // X03
     else if (m.ach_blocked) text(g, out, bx + 8, fy, "NO ACHIEVEMENTS: OPTIONS", 0xFF8040); // S34E
+    else if (page_ == 3 && it[cur_[3]].cmd == Cmd::FrameRate) text(g, out, bx + 8, fy, "GAME SPEED NEVER CHANGES", 0x00FFFF);
     else text(g, out, bx + 8, fy, page_ == 0 ? "ESC RESUMES" : "ESC GOES BACK", 0x909090);
     if (hints_are_pad(m)) { // X08: the hints follow the hand: pad pictures ...
         int hx = bx + 8;
@@ -406,15 +391,6 @@ void draw_achievement_popup(const Gfx &g, uint32_t *out, int id) {
     const std::string nm = achievements::def(id).name;
     text(g, out, bx + (bw - 8 * (int)std::strlen(head)) / 2, by + 5, head, 0x00FF00);
     text(g, out, bx + (bw - 8 * (int)nm.size()) / 2, by + 17, nm.c_str(), 0xFFFFFF);
-}
-
-void draw_new_best(const Gfx &g, uint32_t *out, const std::string &line1, const std::string &line2) {
-    using namespace overlay;
-    const int bw = 192, bh = 34, bx = (kPictureW - bw) / 2, by = 120;
-    rect(out, bx, by, bw, bh, 0x000028);
-    frame_box(out, bx, by, bw, bh, 0xFFFF00);
-    text(g, out, bx + (bw - 8 * (int)line1.size()) / 2, by + 6, line1.c_str(), 0xFFFF00);
-    text(g, out, bx + (bw - 8 * (int)line2.size()) / 2, by + 20, line2.c_str(), 0xFFFFFF);
 }
 
 void draw_run_summary(const Gfx &g, uint32_t *out, const stats::Summary &s) {
@@ -480,7 +456,7 @@ void draw_help(const Gfx &g, uint32_t *out, const Model &m) {
         int pad;
     }; // pad: index into Model::pad_btn / pad_name, or -1
     const L lines[] = {{"ESC", "MENU", false, 0},      {"F1", "PAUSE", false, 1},       {"F2", "SAVE", true, 2},       {"F4", "LOAD", true, 3},
-                       {"BKSP", "REWIND", true, 4},    {"F3", "OVERLAY", true, -1},     {"F5", "SCANLINES", true, -1}, {"F6", "PACING", true, -1},
+                       {"BKSP", "REWIND", true, 4},    {"F5", "SCANLINES", true, -1}, {"F6", "PACING", true, -1},
                        {"F7", "FRAME", false, -1},     {"F8", "SCALING", true, -1},     {"F9", "KEYS", false, -1},     {"F10", "PAD", false, -1},
                        {"F11", "FULLSCRN", false, -1}, {"F12", "RESET KEYS", false, -1}};
     const bool padset = hints_are_pad(m);
@@ -801,7 +777,8 @@ bool load_settings(const std::string &path, Settings &s, std::string *problems) 
         std::string k, v;
         ss >> k >> v;
         if (k == "purist") { if (problems) *problems += "  ignored: " + line + "   (there is no Purist setting any more: use RESET TO DEFAULTS on the DISPLAY or GAME OPTIONS page)\n"; }
-        else if (k == "overlay") s.overlay = b(v);
+        else if (k == "overlay" || k == "hdr" || k == "hdr_intensity") { /* removed before 2.1.0 was released (overlay, HDR): an old file may still have the line; it is ignored without a message */ }
+        else if (k == "frame_rate") s.fps = v == "30" ? 0 : v == "75" ? 2 : v == "100" ? 3 : v == "120" ? 4 : v == "144" ? 5 : v == "unlocked" ? 6 : 1;
         else if (k == "scanlines") s.scanlines = b(v);
         else if (k == "fill") s.fill = b(v);
         else if (k == "smooth") s.smooth = b(v);
@@ -848,10 +825,11 @@ bool save_settings(const std::string &path, const Settings &s, std::string *erro
         return false;
     }
     std::fprintf(f,
-                 "# Pac-Man port settings (the menu writes this file; you may also edit it with Notepad)\noverlay %s\nscanlines %s\nfill %s\nsmooth "
+                 "# Pac-Man port settings (the menu writes this file; you may also edit it with Notepad)\nframe_rate %s\nscanlines %s\nfill %s\nsmooth "
                  "%s\nwindow_frame %s\nhelp_panel %s\n"
                  "lives %d\nbonus %s\ndifficulty %s\nghost_names %s\nvibration %s\npad_symbols %s\npause_on_focus_loss %s\nhints %s\nlightbar %s\nrun_summary %s\n",
-                 s.overlay ? "on" : "off", s.scanlines ? "on" : "off", s.fill ? "on" : "off", s.smooth ? "on" : "off", s.frame ? "on" : "off",
+                 s.fps == 0 ? "30" : s.fps == 2 ? "75" : s.fps == 3 ? "100" : s.fps == 4 ? "120" : s.fps == 5 ? "144" : s.fps == 6 ? "unlocked" : "60",
+                 s.scanlines ? "on" : "off", s.fill ? "on" : "off", s.smooth ? "on" : "off", s.frame ? "on" : "off",
                  s.help_pin ? "on" : "off", lv[s.lives & 3], bn[s.bonus & 3], s.diff_normal ? "normal" : "hard", s.names_normal ? "normal" : "alternate",
                  s.vibration == 0   ? "off"
                  : s.vibration == 1 ? "light"

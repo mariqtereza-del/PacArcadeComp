@@ -101,6 +101,7 @@ sh tests/test_native_machine.sh 100000 20000   # N49a: the machine without the Z
 sh tests/test_native_f48.sh 30000 10000 2000   # N48: the last routines (0010, 1AD9, 276C, 2B7E) equal the ROM
 sh tests/test_native_ops.sh 300   # N49c: every instruction of the native list equals the Z80 on random states
 sh tests/test_no_rom_code.sh 100000 20000 300   # N48: zero ROM instructions executed (the evidence run: 3,000,000 scripted frames)
+sh tests/test_fps.sh   # 2.1.0: frame rate (sprites between ticks), the new setting; hash logs identical at every frame rate
 sh tests/test_cheat_invincible.sh   # the INVINCIBLE test cheat on the real ROM, original and readable rules
 python3 tools/check_docs.py
 python3 tools/check_links.py   # N54: every link and cited path in the documents exists

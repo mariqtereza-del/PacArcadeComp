@@ -1,0 +1,20 @@
+I02: the F3 debug overlay and the record messages removed (2026-10-28)
+Checked by (all PASS on 2026-10-28):
+  test_menu: PASS: 953 checks, 0 failures
+  test_integration: RESULT: PASS
+  test_mouse: RESULT: PASS
+  test_records: RESULT: PASS
+  test_records_window: RESULT: PASS
+  test_achievements: RESULT: PASS
+  test_purist: PASS: Purist run: 7273 frame hashes identical to the Python prototype and the high score file untouched; norma
+  test_replay:   replay played: 7273 frames, 7172 distinct frame states, main state changed 38 times, 3 games started, most d
+  test_reset_defaults and test_achievement_settings ran inside tests/run_all.sh (ALL TESTS PASSED, exit 0).
+
+What the tests prove:
+  - the main menu has no RECORDS item and ten rows; the DISPLAY page has no OVERLAY row (tests/test_menu.sh)
+  - records.cfg is still written exactly as before: first record, better score and time, worse = nothing, level 1 score 1500 frames 2500, level 4 score 500 frames 800, Purist writes nothing (tests/test_records_window.sh)
+  - the log has no Records line and no NEW BEST / RECORD SET text (same test)
+  - the achievements unlock as before (test_achievements, test_achievement_settings, test_chain_ach, test_fruit_ach, test_round_ach, test_progress_ach, test_pause_ach all PASS)
+  - --overlay is accepted and ignored with one log note; an old 'overlay' line in settings.cfg is ignored without a message (tests/test_fps_hdr.cpp)
+  - the machine is untouched: tests/test_purist.sh and tests/test_replay.sh hashes identical (7,273 frames)
+  - tests/test_level256.cpp (the S30 overlay test) was deleted with the feature; the level 256 split-screen proof stays in tests/test_level256_full.sh

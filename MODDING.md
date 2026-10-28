@@ -125,7 +125,7 @@ In the arcade game Pinky does not chase Pac-Man's tile but a tile **four steps a
    target = from_word((uint16_t)(as_word(tile_at(ram, kPacmanTileAddress)) + (uint16_t)(pac_step * 4)));
    ```
 3. Change the **4** to **6**: `(uint16_t)(pac_step * 6)`. Save.
-4. Build (`sh tools/build_app.sh`) and start with `--rules readable`. In the chase phase Pinky now ambushes from further ahead. (The F3 overlay draws its own copy of the ghost targets from the arcade rules and does not show your change.)
+4. Build (`sh tools/build_app.sh`) and start with `--rules readable`. In the chase phase Pinky now ambushes from further ahead.
 
 How we know this works: `tests/test_mods.sh` makes a **copy** of `src/logic/` in `build/mods/`, changes the 4 to a 6 in the copy exactly as above, and asks the copy for Pinky's target with Pac-Man at tile (100, 100) moving one step: the original answers (104, 100), the changed copy answers (106, 100), so the target moved by two tiles. The test also checks that the real `src/logic/` still says 4, so the repository stays the arcade game.
 
